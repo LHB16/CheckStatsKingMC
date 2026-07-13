@@ -1,0 +1,14 @@
+{
+  "name": "bot-check-stats-kingmc",
+  "version": "1.0.0",
+  "description": "Discord bot to check player stats on KingMC.vn using Mineflayer",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.15.3",
+    "mineflayer": "^4.37.1",
+    "dotenv": "^17.4.2"
+  }
+}
