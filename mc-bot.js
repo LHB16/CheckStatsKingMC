@@ -306,6 +306,43 @@ class PersistentBot extends EventEmitter {
     this.afkTimers.push(delay1);
   }
 
+  // Lấy balance bằng lệnh /balance
+  getBalance(player, timeoutMs = 15000) {
+    return new Promise((resolve, reject) => {
+      if (!this.isBotOnline) {
+        return reject(new Error("Bot Minecraft đang offline, không thể lấy thông tin."));
+      }
+
+      console.log(`[MC-Bot] Yêu cầu lấy balance: ${player}`);
+      this.bot.chat(`/balance ${player}`);
+
+      const timeoutId = setTimeout(() => {
+        this.bot.removeListener('messagestr', onMessage);
+        reject(new Error(`Timeout! Không nhận được phản hồi balance từ server sau ${timeoutMs/1000} giây.`));
+      }, timeoutMs);
+
+      const onMessage = (message, messagePosition, jsonMsg) => {
+        // Lọc thông báo có chứa tên người chơi và ký hiệu tiền $ hoặc từ khóa balance
+        if (message.includes(player) && (message.includes(' có $') || message.includes(' balance ') || message.includes('$'))) {
+          // Lọc rác (vd người chơi chat bình thường) bằng cách check xem nó có phải hệ thống không
+          // Bỏ qua nếu có dấu ngoặc kép hoặc dấu hai chấm đặc trưng của chat người chơi
+          if (message.includes('<') && message.includes('>')) return;
+          if (message.includes(': ')) return;
+
+          clearTimeout(timeoutId);
+          this.bot.removeListener('messagestr', onMessage);
+          resolve(message.trim());
+        } else if ((message.includes('không tìm thấy') || message.includes('not found')) && message.includes(player)) {
+          clearTimeout(timeoutId);
+          this.bot.removeListener('messagestr', onMessage);
+          resolve(`Không tìm thấy người chơi **${player}** hoặc người chơi chưa từng đăng nhập.`);
+        }
+      };
+
+      this.bot.on('messagestr', onMessage);
+    });
+  }
+
   getStats(player, timeoutMs = 15000) {
     return new Promise((resolve, reject) => {
       if (!this.bot || !this.isBotOnline) {

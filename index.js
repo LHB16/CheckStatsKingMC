@@ -158,6 +158,14 @@ async function registerSlashCommands() {
         option.setName('player')
           .setDescription('Tên người chơi Minecraft cần kiểm tra')
           .setRequired(true)
+      ),
+    new SlashCommandBuilder()
+      .setName('bal')
+      .setDescription('Kiểm tra số dư (balance) của một người chơi trên KingMC')
+      .addStringOption(option => 
+        option.setName('player')
+          .setDescription('Tên người chơi cần kiểm tra')
+          .setRequired(true)
       )
   ].map(command => command.toJSON());
 
