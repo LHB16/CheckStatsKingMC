@@ -266,6 +266,43 @@ client.on('interactionCreate', async interaction => {
       currentCheckingPlayer = '';
     }
   }
+
+  if (interaction.commandName === 'bal') {
+    const targetPlayer = interaction.options.getString('player').trim();
+
+    if (isBusy) {
+      return interaction.reply({ 
+        content: `⏳ Bot hiện đang bận xử lý yêu cầu cho **${currentCheckingPlayer}**. Vui lòng đợi trong giây lát!`, 
+        ephemeral: true 
+      });
+    }
+
+    isBusy = true;
+    currentCheckingPlayer = targetPlayer;
+
+    await interaction.deferReply();
+
+    try {
+      const balanceText = await mcBot.getBalance(targetPlayer, 15000);
+      
+      const embed = new EmbedBuilder()
+        .setColor('#10b981')
+        .setTitle(`💰 Số dư của ${targetPlayer}`)
+        .setDescription(`>>> ${balanceText}`)
+        .setTimestamp()
+        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
+
+      await interaction.editReply({ embeds: [embed] });
+    } catch (error) {
+      console.error(`[Discord-Bot] Lỗi khi xử lý lệnh bal cho ${targetPlayer}:`, error.message);
+      await interaction.editReply({ 
+        content: `❌ **Lỗi:** ${error.message}\nCó thể bot chưa vào được máy chủ hoặc người chơi không tồn tại.` 
+      });
+    } finally {
+      isBusy = false;
+      currentCheckingPlayer = '';
+    }
+  }
 });
 
 process.on('uncaughtException', err => {
