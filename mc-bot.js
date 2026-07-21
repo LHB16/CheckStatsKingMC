@@ -32,7 +32,6 @@ function parseMinecraftJSON(input) {
   if (typeof input === 'object') {
     let result = '';
     
-    // Server có thể gói thuộc tính value
     if (input.value !== undefined && typeof input.value === 'string') {
       try {
         const obj = JSON.parse(input.value);
@@ -88,20 +87,24 @@ class PersistentBot extends EventEmitter {
     this.bot = null;
     this.reconnectTimeout = null;
     
-    // Trạng thái AFK
+    // Trạng thái AFK và Ready Check
     this.afkRoutineRunning = false;
     this.afkTimers = [];
+    this.isBotOnline = false;
+    this.isReady = false; // Chỉ true khi đã đăng nhập và đứng AFK hoàn tất
 
     // Trạng thái Stats (xử lý song song với AFK)
     this.statsPromiseResolve = null;
     this.statsPromiseReject = null;
     this.statsTimeout = null;
     this.targetPlayer = null;
-    this.isBotOnline = false;
   }
 
   connect() {
     this.clearAllTimers();
+    this.isBotOnline = false;
+    this.isReady = false;
+
     const host = this.hosts[this.currentHostIndex];
     console.log(`[MC-Bot] Đang kết nối tới ${host}:${this.port}...`);
 
@@ -133,7 +136,6 @@ class PersistentBot extends EventEmitter {
   registerEvents() {
     this.bot.on('error', (err) => {
       console.error(`[MC-Bot] Lỗi kết nối: ${err.message}`);
-      // Sẽ tự động gọi 'end' sau đó
     });
 
     this.bot.on('kicked', (reason) => {
@@ -143,8 +145,8 @@ class PersistentBot extends EventEmitter {
 
     this.bot.on('end', (reason) => {
       this.isBotOnline = false;
+      this.isReady = false;
       console.log(`[MC-Bot] Mất kết nối. Đang lên lịch Reconnect sau 10 giây...`);
-      // Thử host tiếp theo nếu mất kết nối
       this.currentHostIndex = (this.currentHostIndex + 1) % this.hosts.length;
       
       if (this.statsPromiseReject) {
@@ -157,6 +159,7 @@ class PersistentBot extends EventEmitter {
 
     this.bot.once('spawn', () => {
       this.isBotOnline = true;
+      this.isReady = false; // Vừa spawn, bắt đầu chạy AFK routine nên chưa ready
       console.log(`[MC-Bot] Đã spawn vào server thành công! Bắt đầu kịch bản AFK.`);
       this.startAfkRoutine();
     });
@@ -166,16 +169,15 @@ class PersistentBot extends EventEmitter {
       const msgText = jsonMsg.toString();
       const cleanMsg = cleanMinecraftText(msgText).toLowerCase();
       
-      // 1. Tự động Login/Register (theo script cũ của dự án)
+      // 1. Tự động Login/Register
       if (this.credentials.password) {
         if (cleanMsg.includes('/dk') || cleanMsg.includes('dang ky bang lenh') || cleanMsg.includes('dang ky') || cleanMsg.includes('/register')) {
-          // Lọc không lặp lại nếu vừa gửi
           if (!this.lastAuthTime || Date.now() - this.lastAuthTime > 2000) {
             console.log(`[MC-Bot] Server yêu cầu đăng ký. Gửi lệnh /register...`);
-            this.bot.chat(`/register ${this.credentials.password} ${this.credentials.password}`); // Nhiều server chặn alias /dk, dùng lệnh gốc /register 2 pass là an toàn nhất
+            this.bot.chat(`/register ${this.credentials.password} ${this.credentials.password}`);
             this.lastAuthTime = Date.now();
           }
-        } else if (cleanMsg.includes('/dn') || cleanMsg.includes('vui long') || cleanMsg.includes('dang nhap') || cleanMsg.includes('login')) {
+        } else if (cleanMsg.includes('/dn') || cleanMsg.includes('vui long') || cleanMsg.includes('dang nhap') || cleanMsg.includes('/login')) {
           if (!this.lastAuthTime || Date.now() - this.lastAuthTime > 2000) {
             console.log(`[MC-Bot] Server yêu cầu đăng nhập. Gửi lệnh /login...`);
             this.bot.chat(`/login ${this.credentials.password}`);
@@ -201,7 +203,7 @@ class PersistentBot extends EventEmitter {
 
     // Lắng nghe khi GUI mở (để lấy stats)
     this.bot.on('windowOpen', (window) => {
-      if (!this.targetPlayer) return; // Nếu không có ai yêu cầu stats thì bỏ qua
+      if (!this.targetPlayer) return;
 
       const title = parseMinecraftJSON(window.title || '');
       console.log(`[MC-Bot] GUI Mở: "${title}", Đang trích xuất Stats...`);
@@ -238,7 +240,6 @@ class PersistentBot extends EventEmitter {
           items: statsItems
         });
         
-        // Cố gắng đóng cửa sổ để tránh lỗi
         if (this.bot && this.isBotOnline) {
            this.bot.closeWindow(window);
         }
@@ -250,6 +251,7 @@ class PersistentBot extends EventEmitter {
 
   scheduleReconnect() {
     this.clearAllTimers();
+    this.isReady = false;
     if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
     
     this.reconnectTimeout = setTimeout(() => {
@@ -267,7 +269,8 @@ class PersistentBot extends EventEmitter {
 
   startAfkRoutine() {
     this.afkRoutineRunning = true;
-    console.log(`[MC-Bot] Đang khởi động kịch bản AFK. Sẽ gõ lệnh /menu sau 60 giây nữa (theo script cài đặt)...`);
+    this.isReady = false; // Đang chạy AFK Routine -> Chưa ready
+    console.log(`[MC-Bot] Đang khởi động kịch bản AFK. Sẽ gõ lệnh /menu sau 60 giây nữa...`);
 
     // Kịch bản: delay 60000 -> chat /menu -> delay 4000 -> click slot 24 -> delay 10000 -> chat /warp afk
     const delay1 = setTimeout(() => {
@@ -279,7 +282,6 @@ class PersistentBot extends EventEmitter {
         if (!this.afkRoutineRunning || !this.bot || !this.isBotOnline) return;
         console.log(`[MC-Bot] Đang click slot 24...`);
         
-        // Lưu ý: clickWindow có thể throws error nếu GUI không mở kịp hoặc slot không hợp lệ
         try {
           const currentWindow = this.bot.currentWindow;
           if (currentWindow) {
@@ -295,7 +297,10 @@ class PersistentBot extends EventEmitter {
           if (!this.afkRoutineRunning || !this.bot || !this.isBotOnline) return;
           console.log(`[MC-Bot] Đang gõ /warp afk...`);
           this.bot.chat('/warp afk');
-          // Từ lúc này, vòng lặp (loop) được duy trì bởi onMessage (chat listener)
+
+          // Đánh dấu Bot đã hoàn tất kịch bản AFK và đã SẴN SÀNG nhận lệnh
+          this.isReady = true;
+          console.log(`[MC-Bot] ✅ Bot đã hoàn tất kịch bản AFK và sẵn sàng nhận lệnh từ Discord! (isReady = true)`);
         }, 10000);
         this.afkTimers.push(delay3);
 
@@ -309,8 +314,8 @@ class PersistentBot extends EventEmitter {
   // Lấy balance bằng lệnh /balance
   getBalance(player, timeoutMs = 15000) {
     return new Promise((resolve, reject) => {
-      if (!this.isBotOnline) {
-        return reject(new Error("Bot Minecraft đang offline, không thể lấy thông tin."));
+      if (!this.isBotOnline || !this.isReady) {
+        return reject(new Error("Bot Minecraft đang trong quá trình đăng nhập hoặc khởi chạy AFK, chưa sẵn sàng nhận lệnh."));
       }
 
       console.log(`[MC-Bot] Yêu cầu lấy balance: ${player}`);
@@ -322,10 +327,7 @@ class PersistentBot extends EventEmitter {
       }, timeoutMs);
 
       const onMessage = (message, messagePosition, jsonMsg) => {
-        // Lọc thông báo có chứa tên người chơi và ký hiệu tiền $ hoặc từ khóa balance
         if (message.includes(player) && (message.includes(' có $') || message.includes(' balance ') || message.includes('$'))) {
-          // Lọc rác (vd người chơi chat bình thường) bằng cách check xem nó có phải hệ thống không
-          // Bỏ qua nếu có dấu ngoặc kép hoặc dấu hai chấm đặc trưng của chat người chơi
           if (message.includes('<') && message.includes('>')) return;
           if (message.includes(': ')) return;
 
@@ -345,8 +347,8 @@ class PersistentBot extends EventEmitter {
 
   getStats(player, timeoutMs = 15000) {
     return new Promise((resolve, reject) => {
-      if (!this.bot || !this.isBotOnline) {
-        return reject(new Error('Bot Minecraft hiện đang ngoại tuyến hoặc đang reconnect. Vui lòng thử lại sau.'));
+      if (!this.bot || !this.isBotOnline || !this.isReady) {
+        return reject(new Error('Bot Minecraft hiện đang đăng nhập hoặc khởi chạy AFK, chưa sẵn sàng nhận lệnh. Vui lòng thử lại sau.'));
       }
 
       if (this.targetPlayer) {

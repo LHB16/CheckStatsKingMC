@@ -46,7 +46,7 @@ class QueueDispatcher {
         if (index !== -1) {
           this.queue.splice(index, 1);
           console.warn(`[QueueDispatcher] Tác vụ #${task.id} bị Timeout trong Hàng đợi!`);
-          reject(new Error(`Yêu cầu bị quá thời gian chờ (${timeoutMs / 1000}s) trong hàng đợi do tất cả các Bot đều đang bận.`));
+          reject(new Error(`Yêu cầu bị quá thời gian chờ (${timeoutMs / 1000}s) trong hàng đợi do tất cả các Bot đều đang bận hoặc đang đăng nhập.`));
         }
       }, timeoutMs + 10000);
 
@@ -58,10 +58,10 @@ class QueueDispatcher {
   async processQueue() {
     if (this.queue.length === 0) return;
 
-    // Tìm một Worker đang rảnh (Local hoặc Remote)
+    // Tìm một Worker đang rảnh và SẴN SÀNG (isReady = true)
     const availableWorker = await this.findAvailableWorker();
     if (!availableWorker) {
-      // Không có worker rảnh, chờ đợt kiểm tra tiếp theo
+      // Không có worker rảnh/sẵn sàng, chờ đợt kiểm tra tiếp theo
       return;
     }
 
@@ -93,10 +93,10 @@ class QueueDispatcher {
     }
   }
 
-  // Tìm Worker đang Rảnh (Idle & Online)
+  // Tìm Worker đang Rảnh & Sẵn Sàng (Idle, Online & isReady)
   async findAvailableWorker() {
-    // 1. Ưu tiên kiểm tra Local Bot trước (nếu có)
-    if (this.localBot && this.localBot.isBotOnline && !this.localBot.targetPlayer) {
+    // 1. Ưu tiên kiểm tra Local Bot trước (nếu có và đã ready)
+    if (this.localBot && this.localBot.isBotOnline && this.localBot.isReady && !this.localBot.targetPlayer) {
       return { type: 'local', name: 'Local-Worker' };
     }
 
@@ -104,7 +104,7 @@ class QueueDispatcher {
     for (const baseUrl of this.workerUrls) {
       try {
         const status = await this.checkRemoteWorkerHealth(baseUrl);
-        if (status && status.online && !status.busy) {
+        if (status && status.online && status.ready && !status.busy) {
           return { type: 'remote', name: baseUrl, url: baseUrl };
         }
       } catch (e) {

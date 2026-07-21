@@ -55,11 +55,16 @@ const server = http.createServer((req, res) => {
   // Endpoint kiểm tra Health Check
   if (url.pathname === '/health' || url.pathname === '/') {
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    const isOnline = localMcBot ? localMcBot.isBotOnline : true;
+    const isReady = localMcBot ? localMcBot.isReady : true;
+    const isBusy = localMcBot ? (!localMcBot.isReady || !!localMcBot.targetPlayer) : false;
+
     const healthStatus = {
       status: 'OK',
       role: BOT_ROLE,
-      online: localMcBot ? localMcBot.isBotOnline : true,
-      busy: localMcBot ? !!localMcBot.targetPlayer : false,
+      online: isOnline,
+      ready: isReady,
+      busy: isBusy,
       username: MC_USERNAME,
       timestamp: new Date().toISOString()
     };
@@ -83,9 +88,9 @@ const server = http.createServer((req, res) => {
         const payload = JSON.parse(body);
         const { action, player, timeoutMs } = payload;
 
-        if (!localMcBot || !localMcBot.isBotOnline) {
+        if (!localMcBot || !localMcBot.isBotOnline || !localMcBot.isReady) {
           res.writeHead(503, { 'Content-Type': 'application/json' });
-          return res.end(JSON.stringify({ success: false, error: 'Worker Minecraft Bot đang Offline' }));
+          return res.end(JSON.stringify({ success: false, error: 'Worker Minecraft Bot chưa sẵn sàng (đang kết nối hoặc AFK setup)' }));
         }
 
         if (localMcBot.targetPlayer) {
