@@ -5,6 +5,40 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { getCustomEmoji } = require('../helpers/utils');
 
+function cleanBuyerName(str) {
+  if (!str) return 'Ẩn danh';
+  let clean = String(str)
+    .replace(/§./g, '')
+    .replace(/[\u00A0\u200B\uFEFF]/g, ' ')
+    .normalize('NFC')
+    .trim();
+
+  const lower = clean.toLowerCase();
+  const prefixes = [
+    'đơn hàng của',
+    'don hang cua',
+    'đơn hàng:',
+    'don hang:',
+    'đơn hàng',
+    'don hang',
+    'order của',
+    'order cua',
+    'order:',
+    'của ',
+    'cua '
+  ];
+
+  for (const prefix of prefixes) {
+    if (lower.startsWith(prefix)) {
+      clean = clean.substring(prefix.length).trim();
+      break;
+    }
+  }
+
+  clean = clean.replace(/^[:\-\s#]+/, '').trim();
+  return clean || 'Ẩn danh';
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('order')
@@ -51,13 +85,8 @@ module.exports = {
       let descriptionText = `📡 *Dữ liệu đơn hàng trích xuất từ server \`${result.serverUsed}\`*\n\n>>> `;
 
       const formattedLines = orders.map((order, index) => {
-        let buyerText = order.buyer || 'Ẩn danh';
-        buyerText = buyerText
-          .replace(/^.*?(?:đơn\s*hàng\s*)?của\s*/iu, '')
-          .replace(/^.*?(?:đơn\s*hàng)\s*/iu, '')
-          .trim();
-
-        const qtyText = order.quantity || 'N/A';
+        const buyerText = cleanBuyerName(order.buyer);
+        const qtyText = order.quantity || '1';
         const priceText = order.price || 'N/A';
         let lineStr = `📦 **${buyerText}** | Số lượng: **${qtyText}** | Giá: **${priceText}**`;
 

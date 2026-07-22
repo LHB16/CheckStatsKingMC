@@ -11,9 +11,40 @@ function cleanMinecraftText(text) {
   if (!text) return '';
   return String(text)
     .replace(/§./g, '')
-    .replace(/\u00A0/g, ' ')
+    .replace(/[\u00A0\u200B\uFEFF]/g, ' ')
     .normalize('NFC')
     .trim();
+}
+
+// Hàm làm sạch tên người đặt đơn hàng (loại bỏ mọi tiền tố "Đơn hàng của", "ĐƠN HÀNG CỦA", "của", "order của",...)
+function cleanBuyerName(str) {
+  if (!str) return 'Ẩn danh';
+  let clean = cleanMinecraftText(str);
+
+  const lower = clean.toLowerCase();
+  const prefixes = [
+    'đơn hàng của',
+    'don hang cua',
+    'đơn hàng:',
+    'don hang:',
+    'đơn hàng',
+    'don hang',
+    'order của',
+    'order cua',
+    'order:',
+    'của ',
+    'cua '
+  ];
+
+  for (const prefix of prefixes) {
+    if (lower.startsWith(prefix)) {
+      clean = clean.substring(prefix.length).trim();
+      break;
+    }
+  }
+
+  clean = clean.replace(/^[:\-\s#]+/, '').trim();
+  return clean || 'Ẩn danh';
 }
 
 // Hàm parse chuẩn Minecraft JSON Text Component (có đệ quy đọc extra, text)
@@ -251,10 +282,7 @@ class PersistentBot extends EventEmitter {
 
           // Phân tích Tên người đặt mua (Lọc sạch từ "Đơn hàng của", "đơn hàng", "của")
           const cleanDisplayName = cleanMinecraftText(displayName);
-          let buyer = cleanDisplayName
-            .replace(/^.*?(?:đơn\s*hàng\s*)?của\s*/iu, '')
-            .replace(/^.*?(?:đơn\s*hàng)\s*/iu, '')
-            .trim();
+          let buyer = cleanBuyerName(cleanDisplayName);
 
           let quantity = '';
           let price = '';
@@ -262,37 +290,49 @@ class PersistentBot extends EventEmitter {
 
           for (const line of loreArray) {
             const cleanLine = cleanMinecraftText(line).trim();
+            const lowerLine = cleanLine.toLowerCase();
 
-            // Trích xuất Số lượng
+            // Trích xuất Số lượng (Ví dụ: SỐ LƯỢNG: 50000 Blaze Rod)
             if (!quantity) {
-              const qtyMatch = cleanLine.match(/(?:số\s*lượng|so\s*luong|sl)\s*[:\s]\s*(.+)/iu);
-              if (qtyMatch && qtyMatch[1]) {
-                quantity = qtyMatch[1].trim();
+              if (
+                lowerLine.includes('số lượng') ||
+                lowerLine.includes('so luong') ||
+                lowerLine.includes('sl:') ||
+                lowerLine.includes('cần mua') ||
+                lowerLine.includes('can mua')
+              ) {
+                if (cleanLine.includes(':')) {
+                  quantity = cleanLine.split(':').slice(1).join(':').trim();
+                } else {
+                  quantity = cleanLine.replace(/^.*?(?:số\s*lượng|so\s*luong|cần\s*mua|sl)\s*/iu, '').trim();
+                }
               }
             }
 
-            // Trích xuất Giá mỗi item (Nhận diện dòng chứa "giá", "gia", hoặc ký hiệu "$")
+            // Trích xuất Giá mỗi item (Ví dụ: GIÁ MỖI ITEM: $ 151.6)
             if (!price) {
-              const priceMatch = cleanLine.match(/(?:giá\s*(?:mỗi\s*item)?|gia)\s*[:\s]\s*(.+)/iu);
-              if (priceMatch && priceMatch[1]) {
-                price = priceMatch[1].trim();
-              } else if (cleanLine.includes('$')) {
-                const dollarIndex = cleanLine.indexOf('$');
-                price = cleanLine.substring(dollarIndex).trim();
+              if (lowerLine.includes('giá') || lowerLine.includes('gia') || lowerLine.includes('$')) {
+                if (cleanLine.includes(':')) {
+                  price = cleanLine.split(':').slice(1).join(':').trim();
+                } else if (cleanLine.includes('$')) {
+                  const dollarIndex = cleanLine.indexOf('$');
+                  price = cleanLine.substring(dollarIndex).trim();
+                }
               }
             }
 
-            // Trích xuất Tiến độ đã giao (Nhận diện dòng chứa "đã giao" hoặc "da giao")
+            // Trích xuất Tiến độ đã giao (Ví dụ: ĐÃ GIAO: 49985/50000)
             if (!delivered) {
-              const delivMatch = cleanLine.match(/(?:đã\s*giao|da\s*giao)\s*[:\s]\s*(.+)/iu);
-              if (delivMatch && delivMatch[1]) {
-                delivered = delivMatch[1].trim();
+              if (lowerLine.includes('đã giao') || lowerLine.includes('da giao')) {
+                if (cleanLine.includes(':')) {
+                  delivered = cleanLine.split(':').slice(1).join(':').trim();
+                }
               }
             }
           }
 
           // Fallback nếu không parse được quantity từ lore
-          if (!quantity && item.count && item.count > 1) {
+          if (!quantity && item.count) {
             quantity = String(item.count);
           }
 
@@ -301,7 +341,7 @@ class PersistentBot extends EventEmitter {
             itemName: item.name,
             displayName: displayName,
             buyer: buyer || 'Ẩn danh',
-            quantity: quantity || 'N/A',
+            quantity: quantity || '1',
             price: price || 'N/A',
             delivered: delivered || null,
             lore: loreArray
