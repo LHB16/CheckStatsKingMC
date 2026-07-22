@@ -367,6 +367,101 @@ class PersistentBot extends EventEmitter {
         return;
       }
 
+      if (this.currentAction === 'ah') {
+        // Trích xuất vật phẩm đấu giá từ GUI 6x9 (Chỉ lấy trong phạm vi top 5x9: slot 0 tới 44)
+        const ahItems = [];
+        const maxAhSlots = Math.min(45, window.inventoryStart || 45);
+
+        for (let i = 0; i < maxAhSlots; i++) {
+          const item = window.slots[i];
+          if (!item) continue;
+
+          let displayName = item.displayName || '';
+          if (item.customName) displayName = item.customName;
+          displayName = parseMinecraftJSON(displayName);
+
+          // Bỏ qua item trang trí/kính/barrier/air
+          const nameLower = (item.name || '').toLowerCase();
+          if (nameLower.includes('pane') || nameLower === 'air' || nameLower === 'barrier') continue;
+
+          let loreArray = [];
+          if (item.customLore) {
+            loreArray = item.customLore.map(l => parseMinecraftJSON(l));
+          } else {
+            loreArray = extractLoreFromNbt(item.nbt);
+          }
+
+          if (loreArray.length === 0) continue;
+
+          let price = '';
+          let seller = '';
+          let expiration = '';
+
+          for (const line of loreArray) {
+            const cleanLine = cleanMinecraftText(line).trim();
+            const lowerLine = cleanLine.toLowerCase();
+
+            // Trích xuất Giá mỗi item (Ví dụ: giá: $ 638M)
+            if (!price) {
+              if (lowerLine.includes('giá') || lowerLine.includes('gia') || lowerLine.includes('$')) {
+                if (cleanLine.includes(':')) {
+                  price = cleanLine.split(':').slice(1).join(':').trim();
+                } else if (cleanLine.includes('$')) {
+                  const dollarIndex = cleanLine.indexOf('$');
+                  price = cleanLine.substring(dollarIndex).trim();
+                }
+              }
+            }
+
+            // Trích xuất Người bán (Ví dụ: người bán: KhoaCoCaiNjt)
+            if (!seller) {
+              if (lowerLine.includes('người bán') || lowerLine.includes('nguoi ban') || lowerLine.includes('seller')) {
+                if (cleanLine.includes(':')) {
+                  seller = cleanLine.split(':').slice(1).join(':').trim();
+                }
+              }
+            }
+
+            // Trích xuất Thời gian hết hạn (Ví dụ: hết hạn vào: 2 ngày)
+            if (!expiration) {
+              if (lowerLine.includes('hết hạn') || lowerLine.includes('het han') || lowerLine.includes('expire')) {
+                if (cleanLine.includes(':')) {
+                  expiration = cleanLine.split(':').slice(1).join(':').trim();
+                }
+              }
+            }
+          }
+
+          ahItems.push({
+            slot: i,
+            itemName: item.name,
+            displayName: displayName,
+            price: price || 'N/A',
+            seller: seller || 'Ẩn danh',
+            expiration: expiration || null,
+            lore: loreArray
+          });
+
+          // Giới hạn lấy tối đa 9 vật phẩm đầu tiên
+          if (ahItems.length >= 9) break;
+        }
+
+        if (this.statsPromiseResolve) {
+          this.statsPromiseResolve({
+            success: true,
+            serverUsed: `${this.hosts[this.currentHostIndex]}:${this.port}`,
+            title: title,
+            items: ahItems
+          });
+
+          if (this.bot && this.isBotOnline) {
+            this.bot.closeWindow(window);
+          }
+          this.cleanupStatsState();
+        }
+        return;
+      }
+
       // Xử lý mặc định cho GUI Stats
       const statsItems = [];
       for (let i = 0; i < window.inventoryStart; i++) {
@@ -554,6 +649,33 @@ class PersistentBot extends EventEmitter {
       this.statsTimeout = setTimeout(() => {
         if (this.statsPromiseReject) {
           this.statsPromiseReject(new Error('Timeout! Không mở được bảng Đơn hàng (Order) sau ' + (timeoutMs/1000) + ' giây.'));
+          this.cleanupStatsState();
+        }
+      }, timeoutMs);
+    });
+  }
+
+  getAh(itemQuery, timeoutMs = 15000) {
+    return new Promise((resolve, reject) => {
+      if (!this.bot || !this.isBotOnline || !this.isReady) {
+        return reject(new Error('Bot Minecraft hiện đang đăng nhập hoặc khởi chạy AFK, chưa sẵn sàng nhận lệnh. Vui lòng thử lại sau.'));
+      }
+
+      if (this.targetPlayer) {
+        return reject(new Error('Bot đang trong quá trình xử lý một yêu cầu khác.'));
+      }
+
+      this.targetPlayer = itemQuery;
+      this.currentAction = 'ah';
+      this.statsPromiseResolve = resolve;
+      this.statsPromiseReject = reject;
+
+      console.log(`[MC-Bot] Yêu cầu lấy Chợ Đấu Giá: /ah ${itemQuery}`);
+      this.bot.chat(`/ah ${itemQuery}`);
+
+      this.statsTimeout = setTimeout(() => {
+        if (this.statsPromiseReject) {
+          this.statsPromiseReject(new Error('Timeout! Không mở được bảng Chợ Đấu Giá (AH) sau ' + (timeoutMs/1000) + ' giây.'));
           this.cleanupStatsState();
         }
       }, timeoutMs);
