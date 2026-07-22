@@ -29,7 +29,7 @@ class QueueDispatcher {
     return new Promise((resolve, reject) => {
       const task = {
         id: Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-        action, // 'stats' hoặc 'bal'
+        action, // 'stats', 'bal' hoặc 'order'
         player,
         timeoutMs,
         createdAt: Date.now(),
@@ -61,7 +61,6 @@ class QueueDispatcher {
     // Tìm một Worker đang rảnh và SẴN SÀNG (isReady = true)
     const availableWorker = await this.findAvailableWorker();
     if (!availableWorker) {
-      // Không có worker rảnh/sẵn sàng, chờ đợt kiểm tra tiếp theo
       return;
     }
 
@@ -78,6 +77,8 @@ class QueueDispatcher {
           result = await this.localBot.getStats(task.player, task.timeoutMs);
         } else if (task.action === 'bal') {
           result = await this.localBot.getBalance(task.player, task.timeoutMs);
+        } else if (task.action === 'order') {
+          result = await this.localBot.getOrder(task.player, task.timeoutMs);
         }
       } else {
         result = await this.executeRemoteWorker(availableWorker.url, task.action, task.player, task.timeoutMs);
@@ -88,19 +89,16 @@ class QueueDispatcher {
       console.error(`[QueueDispatcher] Thất bại tác vụ #${task.id} trên Worker [${availableWorker.name}]:`, err.message);
       task.reject(err);
     } finally {
-      // Tiếp tục xử lý tác vụ tiếp theo trong hàng đợi nếu có
       setImmediate(() => this.processQueue());
     }
   }
 
   // Tìm Worker đang Rảnh & Sẵn Sàng (Idle, Online & isReady)
   async findAvailableWorker() {
-    // 1. Ưu tiên kiểm tra Local Bot trước (nếu có và đã ready)
     if (this.localBot && this.localBot.isBotOnline && this.localBot.isReady && !this.localBot.targetPlayer) {
       return { type: 'local', name: 'Local-Worker' };
     }
 
-    // 2. Kiểm tra các Remote Workers qua HTTP /health
     for (const baseUrl of this.workerUrls) {
       try {
         const status = await this.checkRemoteWorkerHealth(baseUrl);
@@ -112,10 +110,9 @@ class QueueDispatcher {
       }
     }
 
-    return null; // Không tìm thấy worker nào rảnh
+    return null;
   }
 
-  // Kiểm tra Health của Remote Worker
   checkRemoteWorkerHealth(baseUrl) {
     return new Promise((resolve) => {
       const url = new URL('/health', baseUrl);
@@ -142,7 +139,6 @@ class QueueDispatcher {
     });
   }
 
-  // Gửi lệnh thực thi tới Remote Worker API
   executeRemoteWorker(baseUrl, action, player, timeoutMs) {
     return new Promise((resolve, reject) => {
       const url = new URL('/api/execute', baseUrl);
