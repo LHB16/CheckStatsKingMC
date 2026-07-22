@@ -85,15 +85,8 @@ module.exports = {
       let descriptionText = `📡 *Dữ liệu đơn hàng trích xuất từ server \`${result.serverUsed}\`*\n\n>>> `;
 
       const formattedLines = orders.map((order, index) => {
-        const buyerText = cleanBuyerName(order.buyer);
-        const qtyText = order.quantity || '1';
         const priceText = order.price || 'N/A';
-        let lineStr = `📦 **${buyerText}** | Số lượng: **${qtyText}** | Giá: **${priceText}**`;
-
-        if (order.delivered) {
-          lineStr += ` | Đã giao: **${order.delivered}**`;
-        }
-        return lineStr;
+        return `📦 Giá: **${priceText}**`;
       });
 
       descriptionText += formattedLines.join('\n');
