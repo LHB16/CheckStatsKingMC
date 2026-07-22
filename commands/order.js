@@ -39,7 +39,7 @@ module.exports = {
         return await interaction.editReply({ embeds: [emptyEmbed] });
       }
 
-      // Trường hợp CÓ đơn hàng (Hiển thị tối đa 9 đơn hàng đầu tiên)
+      // Trường hợp CÓ đơn hàng
       const emoji = getCustomEmoji(itemQuery);
       const embed = new EmbedBuilder()
         .setTitle(`📦 Danh sách đơn hàng: **${itemQuery.toUpperCase()}** ${emoji}`)
@@ -51,10 +51,21 @@ module.exports = {
       let descriptionText = `📡 *Dữ liệu đơn hàng trích xuất từ server \`${result.serverUsed}\`*\n\n>>> `;
 
       const formattedLines = orders.map((order, index) => {
-        const buyerText = order.buyer || 'Ẩn danh';
-        const qtyText = order.quantity || '1';
+        let buyerText = order.buyer || 'Ẩn danh';
+        buyerText = buyerText
+          .replace(/^.*đơn\s*hàng\s*của\s*/i, '')
+          .replace(/^.*đơn\s*hàng\s*/i, '')
+          .replace(/^.*của\s+/i, '')
+          .trim();
+
+        const qtyText = order.quantity || 'N/A';
         const priceText = order.price || 'N/A';
-        return `📦 **${buyerText}** | Số lượng: **${qtyText}** | Giá: **${priceText}**`;
+        let lineStr = `📦 **${buyerText}** | Số lượng: **${qtyText}** | Giá: **${priceText}**`;
+
+        if (order.delivered) {
+          lineStr += ` | Đã giao: **${order.delivered}**`;
+        }
+        return lineStr;
       });
 
       descriptionText += formattedLines.join('\n');

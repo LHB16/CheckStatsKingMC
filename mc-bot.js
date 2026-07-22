@@ -9,7 +9,11 @@ const EventEmitter = require('events');
 // Hàm loại bỏ mã màu Minecraft (§a, §b, v.v.)
 function cleanMinecraftText(text) {
   if (!text) return '';
-  return String(text).replace(/§./g, '').trim();
+  return String(text)
+    .replace(/§./g, '')
+    .replace(/\u00A0/g, ' ')
+    .normalize('NFC')
+    .trim();
 }
 
 // Hàm parse chuẩn Minecraft JSON Text Component (có đệ quy đọc extra, text)
@@ -61,19 +65,43 @@ function parseMinecraftJSON(input) {
   return cleanMinecraftText(String(input));
 }
 
-// Helper giải mã NBT chứa Lore của vật phẩm trong Mineflayer
+// Helper giải mã NBT/Component chứa Lore của vật phẩm trong Mineflayer
 function extractLoreFromNbt(nbt) {
-  if (!nbt || !nbt.value) return [];
-  const display = nbt.value.display;
-  if (!display || !display.value) return [];
-  const lore = display.value.lore || display.value.Lore;
-  if (!lore || !lore.value) return [];
+  if (!nbt) return [];
   
-  let lines = lore.value;
+  const root = nbt.value || nbt;
+  let rawLore = null;
+  
+  if (root.display) {
+    const displayVal = root.display.value || root.display;
+    if (displayVal) {
+      rawLore = displayVal.lore || displayVal.Lore;
+    }
+  }
+  
+  if (!rawLore && root['minecraft:lore']) {
+    rawLore = root['minecraft:lore'];
+  }
+  if (!rawLore && root.lore) {
+    rawLore = root.lore;
+  }
+  
+  if (!rawLore) return [];
+  
+  let lines = rawLore.value !== undefined ? rawLore.value : rawLore;
+  if (lines && lines.value !== undefined) {
+    lines = lines.value;
+  }
   if (typeof lines === 'string') lines = [lines];
   if (!Array.isArray(lines)) return [];
   
-  return lines.map(line => parseMinecraftJSON(line));
+  return lines.map(line => {
+    let content = line;
+    if (line && typeof line === 'object' && line.value !== undefined) {
+      content = line.value;
+    }
+    return parseMinecraftJSON(content);
+  }).filter(Boolean);
 }
 
 class PersistentBot extends EventEmitter {
@@ -221,24 +249,24 @@ class PersistentBot extends EventEmitter {
 
           if (loreArray.length === 0) continue;
 
-          // Phân tích Tên người đặt mua (Lọc sạch từ "của")
+          // Phân tích Tên người đặt mua (Lọc sạch từ "Đơn hàng của", "đơn hàng", "của")
           const cleanDisplayName = cleanMinecraftText(displayName);
-          let buyer = cleanDisplayName;
-          if (cleanDisplayName.toLowerCase().includes('của')) {
-            buyer = cleanDisplayName.replace(/^.*của\s+/i, '').trim();
-          } else {
-            buyer = cleanDisplayName.trim();
-          }
+          let buyer = cleanDisplayName
+            .replace(/^.*đơn\s*hàng\s*của\s*/i, '')
+            .replace(/^.*đơn\s*hàng\s*/i, '')
+            .replace(/^.*của\s+/i, '')
+            .trim();
 
           let quantity = '';
           let price = '';
+          let delivered = '';
 
           for (const line of loreArray) {
             const cleanLine = cleanMinecraftText(line).trim();
             const lowerLine = cleanLine.toLowerCase();
 
             // Trích xuất Số lượng
-            if (!quantity && (lowerLine.includes('số lượng') || lowerLine.includes('so luong'))) {
+            if (!quantity && (lowerLine.includes('số lượng') || lowerLine.includes('so luong') || lowerLine.includes('sl:'))) {
               if (cleanLine.includes(':')) {
                 quantity = cleanLine.split(':').slice(1).join(':').trim();
               } else {
@@ -257,6 +285,20 @@ class PersistentBot extends EventEmitter {
                 price = cleanLine.replace(/^.*giá\s*(mỗi\s*item)?\s*/i, '').trim();
               }
             }
+
+            // Trích xuất Tiến độ đã giao (Nhận diện dòng chứa "đã giao" hoặc "da giao")
+            if (!delivered && (lowerLine.includes('đã giao') || lowerLine.includes('da giao'))) {
+              if (cleanLine.includes(':')) {
+                delivered = cleanLine.split(':').slice(1).join(':').trim();
+              } else {
+                delivered = cleanLine.replace(/^.*đã\s*giao\s*/i, '').trim();
+              }
+            }
+          }
+
+          // Fallback nếu không parse được quantity từ lore
+          if (!quantity && item.count && item.count > 1) {
+            quantity = String(item.count);
           }
 
           orders.push({
@@ -264,13 +306,14 @@ class PersistentBot extends EventEmitter {
             itemName: item.name,
             displayName: displayName,
             buyer: buyer || 'Ẩn danh',
-            quantity: quantity || '1',
+            quantity: quantity || 'N/A',
             price: price || 'N/A',
+            delivered: delivered || null,
             lore: loreArray
           });
 
-          // Giới hạn lấy tối đa 9 đơn hàng đầu tiên
-          if (orders.length >= 9) break;
+          // Giới hạn lấy tối đa 25 đơn hàng đầu tiên để vừa vặn Embed Discord
+          if (orders.length >= 25) break;
         }
 
         if (this.statsPromiseResolve) {
