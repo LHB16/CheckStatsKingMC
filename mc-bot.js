@@ -252,9 +252,8 @@ class PersistentBot extends EventEmitter {
           // Phân tích Tên người đặt mua (Lọc sạch từ "Đơn hàng của", "đơn hàng", "của")
           const cleanDisplayName = cleanMinecraftText(displayName);
           let buyer = cleanDisplayName
-            .replace(/^.*đơn\s*hàng\s*của\s*/i, '')
-            .replace(/^.*đơn\s*hàng\s*/i, '')
-            .replace(/^.*của\s+/i, '')
+            .replace(/^.*?(?:đơn\s*hàng\s*)?của\s*/iu, '')
+            .replace(/^.*?(?:đơn\s*hàng)\s*/iu, '')
             .trim();
 
           let quantity = '';
@@ -263,35 +262,31 @@ class PersistentBot extends EventEmitter {
 
           for (const line of loreArray) {
             const cleanLine = cleanMinecraftText(line).trim();
-            const lowerLine = cleanLine.toLowerCase();
 
             // Trích xuất Số lượng
-            if (!quantity && (lowerLine.includes('số lượng') || lowerLine.includes('so luong') || lowerLine.includes('sl:'))) {
-              if (cleanLine.includes(':')) {
-                quantity = cleanLine.split(':').slice(1).join(':').trim();
-              } else {
-                quantity = cleanLine.replace(/^.*số\s*lượng\s*/i, '').trim();
+            if (!quantity) {
+              const qtyMatch = cleanLine.match(/(?:số\s*lượng|so\s*luong|sl)\s*[:\s]\s*(.+)/iu);
+              if (qtyMatch && qtyMatch[1]) {
+                quantity = qtyMatch[1].trim();
               }
             }
 
             // Trích xuất Giá mỗi item (Nhận diện dòng chứa "giá", "gia", hoặc ký hiệu "$")
-            if (!price && (lowerLine.includes('giá') || lowerLine.includes('gia') || lowerLine.includes('$'))) {
-              if (cleanLine.includes(':')) {
-                price = cleanLine.split(':').slice(1).join(':').trim();
+            if (!price) {
+              const priceMatch = cleanLine.match(/(?:giá\s*(?:mỗi\s*item)?|gia)\s*[:\s]\s*(.+)/iu);
+              if (priceMatch && priceMatch[1]) {
+                price = priceMatch[1].trim();
               } else if (cleanLine.includes('$')) {
                 const dollarIndex = cleanLine.indexOf('$');
                 price = cleanLine.substring(dollarIndex).trim();
-              } else {
-                price = cleanLine.replace(/^.*giá\s*(mỗi\s*item)?\s*/i, '').trim();
               }
             }
 
             // Trích xuất Tiến độ đã giao (Nhận diện dòng chứa "đã giao" hoặc "da giao")
-            if (!delivered && (lowerLine.includes('đã giao') || lowerLine.includes('da giao'))) {
-              if (cleanLine.includes(':')) {
-                delivered = cleanLine.split(':').slice(1).join(':').trim();
-              } else {
-                delivered = cleanLine.replace(/^.*đã\s*giao\s*/i, '').trim();
+            if (!delivered) {
+              const delivMatch = cleanLine.match(/(?:đã\s*giao|da\s*giao)\s*[:\s]\s*(.+)/iu);
+              if (delivMatch && delivMatch[1]) {
+                delivered = delivMatch[1].trim();
               }
             }
           }
@@ -312,8 +307,8 @@ class PersistentBot extends EventEmitter {
             lore: loreArray
           });
 
-          // Giới hạn lấy tối đa 25 đơn hàng đầu tiên để vừa vặn Embed Discord
-          if (orders.length >= 25) break;
+          // Giới hạn lấy tối đa 9 đơn hàng đầu tiên
+          if (orders.length >= 9) break;
         }
 
         if (this.statsPromiseResolve) {

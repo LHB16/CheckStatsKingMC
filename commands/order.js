@@ -53,9 +53,8 @@ module.exports = {
       const formattedLines = orders.map((order, index) => {
         let buyerText = order.buyer || 'Ẩn danh';
         buyerText = buyerText
-          .replace(/^.*đơn\s*hàng\s*của\s*/i, '')
-          .replace(/^.*đơn\s*hàng\s*/i, '')
-          .replace(/^.*của\s+/i, '')
+          .replace(/^.*?(?:đơn\s*hàng\s*)?của\s*/iu, '')
+          .replace(/^.*?(?:đơn\s*hàng)\s*/iu, '')
           .trim();
 
         const qtyText = order.quantity || 'N/A';
