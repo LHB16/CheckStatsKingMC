@@ -47,13 +47,14 @@ module.exports = {
         .setTimestamp()
         .setFooter({ text: 'KingMC.vn Order Bot • Thiết kế bởi BinhLH' });
 
-      let descriptionText = `📡 *Dữ liệu đơn hàng trích xuất từ server \`${result.serverUsed}\`*\n\n`;
+      // Nổi bật dữ liệu trong khung bao blockquote (>>>)
+      let descriptionText = `📡 *Dữ liệu đơn hàng trích xuất từ server \`${result.serverUsed}\`*\n\n>>> `;
 
       const formattedLines = orders.map((order, index) => {
         const buyerText = order.buyer || 'Ẩn danh';
         const qtyText = order.quantity || '1';
         const priceText = order.price || 'N/A';
-        return `🛒 **${buyerText}** | 🔢 Số lượng: **${qtyText}** | 💰 Giá: **${priceText}**`;
+        return `📦 **${buyerText}** | Số lượng: **${qtyText}** | Giá: **${priceText}**`;
       });
 
       descriptionText += formattedLines.join('\n');

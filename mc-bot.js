@@ -221,21 +221,41 @@ class PersistentBot extends EventEmitter {
 
           if (loreArray.length === 0) continue;
 
-          // Phân tích lore để lấy Tên người đặt, Số lượng, Giá mỗi item
-          let buyer = displayName;
-          if (displayName.toLowerCase().includes('đơn hàng của')) {
-            buyer = displayName.replace(/§./g, '').replace(/đơn hàng của/i, '').trim();
+          // Phân tích Tên người đặt mua (Lọc sạch từ "của")
+          const cleanDisplayName = cleanMinecraftText(displayName);
+          let buyer = cleanDisplayName;
+          if (cleanDisplayName.toLowerCase().includes('của')) {
+            buyer = cleanDisplayName.replace(/^.*của\s+/i, '').trim();
+          } else {
+            buyer = cleanDisplayName.trim();
           }
 
           let quantity = '';
           let price = '';
 
           for (const line of loreArray) {
-            const cleanLine = line.trim();
-            if (cleanLine.toLowerCase().includes('số lượng:')) {
-              quantity = cleanLine.split(':').slice(1).join(':').trim();
-            } else if (cleanLine.toLowerCase().includes('giá mỗi item:') || cleanLine.toLowerCase().includes('giá:')) {
-              price = cleanLine.split(':').slice(1).join(':').trim();
+            const cleanLine = cleanMinecraftText(line).trim();
+            const lowerLine = cleanLine.toLowerCase();
+
+            // Trích xuất Số lượng
+            if (!quantity && (lowerLine.includes('số lượng') || lowerLine.includes('so luong'))) {
+              if (cleanLine.includes(':')) {
+                quantity = cleanLine.split(':').slice(1).join(':').trim();
+              } else {
+                quantity = cleanLine.replace(/^.*số\s*lượng\s*/i, '').trim();
+              }
+            }
+
+            // Trích xuất Giá mỗi item (Nhận diện dòng chứa "giá", "gia", hoặc ký hiệu "$")
+            if (!price && (lowerLine.includes('giá') || lowerLine.includes('gia') || lowerLine.includes('$'))) {
+              if (cleanLine.includes(':')) {
+                price = cleanLine.split(':').slice(1).join(':').trim();
+              } else if (cleanLine.includes('$')) {
+                const dollarIndex = cleanLine.indexOf('$');
+                price = cleanLine.substring(dollarIndex).trim();
+              } else {
+                price = cleanLine.replace(/^.*giá\s*(mỗi\s*item)?\s*/i, '').trim();
+              }
             }
           }
 
@@ -243,7 +263,7 @@ class PersistentBot extends EventEmitter {
             slot: i,
             itemName: item.name,
             displayName: displayName,
-            buyer: buyer,
+            buyer: buyer || 'Ẩn danh',
             quantity: quantity || '1',
             price: price || 'N/A',
             lore: loreArray
