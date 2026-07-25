@@ -200,7 +200,13 @@ class PersistentBot extends EventEmitter {
 
     this.bot.on('kicked', (reason) => {
       const reasonText = typeof reason === 'string' ? reason : JSON.stringify(reason);
-      console.warn(`[MC-Bot] Bị kick: ${cleanMinecraftText(reasonText)}`);
+      const cleanReason = cleanMinecraftText(reasonText);
+      console.warn(`[MC-Bot] Bị kick: ${cleanReason}`);
+
+      const lowerReason = cleanReason.toLowerCase();
+      if (lowerReason.includes('ban') || lowerReason.includes('banned') || lowerReason.includes('bị cấm') || lowerReason.includes('bi cam') || lowerReason.includes('bị ban') || lowerReason.includes('bi ban')) {
+        this.emit('banDetected', { username: this.credentials.username, reason: cleanReason });
+      }
     });
 
     this.bot.on('end', (reason) => {
@@ -224,21 +230,58 @@ class PersistentBot extends EventEmitter {
       this.startAfkRoutine();
     });
 
-    // Lắng nghe tin nhắn từ server để tự động đăng nhập
+    // Lắng nghe tin nhắn từ server để tự động đăng nhập & phát hiện bị đá ra lobby / bị ban
     this.bot.on('message', (jsonMsg) => {
       const msgText = jsonMsg.toString();
-      const cleanMsg = cleanMinecraftText(msgText).toLowerCase();
+      const cleanMsg = cleanMinecraftText(msgText);
+      const lowerMsg = cleanMsg.toLowerCase();
       
-      // Tự động Login/Register
+      // Kiểm tra xem có tin nhắn báo bị ban hay không
+      if (lowerMsg.includes('ban') || lowerMsg.includes('banned') || lowerMsg.includes('bị cấm') || lowerMsg.includes('bi cam') || lowerMsg.includes('bị ban') || lowerMsg.includes('bi ban')) {
+        if (lowerMsg.includes('permanently') || lowerMsg.includes('bị cấm') || lowerMsg.includes('bị ban') || lowerMsg.includes('phạt cấm') || lowerMsg.includes('you are banned')) {
+          console.warn(`[MC-Bot] 🚨 ĐÃ PHÁT HIỆN THÔNG BÁO BỊ BAN: ${cleanMsg}`);
+          this.emit('banDetected', { username: this.credentials.username, reason: cleanMsg });
+        }
+      }
+
+      // Kiểm tra từ khóa "kingmc.vn" (Bị đá ra lobby / yêu cầu gõ /dn và click GUI như vừa join)
+      if (lowerMsg.includes('kingmc.vn')) {
+        if (!this.lastAuthTime || Date.now() - this.lastAuthTime > 5000) {
+          this.lastAuthTime = Date.now();
+          console.log(`[MC-Bot] ⚠️ Nhận diện cụm từ "kingmc.vn" (Bot bị đá về lobby). Chuyển bot sang trạng thái BẬN (isReady = false) và gõ /dn...`);
+          
+          this.isReady = false; // Đặt bot ở trạng thái bận
+          this.clearAllTimers(); // Hủy các timer AFK cũ
+
+          if (this.statsPromiseReject) {
+            this.statsPromiseReject(new Error('Bot bị chuyển về lobby (yêu cầu đăng nhập lại).'));
+            this.cleanupStatsState();
+          }
+
+          if (this.credentials.password) {
+            this.bot.chat(`/dn ${this.credentials.password}`);
+            
+            // Đợi 2.5s rồi khởi chạy lại kịch bản AFK (gõ /menu, click slot 24, /warp afk)
+            const afkTimer = setTimeout(() => {
+              console.log(`[MC-Bot] Đã xong gõ /dn. Bắt đầu lại kịch bản click GUI chọn server...`);
+              this.startAfkRoutine();
+            }, 2500);
+            this.afkTimers.push(afkTimer);
+          }
+        }
+        return;
+      }
+
+      // Tự động Login/Register tiêu chuẩn
       if (this.credentials.password) {
-        if (cleanMsg.includes('/dk') || cleanMsg.includes('dang ky bang lenh') || cleanMsg.includes('dang ky') || cleanMsg.includes('/register')) {
-          if (!this.lastAuthTime || Date.now() - this.lastAuthTime > 2000) {
+        if (lowerMsg.includes('/dk') || lowerMsg.includes('dang ky bang lenh') || lowerMsg.includes('dang ky') || lowerMsg.includes('/register')) {
+          if (!this.lastAuthTime || Date.now() - this.lastAuthTime > 3000) {
             console.log(`[MC-Bot] Server yêu cầu đăng ký. Gửi lệnh /register...`);
             this.bot.chat(`/register ${this.credentials.password} ${this.credentials.password}`);
             this.lastAuthTime = Date.now();
           }
-        } else if (cleanMsg.includes('/dn') || cleanMsg.includes('vui long') || cleanMsg.includes('dang nhap') || cleanMsg.includes('/login')) {
-          if (!this.lastAuthTime || Date.now() - this.lastAuthTime > 2000) {
+        } else if (lowerMsg.includes('/dn') || lowerMsg.includes('vui long') || lowerMsg.includes('dang nhap') || lowerMsg.includes('/login')) {
+          if (!this.lastAuthTime || Date.now() - this.lastAuthTime > 3000) {
             console.log(`[MC-Bot] Server yêu cầu đăng nhập. Gửi lệnh /login...`);
             this.bot.chat(`/login ${this.credentials.password}`);
             this.lastAuthTime = Date.now();

@@ -3,6 +3,7 @@
  */
 
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { recordError } = require('../helpers/reportHelper');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -25,21 +26,24 @@ module.exports = {
       const balanceText = await queueDispatcher.enqueueTask('bal', targetPlayer, BOT_CHECK_TIMEOUT);
       
       const embed = new EmbedBuilder()
-        .setColor('#10b981')
-        .setTitle(`💰 Số dư của ${targetPlayer}`)
-        .setDescription(`>>> ${balanceText}`)
+        .setTitle(`💰 Số dư người chơi: **${targetPlayer}**`)
+        .setColor('#2b2d31')
+        .setThumbnail(`https://minotar.net/helm/${targetPlayer}/128.png`)
+        .setDescription(`💵 **SỐ DƯ:** ${balanceText}`)
         .setTimestamp()
         .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
 
       await interaction.editReply({ embeds: [embed] });
     } catch (error) {
       console.error(`[Discord-Bot] Lỗi khi xử lý lệnh bal cho ${targetPlayer}:`, error.message);
-      
+      recordError('bal', targetPlayer, error);
+
       const errorEmbed = new EmbedBuilder()
         .setTitle('❌ Lỗi kiểm tra số dư')
-        .setDescription(`Không thể lấy số dư của người chơi **${targetPlayer}**.\n\n**Chi tiết lỗi:**\n\`${error.message}\`\n\n⚠️ *Nhắc nhở: Trước khi báo lỗi, hãy chắc chắn rằng bạn đã nhập đúng tên người chơi (player) trên KingMC.*`)
+        .setDescription(`Không thể lấy số dư của người chơi **${targetPlayer}**.\n\n⚠️ Đã có lỗi xảy ra trong quá trình xử lý yêu cầu. Vui lòng thử lại sau hoặc bấm nút **Báo lỗi** bên dưới để gửi thông báo tới Admin!`)
         .setColor('#ef4444')
-        .setTimestamp();
+        .setTimestamp()
+        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
 
       const row = new ActionRowBuilder()
         .addComponents(

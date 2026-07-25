@@ -12,7 +12,7 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const PersistentBot = require('./mc-bot');
 const QueueDispatcher = require('./queue-dispatcher');
 const CommandHandler = require('./handlers/commandHandler');
-const { handleReportButtons } = require('./helpers/reportHelper');
+const { handleReportButtons, sendBanAlert } = require('./helpers/reportHelper');
 
 // Cấu hình từ .env
 const BOT_ROLE = (process.env.BOT_ROLE || 'standalone').toLowerCase();
@@ -143,6 +143,13 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
       GatewayIntentBits.GuildMessages
     ]
   });
+
+  if (localMcBot) {
+    localMcBot.on('banDetected', ({ username, reason }) => {
+      console.warn(`[Index] Phát hiện bot ${username} bị BAN: ${reason}`);
+      sendBanAlert(client, username, reason);
+    });
+  }
 
   const commandHandler = new CommandHandler(client, queueDispatcher);
   commandHandler.loadCommands();

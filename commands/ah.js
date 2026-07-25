@@ -4,6 +4,7 @@
 
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { getCustomEmoji } = require('../helpers/utils');
+const { recordError } = require('../helpers/reportHelper');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -31,10 +32,10 @@ module.exports = {
       if (items.length === 0) {
         const emptyEmbed = new EmbedBuilder()
           .setTitle(`📦 Đấu Giá (AH): **${itemQuery}**`)
-          .setDescription(`>>> ⚠️ Không có vật phẩm nào trên AH cho **${itemQuery}**.`)
+          .setDescription(`⚠️ Không có vật phẩm nào trên AH cho **${itemQuery}**.`)
           .setColor('#ef4444')
           .setTimestamp()
-          .setFooter({ text: 'KingMC.vn AH Bot • Thiết kế bởi BinhLH' });
+          .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
 
         return await interaction.editReply({ embeds: [emptyEmbed] });
       }
@@ -43,19 +44,17 @@ module.exports = {
       const emoji = getCustomEmoji(itemQuery);
       const embed = new EmbedBuilder()
         .setTitle(`📦 Danh sách AH: **${itemQuery.toUpperCase()}** ${emoji}`)
-        .setColor('#10b981')
+        .setColor('#2b2d31')
         .setTimestamp()
-        .setFooter({ text: 'KingMC.vn AH Bot • Thiết kế bởi BinhLH' });
+        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
 
-      // Nổi bật dữ liệu trong khung bao blockquote (>>>)
-      let descriptionText = `📡 *Dữ liệu AH trích xuất từ server \`${result.serverUsed}\`*\n\n>>> `;
-
-      const formattedLines = items.map((item) => {
+      const formattedLines = items.map((item, index) => {
         const priceText = item.price || 'N/A';
-        return `📦 Giá: **${priceText}**`;
+        const sellerText = item.seller ? ` | Người bán: **${item.seller}**` : '';
+        return `📦 **#${index + 1}** | Giá: **${priceText}**${sellerText}`;
       });
 
-      descriptionText += formattedLines.join('\n');
+      let descriptionText = formattedLines.join('\n');
 
       if (descriptionText.length > 4096) {
         descriptionText = descriptionText.substring(0, 4080) + '...';
@@ -67,12 +66,14 @@ module.exports = {
 
     } catch (error) {
       console.error(`[Discord-Bot] Lỗi khi xử lý lệnh ah cho ${itemQuery}:`, error.message);
-      
+      recordError('ah', itemQuery, error);
+
       const errorEmbed = new EmbedBuilder()
         .setTitle('❌ Lỗi kiểm tra AH')
-        .setDescription(`Không thể lấy danh sách AH cho **${itemQuery}**.\n\n**Chi tiết lỗi:**\n\`${error.message}\``)
+        .setDescription(`Không thể lấy danh sách AH cho **${itemQuery}**.\n\n⚠️ Đã có lỗi xảy ra trong quá trình xử lý yêu cầu. Vui lòng thử lại sau hoặc bấm nút **Báo lỗi** bên dưới để gửi thông báo tới Admin!`)
         .setColor('#ef4444')
-        .setTimestamp();
+        .setTimestamp()
+        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
         
       const row = new ActionRowBuilder()
         .addComponents(

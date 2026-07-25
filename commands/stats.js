@@ -4,6 +4,7 @@
 
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { getCustomEmoji, getStatsLabel, isDecorationItem } = require('../helpers/utils');
+const { recordError } = require('../helpers/reportHelper');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -36,10 +37,9 @@ module.exports = {
       const validItems = (result.items || []).filter(item => !isDecorationItem(item));
 
       if (validItems.length === 0) {
-        embed.setDescription(`>>> 📡 *Dữ liệu được trích xuất từ server \`${result.serverUsed}\`*\n\n⚠️ **Lưu ý:** Không tìm thấy stats nào hữu ích hoặc người chơi này chưa từng đăng nhập.`);
+        embed.setDescription(`⚠️ **Lưu ý:** Không tìm thấy stats nào hữu ích hoặc người chơi này chưa từng đăng nhập.`);
         embed.setColor('#ef4444');
       } else {
-        let descriptionText = `📡 *Dữ liệu được trích xuất từ server \`${result.serverUsed}\`*\n\n`;
         const formattedItems = [];
         
         validItems.forEach(item => {
@@ -63,7 +63,7 @@ module.exports = {
           }
         });
 
-        descriptionText += formattedItems.join('\n');
+        let descriptionText = formattedItems.join('\n');
 
         if (descriptionText.length > 4096) {
           descriptionText = descriptionText.substring(0, 4080) + '...';
@@ -76,12 +76,14 @@ module.exports = {
 
     } catch (error) {
       console.error(`[Discord-Bot] Lỗi khi xử lý lệnh stats cho ${targetPlayer}:`, error.message);
-      
+      recordError('stats', targetPlayer, error);
+
       const errorEmbed = new EmbedBuilder()
         .setTitle('❌ Lỗi kiểm tra stats')
-        .setDescription(`Không thể lấy stats của người chơi **${targetPlayer}**.\n\n**Chi tiết lỗi:**\n\`${error.message}\`\n\n⚠️ *Nhắc nhở: Trước khi báo lỗi, hãy chắc chắn rằng bạn đã nhập đúng tên người chơi (player) trên KingMC.*`)
+        .setDescription(`Không thể lấy stats của người chơi **${targetPlayer}**.\n\n⚠️ Đã có lỗi xảy ra trong quá trình xử lý yêu cầu. Vui lòng thử lại sau hoặc bấm nút **Báo lỗi** bên dưới để gửi thông báo tới Admin!`)
         .setColor('#ef4444')
-        .setTimestamp();
+        .setTimestamp()
+        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
         
       const row = new ActionRowBuilder()
         .addComponents(

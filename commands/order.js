@@ -4,40 +4,7 @@
 
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { getCustomEmoji } = require('../helpers/utils');
-
-function cleanBuyerName(str) {
-  if (!str) return 'Ẩn danh';
-  let clean = String(str)
-    .replace(/§./g, '')
-    .replace(/[\u00A0\u200B\uFEFF]/g, ' ')
-    .normalize('NFC')
-    .trim();
-
-  const lower = clean.toLowerCase();
-  const prefixes = [
-    'đơn hàng của',
-    'don hang cua',
-    'đơn hàng:',
-    'don hang:',
-    'đơn hàng',
-    'don hang',
-    'order của',
-    'order cua',
-    'order:',
-    'của ',
-    'cua '
-  ];
-
-  for (const prefix of prefixes) {
-    if (lower.startsWith(prefix)) {
-      clean = clean.substring(prefix.length).trim();
-      break;
-    }
-  }
-
-  clean = clean.replace(/^[:\-\s#]+/, '').trim();
-  return clean || 'Ẩn danh';
-}
+const { recordError } = require('../helpers/reportHelper');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -65,10 +32,10 @@ module.exports = {
       if (orders.length === 0) {
         const emptyEmbed = new EmbedBuilder()
           .setTitle(`📦 Đơn hàng: **${itemQuery}**`)
-          .setDescription(`>>> ⚠️ Không có order (đơn hàng) nào cho **${itemQuery}**.`)
+          .setDescription(`⚠️ Không có order (đơn hàng) nào cho **${itemQuery}**.`)
           .setColor('#ef4444')
           .setTimestamp()
-          .setFooter({ text: 'KingMC.vn Order Bot • Thiết kế bởi BinhLH' });
+          .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
 
         return await interaction.editReply({ embeds: [emptyEmbed] });
       }
@@ -77,19 +44,18 @@ module.exports = {
       const emoji = getCustomEmoji(itemQuery);
       const embed = new EmbedBuilder()
         .setTitle(`📦 Danh sách đơn hàng: **${itemQuery.toUpperCase()}** ${emoji}`)
-        .setColor('#10b981')
+        .setColor('#2b2d31')
         .setTimestamp()
-        .setFooter({ text: 'KingMC.vn Order Bot • Thiết kế bởi BinhLH' });
-
-      // Nổi bật dữ liệu trong khung bao blockquote (>>>)
-      let descriptionText = `📡 *Dữ liệu đơn hàng trích xuất từ server \`${result.serverUsed}\`*\n\n>>> `;
+        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
 
       const formattedLines = orders.map((order, index) => {
         const priceText = order.price || 'N/A';
-        return `📦 Giá: **${priceText}**`;
+        const qtyText = order.quantity ? ` | SL: **${order.quantity}**` : '';
+        const buyerText = order.buyer ? ` | Người mua: **${order.buyer}**` : '';
+        return `📦 **#${index + 1}** | Giá: **${priceText}**${qtyText}${buyerText}`;
       });
 
-      descriptionText += formattedLines.join('\n');
+      let descriptionText = formattedLines.join('\n');
 
       if (descriptionText.length > 4096) {
         descriptionText = descriptionText.substring(0, 4080) + '...';
@@ -101,12 +67,14 @@ module.exports = {
 
     } catch (error) {
       console.error(`[Discord-Bot] Lỗi khi xử lý lệnh order cho ${itemQuery}:`, error.message);
-      
+      recordError('order', itemQuery, error);
+
       const errorEmbed = new EmbedBuilder()
         .setTitle('❌ Lỗi kiểm tra đơn hàng')
-        .setDescription(`Không thể lấy danh sách đơn hàng cho **${itemQuery}**.\n\n**Chi tiết lỗi:**\n\`${error.message}\``)
+        .setDescription(`Không thể lấy danh sách đơn hàng cho **${itemQuery}**.\n\n⚠️ Đã có lỗi xảy ra trong quá trình xử lý yêu cầu. Vui lòng thử lại sau hoặc bấm nút **Báo lỗi** bên dưới để gửi thông báo tới Admin!`)
         .setColor('#ef4444')
-        .setTimestamp();
+        .setTimestamp()
+        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
         
       const row = new ActionRowBuilder()
         .addComponents(
