@@ -3,6 +3,7 @@
  */
 
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { getCustomEmoji } = require('../helpers/utils');
 const { recordError } = require('../helpers/reportHelper');
 
 module.exports = {
@@ -24,12 +25,19 @@ module.exports = {
     try {
       // Gửi tác vụ vào Queue Dispatcher
       const balanceText = await queueDispatcher.enqueueTask('bal', targetPlayer, BOT_CHECK_TIMEOUT);
+      const emeraldEmoji = getCustomEmoji('emerald');
+
+      let cleanVal = balanceText;
+      if (cleanVal.includes('$')) {
+        const dollarIndex = cleanVal.indexOf('$');
+        cleanVal = cleanVal.substring(dollarIndex).replace(/balance/gi, '').trim();
+      }
       
       const embed = new EmbedBuilder()
-        .setTitle(`💰 Số dư người chơi: **${targetPlayer}**`)
+        .setTitle(`${emeraldEmoji} Số dư người chơi: **${targetPlayer}**`)
         .setColor('#2b2d31')
         .setThumbnail(`https://minotar.net/helm/${targetPlayer}/128.png`)
-        .setDescription(`💵 **SỐ DƯ:** ${balanceText}`)
+        .setDescription(`${emeraldEmoji} **SỐ DƯ:** ${cleanVal}\n\n\u200B`)
         .setTimestamp()
         .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
 

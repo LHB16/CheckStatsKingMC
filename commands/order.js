@@ -50,9 +50,8 @@ module.exports = {
 
       const formattedLines = orders.map((order, index) => {
         const priceText = order.price || 'N/A';
-        const qtyText = order.quantity ? ` | SL: **${order.quantity}**` : '';
-        const buyerText = order.buyer ? ` | Người mua: **${order.buyer}**` : '';
-        return `📦 **#${index + 1}** | Giá: **${priceText}**${qtyText}${buyerText}`;
+        const buyerText = order.buyer ? ` | **${order.buyer}**` : '';
+        return `📦 **#${index + 1}** | Giá: **${priceText}**${buyerText}`;
       });
 
       let descriptionText = formattedLines.join('\n');

@@ -50,8 +50,7 @@ module.exports = {
 
       const formattedLines = items.map((item, index) => {
         const priceText = item.price || 'N/A';
-        const sellerText = item.seller ? ` | Người bán: **${item.seller}**` : '';
-        return `📦 **#${index + 1}** | Giá: **${priceText}**${sellerText}`;
+        return `📦 **#${index + 1}** | Giá: **${priceText}**`;
       });
 
       let descriptionText = formattedLines.join('\n');
