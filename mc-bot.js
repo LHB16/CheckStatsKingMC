@@ -347,6 +347,37 @@ class PersistentBot extends EventEmitter {
         let world = 'N/A';
         let playerName = this.targetPlayer;
 
+        // Helper bóc tách tên World từ câu chữ bất kỳ
+        const parseWorldFromText = (text) => {
+          if (!text) return null;
+          const clean = cleanMinecraftText(text).trim();
+          if (!clean) return null;
+
+          // Mẫu 1: Dạng "WORLD world_the_end" hoặc "WORLD world" hoặc "WORLD: nether"
+          const m1 = clean.match(/WORLD[:\s]+([a-zA-Z0-9_\-]+)/i);
+          if (m1 && m1[1]) {
+            let res = m1[1].trim();
+            if (res.startsWith('_')) res = 'world' + res;
+            return res;
+          }
+
+          // Mẫu 2: Dạng chứa từ "world"
+          const lower = clean.toLowerCase();
+          if (lower.includes('world')) {
+            const idx = lower.indexOf('world');
+            if (idx !== -1) {
+              let after = clean.substring(idx + 5).replace(/^[:\s\-=]+/, '').trim();
+              if (after) {
+                let first = after.split(/\s+/)[0];
+                if (first.startsWith('_')) first = 'world' + first;
+                return first;
+              }
+              return 'world';
+            }
+          }
+          return null;
+        };
+
         if (foundHeadItem) {
           const fullText = foundHeadItem.displayName + ' ' + foundHeadItem.lore.join(' ');
 
@@ -356,23 +387,37 @@ class PersistentBot extends EventEmitter {
           }
 
           for (const line of [foundHeadItem.displayName, ...foundHeadItem.lore]) {
-            const cleanLine = cleanMinecraftText(line).trim();
-            const lower = cleanLine.toLowerCase();
-            if (lower.includes('world')) {
-              const lineWithoutEmoji = cleanLine.replace(/^[^a-zA-Z0-9]+/, '').trim();
-              if (lineWithoutEmoji.toLowerCase().startsWith('world')) {
-                const extractedWorld = lineWithoutEmoji.replace(/^WORLD[:\s]*/i, '').trim();
-                if (extractedWorld) {
-                  world = extractedWorld;
-                  break;
-                }
-              }
+            const w = parseWorldFromText(line);
+            if (w) {
+              world = w;
+              break;
             }
           }
 
           if (foundHeadItem.displayName) {
             let cleanName = cleanMinecraftText(foundHeadItem.displayName).replace(/\s*\(\d+\s*ms\).*/i, '').trim();
             if (cleanName) playerName = cleanName;
+          }
+        }
+
+        // Fallback: Quét toàn bộ GUI nếu world vẫn là N/A
+        if (world === 'N/A') {
+          for (let i = 0; i < maxSlots; i++) {
+            const item = window.slots[i];
+            if (!item) continue;
+            let displayName = item.displayName || '';
+            if (item.customName) displayName = item.customName;
+            displayName = parseMinecraftJSON(displayName);
+            let loreArray = item.customLore ? item.customLore.map(l => parseMinecraftJSON(l)) : extractLoreFromNbt(item.nbt);
+
+            for (const line of [displayName, ...loreArray]) {
+              const w = parseWorldFromText(line);
+              if (w) {
+                world = w;
+                break;
+              }
+            }
+            if (world !== 'N/A') break;
           }
         }
 
