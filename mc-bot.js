@@ -357,14 +357,11 @@ class PersistentBot extends EventEmitter {
 
           for (const line of [foundHeadItem.displayName, ...foundHeadItem.lore]) {
             const cleanLine = cleanMinecraftText(line).trim();
-            const worldMatch = cleanLine.match(/WORLD\s+([a-zA-Z0-9_\-]+)/i);
-            if (worldMatch) {
-              world = worldMatch[1];
-              break;
-            } else if (cleanLine.toLowerCase().includes('world')) {
-              const parts = cleanLine.split(/world/i);
-              if (parts.length > 1) {
-                world = parts[1].replace(/[:\s]+/, '').trim().split(' ')[0] || world;
+            if (cleanLine.toLowerCase().includes('world')) {
+              const worldMatch = cleanLine.match(/WORLD[:\s]+([a-zA-Z0-9_\-]+)/i);
+              if (worldMatch && worldMatch[1]) {
+                world = worldMatch[1];
+                break;
               }
             }
           }

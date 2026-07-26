@@ -27,15 +27,17 @@ module.exports = {
 
       if (result.online) {
         // Người chơi đang ONLINE
+        const descriptionLines = [
+          `👤 **TÊN NGƯỜI CHƠI:** ${result.player || targetPlayer}`,
+          `📶 **PING:** ${result.ping || 'N/A'}`,
+          `🌐 **THẾ GIỚI:** ${result.world || 'N/A'}`
+        ].join('\n');
+
         const embed = new EmbedBuilder()
-          .setTitle(`🟢 Người chơi **${targetPlayer}** đang Online!`)
-          .setColor('#22c55e')
+          .setTitle(`🟢 Trạng thái người chơi: **${targetPlayer}**`)
+          .setColor('#2b2d31')
           .setThumbnail(`https://minotar.net/helm/${targetPlayer}/128.png`)
-          .addFields(
-            { name: '👤 Tên người chơi', value: `\`${result.player || targetPlayer}\``, inline: true },
-            { name: '📶 Ping', value: `\`${result.ping || 'N/A'}\``, inline: true },
-            { name: '🌐 Thế giới (World)', value: `\`${result.world || 'N/A'}\``, inline: true }
-          )
+          .setDescription(`${descriptionLines}\n\n\u200B`)
           .setTimestamp()
           .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
 
@@ -46,9 +48,9 @@ module.exports = {
 
         const embed = new EmbedBuilder()
           .setTitle(`🔴 Trạng thái người chơi: **${targetPlayer}**`)
-          .setColor('#ef4444')
+          .setColor('#2b2d31')
           .setThumbnail(`https://minotar.net/helm/${targetPlayer}/128.png`)
-          .setDescription(`⚠️ **${serverMessage}**`)
+          .setDescription(`⚠️ **${serverMessage}**\n\n\u200B`)
           .setTimestamp()
           .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
 
