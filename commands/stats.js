@@ -59,7 +59,7 @@ module.exports = {
 
           const valueText = cleanLoreLines.join(', ');
           if (valueText) {
-            formattedItems.push(`${emoji} **${(item.displayName || label).toUpperCase()}** | ${valueText}`);
+            formattedItems.push(`${emoji} **${(item.displayName || label).toUpperCase()}** | \`${valueText}\``);
           }
         });
 

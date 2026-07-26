@@ -26,10 +26,9 @@ module.exports = {
       const result = await queueDispatcher.enqueueTask('online', targetPlayer, BOT_CHECK_TIMEOUT);
 
       if (result.online) {
-        // Người chơi đang ONLINE
+        // Người chơi đang ONLINE (bỏ thanh màu bên trái theo yêu cầu)
         const embed = new EmbedBuilder()
           .setTitle(`🟢 Người chơi **${targetPlayer}** đang Online!`)
-          .setColor('#22c55e')
           .setThumbnail(`https://minotar.net/helm/${targetPlayer}/128.png`)
           .addFields(
             { name: '📶 Ping', value: `\`${result.ping || 'N/A'}\``, inline: true },
@@ -45,7 +44,6 @@ module.exports = {
 
         const embed = new EmbedBuilder()
           .setTitle(`🔴 Trạng thái người chơi: **${targetPlayer}**`)
-          .setColor('#ef4444')
           .setThumbnail(`https://minotar.net/helm/${targetPlayer}/128.png`)
           .setDescription(`⚠️ **${serverMessage}**`)
           .setTimestamp()
