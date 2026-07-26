@@ -107,6 +107,8 @@ const server = http.createServer((req, res) => {
           result = await localMcBot.getOrder(player, timeoutMs || 15000);
         } else if (action === 'ah') {
           result = await localMcBot.getAh(player, timeoutMs || 15000);
+        } else if (action === 'online') {
+          result = await localMcBot.getOnline(player, timeoutMs || 15000);
         } else {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           return res.end(JSON.stringify({ success: false, error: 'Hành động không hợp lệ' }));

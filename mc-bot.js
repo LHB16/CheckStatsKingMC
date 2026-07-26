@@ -297,6 +297,100 @@ class PersistentBot extends EventEmitter {
       const title = parseMinecraftJSON(window.title || '');
       console.log(`[MC-Bot] GUI Mở: "${title}" (Action: ${this.currentAction}), Đang trích xuất dữ liệu...`);
 
+      if (this.currentAction === 'online') {
+        let foundHeadItem = null;
+        const maxSlots = Math.min(window.inventoryStart || 45, window.slots.length);
+
+        for (let i = 0; i < maxSlots; i++) {
+          const item = window.slots[i];
+          if (!item) continue;
+
+          let displayName = item.displayName || '';
+          if (item.customName) displayName = item.customName;
+          displayName = parseMinecraftJSON(displayName);
+
+          let loreArray = [];
+          if (item.customLore) {
+            loreArray = item.customLore.map(l => parseMinecraftJSON(l));
+          } else {
+            loreArray = extractLoreFromNbt(item.nbt);
+          }
+
+          const itemStr = (item.name || '') + ' ' + displayName + ' ' + loreArray.join(' ');
+          if (item.name.includes('head') || item.name.includes('skull') || itemStr.toLowerCase().includes('world') || itemStr.includes('ms)')) {
+            foundHeadItem = {
+              displayName,
+              lore: loreArray
+            };
+            break;
+          }
+        }
+
+        if (!foundHeadItem) {
+          for (let i = 0; i < maxSlots; i++) {
+            const item = window.slots[i];
+            if (!item) continue;
+            let displayName = item.displayName || '';
+            if (item.customName) displayName = item.customName;
+            displayName = parseMinecraftJSON(displayName);
+            let loreArray = item.customLore ? item.customLore.map(l => parseMinecraftJSON(l)) : extractLoreFromNbt(item.nbt);
+            
+            const fullText = (displayName + ' ' + loreArray.join(' ')).toLowerCase();
+            if (fullText.includes('world')) {
+              foundHeadItem = { displayName, lore: loreArray };
+              break;
+            }
+          }
+        }
+
+        let ping = 'N/A';
+        let world = 'N/A';
+        let playerName = this.targetPlayer;
+
+        if (foundHeadItem) {
+          const fullText = foundHeadItem.displayName + ' ' + foundHeadItem.lore.join(' ');
+
+          const pingMatch = fullText.match(/(\d+\s*ms)/i);
+          if (pingMatch) {
+            ping = pingMatch[1];
+          }
+
+          for (const line of [foundHeadItem.displayName, ...foundHeadItem.lore]) {
+            const cleanLine = cleanMinecraftText(line).trim();
+            const worldMatch = cleanLine.match(/WORLD\s+([a-zA-Z0-9_\-]+)/i);
+            if (worldMatch) {
+              world = worldMatch[1];
+              break;
+            } else if (cleanLine.toLowerCase().includes('world')) {
+              const parts = cleanLine.split(/world/i);
+              if (parts.length > 1) {
+                world = parts[1].replace(/[:\s]+/, '').trim().split(' ')[0] || world;
+              }
+            }
+          }
+
+          if (foundHeadItem.displayName) {
+            let cleanName = cleanMinecraftText(foundHeadItem.displayName).replace(/\s*\(\d+\s*ms\).*/i, '').trim();
+            if (cleanName) playerName = cleanName;
+          }
+        }
+
+        if (this.statsPromiseResolve) {
+          this.statsPromiseResolve({
+            online: true,
+            player: playerName,
+            ping: ping,
+            world: world
+          });
+
+          if (this.bot && this.isBotOnline) {
+            this.bot.closeWindow(window);
+          }
+          this.cleanupStatsState();
+        }
+        return;
+      }
+
       if (this.currentAction === 'order') {
         // Trích xuất đơn hàng từ GUI 6x9 (Chỉ lấy trong phạm vi top 5x9: slot 0 tới 44)
         const orders = [];
@@ -725,11 +819,76 @@ class PersistentBot extends EventEmitter {
     });
   }
 
+  getOnline(player, timeoutMs = 15000) {
+    return new Promise((resolve, reject) => {
+      if (!this.bot || !this.isBotOnline || !this.isReady) {
+        return reject(new Error('Bot Minecraft hiện đang đăng nhập hoặc khởi chạy AFK, chưa sẵn sàng nhận lệnh. Vui lòng thử lại sau.'));
+      }
+
+      if (this.targetPlayer) {
+        return reject(new Error('Bot đang trong quá trình xử lý một yêu cầu khác.'));
+      }
+
+      this.targetPlayer = player;
+      this.currentAction = 'online';
+      this.statsPromiseResolve = resolve;
+      this.statsPromiseReject = reject;
+
+      const onMessage = (message, messagePosition, jsonMsg) => {
+        const cleanMsg = cleanMinecraftText(message).trim();
+        const lowerMsg = cleanMsg.toLowerCase();
+
+        if (
+          lowerMsg.includes('đã offline') ||
+          lowerMsg.includes('da offline') ||
+          lowerMsg.includes('offline') ||
+          lowerMsg.includes('nhập sai tên') ||
+          lowerMsg.includes('nhap sai ten')
+        ) {
+          if (cleanMsg.includes('<') && cleanMsg.includes('>')) return;
+
+          if (this.onOnlineMessageListener) {
+            this.bot.removeListener('messagestr', this.onOnlineMessageListener);
+            this.onOnlineMessageListener = null;
+          }
+
+          this.cleanupStatsState();
+          resolve({
+            online: false,
+            message: cleanMsg
+          });
+        }
+      };
+
+      this.onOnlineMessageListener = onMessage;
+      this.bot.on('messagestr', onMessage);
+
+      console.log(`[MC-Bot] Yêu cầu kiểm tra online: /tpa ${player}`);
+      this.bot.chat(`/tpa ${player}`);
+
+      this.statsTimeout = setTimeout(() => {
+        if (this.onOnlineMessageListener) {
+          this.bot.removeListener('messagestr', this.onOnlineMessageListener);
+          this.onOnlineMessageListener = null;
+        }
+
+        if (this.statsPromiseReject) {
+          this.statsPromiseReject(new Error('Timeout! Không nhận được phản hồi kiểm tra Online sau ' + (timeoutMs / 1000) + ' giây.'));
+          this.cleanupStatsState();
+        }
+      }, timeoutMs);
+    });
+  }
+
   cleanupStatsState() {
     this.targetPlayer = null;
     this.currentAction = null;
     this.statsPromiseResolve = null;
     this.statsPromiseReject = null;
+    if (this.onOnlineMessageListener && this.bot) {
+      this.bot.removeListener('messagestr', this.onOnlineMessageListener);
+      this.onOnlineMessageListener = null;
+    }
     if (this.statsTimeout) {
       clearTimeout(this.statsTimeout);
       this.statsTimeout = null;

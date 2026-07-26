@@ -81,6 +81,8 @@ class QueueDispatcher {
           result = await this.localBot.getOrder(task.player, task.timeoutMs);
         } else if (task.action === 'ah') {
           result = await this.localBot.getAh(task.player, task.timeoutMs);
+        } else if (task.action === 'online') {
+          result = await this.localBot.getOnline(task.player, task.timeoutMs);
         }
       } else {
         result = await this.executeRemoteWorker(availableWorker.url, task.action, task.player, task.timeoutMs);

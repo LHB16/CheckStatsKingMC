@@ -100,7 +100,7 @@ async function handleReportButtons(interaction, client) {
       const admin = await client.users.fetch(ADMIN_ID);
       if (admin) {
         const timeString = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
-        const typeName = type === 'stats' ? 'Lấy Stats (Chỉ số)' : (type === 'bal' ? 'Lấy Balance (Số dư)' : (type === 'order' ? 'Lấy Đơn hàng (Order)' : (type === 'ah' ? 'Lấy Chợ đấu giá (AH)' : 'Không rõ')));
+        const typeName = type === 'stats' ? 'Lấy Stats (Chỉ số)' : (type === 'bal' ? 'Lấy Balance (Số dư)' : (type === 'order' ? 'Lấy Đơn hàng (Order)' : (type === 'ah' ? 'Lấy Chợ đấu giá (AH)' : (type === 'online' ? 'Kiểm tra Online' : 'Không rõ'))));
         
         const key = `${type}_${targetPlayer.toLowerCase()}`;
         const errorInfo = errorStore.get(key);
