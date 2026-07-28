@@ -56,7 +56,7 @@ function getItemIconUrl(id) {
  * @param {string} type - Loại lệnh ('order' hoặc 'ah')
  * @returns {Promise<Buffer>}
  */
-async function renderTableImage(title, itemQuery, items, type = 'order', requesterName = 'KingMC') {
+async function renderTableImage(title, itemQuery, items, type = 'order') {
   let templateContent = '';
   try {
     templateContent = fs.readFileSync(TEMPLATE_PATH, 'utf8');
@@ -67,7 +67,6 @@ async function renderTableImage(title, itemQuery, items, type = 'order', request
 
   const iconUrl = getItemIconUrl(itemQuery);
   const displayName = formatItemDisplayName(itemQuery);
-  const playerHeadUrl = `https://mc-heads.net/head/${encodeURIComponent(requesterName)}/3d`;
 
   const rowsHtml = items.map((item, index) => {
     const price = item.price || 'N/A';
@@ -88,8 +87,6 @@ async function renderTableImage(title, itemQuery, items, type = 'order', request
   const compiledHtml = templateContent
     .replace('{{TITLE}}', title)
     .replace('{{HEADER_ICON}}', iconUrl)
-    .replace('{{PLAYER_HEAD_URL}}', playerHeadUrl)
-    .replace('{{REQUESTER}}', requesterName)
     .replace('{{ROWS}}', rowsHtml);
 
   const browser = await getBrowser();
