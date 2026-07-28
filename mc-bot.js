@@ -5,7 +5,6 @@
 
 const mineflayer = require('mineflayer');
 const EventEmitter = require('events');
-const { debugEmitter } = require('./debug/debug-server');
 
 // Hàm loại bỏ mã màu Minecraft (§a, §b, v.v.)
 function cleanMinecraftText(text) {
@@ -169,82 +168,6 @@ class PersistentBot extends EventEmitter {
     this.statsTimeout = null;
     this.targetPlayer = null;
     this.currentAction = null; // 'stats' | 'bal' | 'order'
-
-    // Timer cho debug panel (vị trí, túi đồ, info chung)
-    this.debugInterval = setInterval(() => this.emitDebugInfo(), 2000);
-
-    // Lắng nghe các action từ debug panel
-    debugEmitter.on('client_action', (actionData) => {
-      if (!this.bot || !this.isBotOnline) return;
-      try {
-        if (actionData.type === 'chat') {
-          console.log(`[MC-Bot] Nhận lệnh chat từ Debug Panel: ${actionData.message}`);
-          this.bot.chat(actionData.message);
-        } else if (actionData.type === 'clickGui') {
-          console.log(`[MC-Bot] Nhận lệnh click GUI từ Debug Panel: slot ${actionData.slot}`);
-          if (this.bot.currentWindow) {
-            this.bot.clickWindow(actionData.slot, actionData.mouseButton || 0, actionData.mode || 0);
-          }
-        } else if (actionData.type === 'closeGui') {
-          console.log(`[MC-Bot] Nhận lệnh đóng GUI từ Debug Panel`);
-          if (this.bot.currentWindow) {
-             this.bot.closeWindow(this.bot.currentWindow);
-          }
-        }
-      } catch (e) {
-        console.error('[MC-Bot] Error executing debug action:', e.message);
-      }
-    });
-  }
-
-  emitDebugInfo() {
-    if (!this.bot || !this.isBotOnline) return;
-    
-    // Position
-    const pos = this.bot.entity ? this.bot.entity.position : { x: 0, y: 0, z: 0 };
-    const ping = this.bot.player ? this.bot.player.ping : 0;
-    debugEmitter.emit('position', {
-       x: pos.x, y: pos.y, z: pos.z, 
-       world: 'N/A', ping: ping
-    });
-
-    // Inventory (36 ô chính)
-    if (this.bot.inventory) {
-      const invSlots = [];
-      const items = this.bot.inventory.items();
-      for (const item of items) {
-        let dn = item.displayName || '';
-        if (item.customName) dn = item.customName;
-        dn = parseMinecraftJSON(dn);
-        
-        let lore = [];
-        if (item.customLore) lore = item.customLore.map(l => parseMinecraftJSON(l));
-        else lore = extractLoreFromNbt(item.nbt);
-
-        invSlots.push({
-           slot: item.slot,
-           name: item.name,
-           displayName: dn,
-           count: item.count,
-           lore: lore
-        });
-      }
-      debugEmitter.emit('inventory', { slots: invSlots });
-    }
-
-    // Status / Server Info
-    debugEmitter.emit('serverInfo', {
-       serverUsed: `${this.hosts[this.currentHostIndex]}:${this.port}`,
-       isReady: this.isReady,
-       isBusy: !this.isReady || !!this.targetPlayer,
-       currentAction: this.currentAction
-    });
-    
-    debugEmitter.emit('status', {
-      connected: true,
-      host: this.hosts[this.currentHostIndex],
-      username: this.credentials.username
-    });
   }
 
   connect() {
@@ -254,7 +177,6 @@ class PersistentBot extends EventEmitter {
 
     const host = this.hosts[this.currentHostIndex];
     console.log(`[MC-Bot] Đang kết nối tới ${host}:${this.port}...`);
-    debugEmitter.emit('status', { connected: false, host, username: this.credentials.username });
 
     const options = {
       host: host,
@@ -323,8 +245,6 @@ class PersistentBot extends EventEmitter {
       const msgText = jsonMsg.toString();
       const cleanMsg = cleanMinecraftText(msgText);
       const lowerMsg = cleanMsg.toLowerCase();
-      
-      debugEmitter.emit('chat', { text: cleanMsg, isJson: true });
       
       // Kiểm tra xem có tin nhắn báo bị ban hay không
       if (lowerMsg.includes('ban') || lowerMsg.includes('banned') || lowerMsg.includes('bị cấm') || lowerMsg.includes('bi cam') || lowerMsg.includes('bị ban') || lowerMsg.includes('bi ban')) {
@@ -414,22 +334,6 @@ class PersistentBot extends EventEmitter {
     this.bot.on('windowOpen', (window) => {
       const title = parseMinecraftJSON(window.title || '');
       
-      // Phát sự kiện debug GUI
-      const debugSlots = [];
-      const maxSlots = Math.min(window.inventoryStart || 54, window.slots.length);
-      for (let i = 0; i < maxSlots; i++) {
-        const item = window.slots[i];
-        if (item) {
-          let dn = item.displayName || '';
-          if (item.customName) dn = item.customName;
-          dn = parseMinecraftJSON(dn);
-          debugSlots.push({ slot: i, name: item.name, displayName: dn, count: item.count });
-        } else {
-           debugSlots.push(null);
-        }
-      }
-      debugEmitter.emit('gui', { title: title, action: this.currentAction, slots: debugSlots });
-
       if (!this.targetPlayer) return;
 
       console.log(`[MC-Bot] GUI Mở: "${title}" (Action: ${this.currentAction}), Đang trích xuất dữ liệu...`);

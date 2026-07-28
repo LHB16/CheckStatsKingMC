@@ -13,7 +13,6 @@ const PersistentBot = require('./mc-bot');
 const QueueDispatcher = require('./queue-dispatcher');
 const CommandHandler = require('./handlers/commandHandler');
 const { handleReportButtons, sendBanAlert } = require('./helpers/reportHelper');
-const { startDebugServer } = require('./debug/debug-server');
 
 // Cấu hình từ .env
 const BOT_ROLE = (process.env.BOT_ROLE || 'standalone').toLowerCase();
@@ -148,9 +147,6 @@ server.listen(PORT, () => {
   console.log(`[HTTP-Server] Đang lắng nghe trên cổng ${PORT} (${BOT_ROLE.toUpperCase()}).`);
 });
 
-// Khởi động server cho Live Debug Panel
-startDebugServer();
-
 // 3. Khởi tạo Discord Client & Queue Dispatcher (Nếu ở chế độ 'master' hoặc 'standalone')
 if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   const queueDispatcher = new QueueDispatcher();
@@ -161,9 +157,7 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   const client = new Client({
     intents: [
       GatewayIntentBits.Guilds,
-      GatewayIntentBits.GuildMessages,
-      GatewayIntentBits.DirectMessages,
-      GatewayIntentBits.MessageContent
+      GatewayIntentBits.GuildMessages
     ],
     partials: ['CHANNEL']
   });
