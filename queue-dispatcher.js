@@ -187,6 +187,11 @@ class QueueDispatcher {
         reject(new Error(`Remote Worker ${baseUrl} bị Timeout!`));
       });
 
+      req.write(postData);
+      req.end();
+    });
+  }
+
   // Lấy trạng thái của toàn bộ Workers (Local + Remote)
   async getAllWorkersStatus() {
     const list = [];
