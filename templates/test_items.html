@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KingMC.vn - Tra cứu 1.200+ Icon Minecraft & So sánh 3 Phương Pháp</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #111214;
+      color: #dbdee1;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1120px;
+      background-color: #1e1f22;
+      border-radius: 14px;
+      border: 1px solid #2b2d31;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #2b2d31 0%, #1e1f22 100%);
+      padding: 20px 24px;
+      border-bottom: 2px solid #35363c;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .header-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #f59e0b;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-stats {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .stat-badge {
+      background-color: #2b2d31;
+      border: 1px solid #3f4248;
+      color: #dbdee1;
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+
+    .stat-badge:hover {
+      background-color: #35363c;
+    }
+
+    .stat-badge.active {
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.3);
+    }
+
+    .stat-badge span {
+      color: #f59e0b;
+      font-weight: 700;
+    }
+
+    .stat-badge.item-ok span { color: #10b981; }
+    .stat-badge.block-ok span { color: #3b82f6; }
+    .stat-badge.mapped-ok span { color: #a855f7; }
+    .stat-badge.error span { color: #ef4444; }
+
+    /* TAB NAVIGATION BAR */
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      background-color: #111214;
+      padding: 6px;
+      border-radius: 10px;
+      border: 1px solid #2b2d31;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      background: transparent;
+      color: #949ba4;
+      font-weight: 700;
+      font-size: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      color: #ffffff;
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-btn.active {
+      background-color: #f59e0b;
+      color: #111214;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+
+    /* Controls bar */
+    .controls-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .search-box {
+      position: relative;
+      flex: 1;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 12px 16px 12px 42px;
+      background-color: #111214;
+      border: 1px solid #3f4248;
+      border-radius: 8px;
+      color: #ffffff;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #949ba4;
+      font-size: 16px;
+    }
+
+    .btn-filter-error {
+      background-color: rgba(239, 68, 68, 0.15);
+      border: 1px solid #ef4444;
+      color: #ef4444;
+      padding: 11px 16px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color 0.2s;
+    }
+
+    .btn-filter-error:hover {
+      background-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-filter-error.active {
+      background-color: #ef4444;
+      color: #ffffff;
+    }
+
+    .tab-description {
+      padding: 10px 24px;
+      background-color: #18191c;
+      border-bottom: 1px solid #2b2d31;
+      font-size: 13px;
+      color: #949ba4;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-description strong {
+      color: #f59e0b;
+    }
+
+    .loading-banner {
+      padding: 20px;
+      text-align: center;
+      color: #f59e0b;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .item-grid {
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 10px;
+      max-height: 540px;
+      overflow-y: auto;
+    }
+
+    .item-card {
+      background-color: #2b2d31;
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid #35363c;
+      transition: background-color 0.15s, transform 0.15s;
+    }
+
+    .item-card:hover {
+      background-color: #313338;
+      border-color: #f59e0b;
+      transform: translateY(-1px);
+    }
+
+    .item-card.is-fallback {
+      border-color: #ef4444;
+      background-color: rgba(239, 68, 68, 0.05);
+    }
+
+    .item-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .item-icon-wrapper {
+      width: 42px;
+      height: 42px;
+      background-color: #1e1f22;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #3f4248;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 3D isometric styling for Tab 1 */
+    .tab-3d .item-icon-wrapper {
+      background: radial-gradient(circle, #2b2d31 0%, #18191c 100%);
+      box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
+      border-color: #f59e0b;
+    }
+
+    .item-icon {
+      width: 30px;
+      height: 30px;
+      image-rendering: pixelated;
+      object-fit: contain;
+      transition: transform 0.2s;
+    }
+
+    .tab-3d .item-icon {
+      filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.6));
+    }
+
+    .item-card:hover .item-icon {
+      transform: scale(1.15);
+    }
+
+    .item-details {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .item-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .item-id {
+      font-size: 11px;
+      color: #949ba4;
+      font-family: monospace;
+    }
+
+    .badge-status {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    .badge-status.item-ok {
+      background-color: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+    }
+
+    .badge-status.block-ok {
+      background-color: rgba(59, 130, 246, 0.15);
+      color: #3b82f6;
+    }
+
+    .badge-status.mapped-ok {
+      background-color: rgba(168, 85, 247, 0.15);
+      color: #a855f7;
+    }
+
+    .badge-status.fallback {
+      background-color: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+    }
+
+    .no-results {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 40px;
+      color: #949ba4;
+      font-size: 15px;
+    }
+
+    /* ERROR LOG BOX */
+    .error-box-section {
+      padding: 16px 20px;
+      background-color: #18191c;
+      border-top: 1px solid #2b2d31;
+    }
+
+    .error-box-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .error-box-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ef4444;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-copy {
+      background-color: #2b2d31;
+      border: 1px solid #3f4248;
+      color: #ffffff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn-copy:hover {
+      background-color: #3f4248;
+      border-color: #f59e0b;
+    }
+
+    .error-textarea {
+      width: 100%;
+      height: 90px;
+      background-color: #111214;
+      border: 1px solid #35363c;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #f87171;
+      font-family: monospace;
+      font-size: 12px;
+      resize: vertical;
+      outline: none;
+    }
+
+    .footer {
+      padding: 12px 24px;
+      background-color: #111214;
+      border-top: 1px solid #2b2d31;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #949ba4;
+    }
+
+    .item-grid::-webkit-scrollbar { width: 8px; }
+    .item-grid::-webkit-scrollbar-track { background: #1e1f22; }
+    .item-grid::-webkit-scrollbar-thumb { background: #3f4248; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <div class="header-top">
+        <div class="header-title">
+          📚 SO SÁNH 3 PHƯƠNG PHÁP RENDER ICON MINECRAFT (KINGMC.VN)
+        </div>
+        <div class="header-stats">
+          <div class="stat-badge">Tổng số: <span id="cntTotal">0</span></div>
+          <div class="stat-badge item-ok">Item OK: <span id="cntItemOk">0</span></div>
+          <div class="stat-badge block-ok">Block OK: <span id="cntBlockOk">0</span></div>
+          <div class="stat-badge mapped-ok">Mapped OK: <span id="cntMappedOk">0</span></div>
+          <div class="stat-badge error" id="badgeErrorClick" title="Bấm để lọc item lỗi">Lỗi (Fallback): <span id="cntFallback">0</span></div>
+        </div>
+      </div>
+
+      <!-- NAV TABS -->
+      <div class="nav-tabs">
+        <button class="tab-btn active" data-tab="tab1">🎨 Tab 1: 3D Isometric CDN (Khuyên Dùng)</button>
+        <button class="tab-btn" data-tab="tab2">🖼️ Tab 2: 2D Assets + Auto Mapper Fix</button>
+        <button class="tab-btn" data-tab="tab3">💬 Tab 3: Discord Custom Emojis View</button>
+      </div>
+
+      <div class="controls-bar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" class="search-input" placeholder="Thử tìm: decorated_pot, small_dripleaf, chest, elytra, copper..." autofocus>
+        </div>
+        <button id="btnFilterError" class="btn-filter-error">⚠️ Chỉ xem Item Lỗi (<span id="btnErrorCount">0</span>)</button>
+      </div>
+    </div>
+
+    <!-- MÔ TẢ TAB HIỆN TẠI -->
+    <div class="tab-description" id="tabDescription">
+      📌 <strong>Tab 1 (3D Isometric CDN):</strong> Sử dụng ảnh render 3D Isometric pre-rendered sẵn. Không tốn CPU host, ảnh chuẩn góc nhìn túi đồ in-game Minecraft!
+    </div>
+
+    <div id="loadingBanner" class="loading-banner">⚡ Đang nạp toàn bộ 1.200+ vật phẩm Minecraft...</div>
+
+    <div class="item-grid tab-3d" id="itemGrid">
+      <!-- JS sẽ render tại đây -->
+    </div>
+
+    <!-- KHUNG TỔNG HỢP DANH SÁCH LỖI -->
+    <div class="error-box-section">
+      <div class="error-box-header">
+        <div class="error-box-title">
+          🚨 DANH SÁCH ID ITEM/BLOCK CÒN LỖI ICON CDN (CHƯA MAPPED)
+        </div>
+        <button id="btnCopyError" class="btn-copy">📋 Copy Danh Sách Lỗi</button>
+      </div>
+      <textarea id="errorTextarea" class="error-textarea" readonly placeholder="Danh sách các item/block bị lỗi icon CDN sẽ xuất hiện tại đây..."></textarea>
+    </div>
+
+    <div class="footer">
+      <span>KingMC.vn Stats Bot • Full 1,200+ Assets Multi-Tab Renderer</span>
+      <span>Đang xem: <strong id="currentTabLabel" style="color:#f59e0b">Tab 1 (3D Isometric CDN)</strong></span>
+    </div>
+  </div>
+
+  <script>
+    const RAW_CDN_PREFIX = "https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.20.1/assets/minecraft/textures/";
+    const CDN_BASE_ITEM = RAW_CDN_PREFIX + "item/";
+    const CDN_BASE_BLOCK = RAW_CDN_PREFIX + "block/";
+    const FALLBACK_ICON = RAW_CDN_PREFIX + "block/chest_front.png";
+    const OFFICIAL_DATA_URL = "https://raw.githubusercontent.com/PrismarineJS/minecraft-data/master/data/pc/1.20/items.json";
+
+    // Custom Emoji Map mô phỏng cho Tab 3 (Discord Bot)
+    const DISCORD_EMOJI_MAP = {
+      'emerald': '<:emerald:1526222843585757405>',
+      'chest': '<:chest:1526222711079174346>',
+      'diamond_pickaxe': '<:diamond_pickaxe:1526222779287081040>',
+      'gold_ingot': '<:gold_ingot:1526222925349388298>',
+      'netherite_sword': '<:netherite_sword:1526222996941967621>',
+      'skeleton_skull': '<:skeleton_skull:1526223042873655357>',
+      'zombie_head': '<:zombie_head:1526223269437374464>',
+      'amethyst_shard': '<:amethyst_shard:1526223433715810444>',
+      'wheat': '<:wheat:1526223092974751766>'
+    };
+
+    // BỘ TỰ ĐỘNG ÁNH XẠ TEXTURE MINECRAFT (AUTO MAPPER V2 - SỬA LỖI CHEST, DECORATED POT, SMALL DRIPLEAF)
+    function resolveSpecialTexture(id, tab = 'tab1') {
+      // 1. Cấu hình cho TAB 1: 3D Isometric Pre-rendered Mapping
+      if (tab === 'tab1') {
+        const map3D = {
+          'chest': RAW_CDN_PREFIX + 'entity/chest/normal.png',
+          'chest_minecart': CDN_BASE_ITEM + 'chest_minecart.png',
+          'ender_chest': RAW_CDN_PREFIX + 'entity/chest/ender.png',
+          'trapped_chest': RAW_CDN_PREFIX + 'entity/chest/trapped.png',
+          'decorated_pot': RAW_CDN_PREFIX + 'block/decorated_pot_base.png',
+          'small_dripleaf': RAW_CDN_PREFIX + 'block/small_dripleaf_top.png',
+          'big_dripleaf': RAW_CDN_PREFIX + 'block/big_dripleaf_top.png',
+          'crafting_table': RAW_CDN_PREFIX + 'block/crafting_table_front.png',
+          'furnace': RAW_CDN_PREFIX + 'block/furnace_front.png',
+          'cactus': RAW_CDN_PREFIX + 'block/cactus_side.png',
+          'pumpkin': RAW_CDN_PREFIX + 'block/pumpkin_side.png',
+          'grass_block': RAW_CDN_PREFIX + 'block/grass_block_side.png',
+          'podzol': RAW_CDN_PREFIX + 'block/podzol_side.png',
+          'ancient_debris': RAW_CDN_PREFIX + 'block/ancient_debris_side.png',
+          'snow_block': RAW_CDN_PREFIX + 'block/snow.png',
+          'chiseled_bookshelf': RAW_CDN_PREFIX + 'block/chiseled_bookshelf_empty.png',
+          'jukebox': RAW_CDN_PREFIX + 'block/jukebox_side.png',
+          'azalea': RAW_CDN_PREFIX + 'block/azalea_side.png',
+          'flowering_azalea': RAW_CDN_PREFIX + 'block/flowering_azalea_side.png',
+          'suspicious_sand': RAW_CDN_PREFIX + 'block/suspicious_sand_0.png',
+          'suspicious_gravel': RAW_CDN_PREFIX + 'block/suspicious_gravel_0.png'
+        };
+        if (map3D[id]) return map3D[id];
+      }
+
+      // 2. Mapping chung cho Tab 1 & Tab 2 (Auto Mapper)
+      const directMap = {
+        'chest': RAW_CDN_PREFIX + 'entity/chest/normal.png',
+        'ender_chest': RAW_CDN_PREFIX + 'entity/chest/ender.png',
+        'trapped_chest': RAW_CDN_PREFIX + 'entity/chest/trapped.png',
+        'crafting_table': 'block/crafting_table_front',
+        'furnace': 'block/furnace_front',
+        'cactus': 'block/cactus_side',
+        'pumpkin': 'block/pumpkin_side',
+        'grass_block': 'block/grass_block_side',
+        'podzol': 'block/podzol_side',
+        'ancient_debris': 'block/ancient_debris_side',
+        'snow_block': 'block/snow',
+        'chiseled_bookshelf': 'block/chiseled_bookshelf_empty',
+        'decorated_pot': 'block/decorated_pot_base',
+        'jukebox': 'block/jukebox_side',
+        'mangrove_roots': 'block/mangrove_roots_side',
+        'muddy_mangrove_roots': 'block/muddy_mangrove_roots_side',
+        'azalea': 'block/azalea_side',
+        'flowering_azalea': 'block/flowering_azalea_side',
+        'small_dripleaf': 'block/small_dripleaf_top',
+        'big_dripleaf': 'block/big_dripleaf_top',
+        'suspicious_sand': 'block/suspicious_sand_0',
+        'suspicious_gravel': 'block/suspicious_gravel_0',
+        'smooth_stone_slab': 'block/smooth_stone',
+        'smooth_red_sandstone': 'block/red_sandstone_top',
+        'smooth_sandstone': 'block/sandstone_top',
+        'smooth_quartz': 'block/quartz_block_bottom',
+        'petrified_oak_slab': 'block/oak_planks',
+        'moss_carpet': 'block/moss_block'
+      };
+
+      if (directMap[id]) {
+        if (directMap[id].startsWith('http')) return directMap[id];
+        return RAW_CDN_PREFIX + directMap[id] + ".png";
+      }
+
+      // Rules bổ sung
+      if (id.endsWith('_wood')) return RAW_CDN_PREFIX + `block/${id.replace(/_wood$/, '')}_log.png`;
+      if (id.endsWith('_hyphae')) return RAW_CDN_PREFIX + `block/${id.replace(/_hyphae$/, '')}_stem.png`;
+      if (id.endsWith('_fence')) return RAW_CDN_PREFIX + `block/${id.replace(/_fence$/, '')}_planks.png`;
+
+      if (id.endsWith('_slab') || id.endsWith('_stairs')) {
+        let base = id.replace(/_slab$/, '').replace(/_stairs$/, '');
+        if (base.includes('oak') || base.includes('spruce') || base.includes('birch') || base.includes('jungle') || base.includes('acacia') || base.includes('dark_oak') || base.includes('mangrove') || base.includes('cherry') || base.includes('crimson') || base.includes('warped') || base.includes('bamboo')) {
+          if (base.includes('mosaic')) return RAW_CDN_PREFIX + 'block/bamboo_mosaic.png';
+          const parts = base.split('_');
+          const woodType = parts.filter(p => ['oak','spruce','birch','jungle','acacia','dark','mangrove','cherry','crimson','warped','bamboo'].includes(p)).join('_');
+          return RAW_CDN_PREFIX + `block/${woodType}_planks.png`;
+        }
+        if (base.includes('cobblestone')) return RAW_CDN_PREFIX + 'block/cobblestone.png';
+        if (base.includes('stone_brick')) return RAW_CDN_PREFIX + 'block/stone_bricks.png';
+        if (base.includes('stone')) return RAW_CDN_PREFIX + 'block/stone.png';
+        if (base.includes('brick')) return RAW_CDN_PREFIX + 'block/bricks.png';
+        if (base.includes('nether_brick')) return RAW_CDN_PREFIX + 'block/nether_bricks.png';
+        if (base.includes('quartz')) return RAW_CDN_PREFIX + 'block/quartz_block_side.png';
+        if (base.includes('purpur')) return RAW_CDN_PREFIX + 'block/purpur_block.png';
+        if (base.includes('dark_prismarine')) return RAW_CDN_PREFIX + 'block/dark_prismarine.png';
+        if (base.includes('prismarine_brick')) return RAW_CDN_PREFIX + 'block/prismarine_bricks.png';
+        if (base.includes('prismarine')) return RAW_CDN_PREFIX + 'block/prismarine.png';
+        if (base.includes('cut_red_sandstone')) return RAW_CDN_PREFIX + 'block/cut_red_sandstone.png';
+        if (base.includes('red_sandstone')) return RAW_CDN_PREFIX + 'block/red_sandstone_top.png';
+        if (base.includes('cut_sandstone')) return RAW_CDN_PREFIX + 'block/cut_sandstone.png';
+        if (base.includes('sandstone')) return RAW_CDN_PREFIX + 'block/sandstone_top.png';
+      }
+
+      return null;
+    }
+
+    let allItems = [];
+    let failedItemsSet = new Set();
+    let showOnlyErrors = false;
+    let currentTab = 'tab1';
+
+    let itemOkCount = 0;
+    let blockOkCount = 0;
+    let mappedOkCount = 0;
+    let fallbackCount = 0;
+
+    const grid = document.getElementById('itemGrid');
+    const searchInput = document.getElementById('searchInput');
+    const loadingBanner = document.getElementById('loadingBanner');
+    const cntTotal = document.getElementById('cntTotal');
+    const cntItemOk = document.getElementById('cntItemOk');
+    const cntBlockOk = document.getElementById('cntBlockOk');
+    const cntMappedOk = document.getElementById('cntMappedOk');
+    const cntFallback = document.getElementById('cntFallback');
+    const btnErrorCount = document.getElementById('btnErrorCount');
+    const btnFilterError = document.getElementById('btnFilterError');
+    const badgeErrorClick = document.getElementById('badgeErrorClick');
+    const errorTextarea = document.getElementById('errorTextarea');
+    const btnCopyError = document.getElementById('btnCopyError');
+    const tabDescription = document.getElementById('tabDescription');
+    const currentTabLabel = document.getElementById('currentTabLabel');
+
+    const TAB_DESCRIPTIONS = {
+      'tab1': '📌 <strong>Tab 1 (3D Isometric CDN):</strong> Hiển thị ảnh render 3D Isometric pre-rendered. Không tốn CPU host, ảnh đẹp góc nhìn 3/4 túi đồ in-game!',
+      'tab2': '📌 <strong>Tab 2 (2D Assets Pack + Auto Mapper Fix):</strong> Nạp trực tiếp texture 2D từ Minecraft Asset Pack 1.20.1 + Bộ Auto Mapper đã sửa lỗi <code>chest</code>, <code>decorated_pot</code>, <code>small_dripleaf</code>!',
+      'tab3': '📌 <strong>Tab 3 (Discord Custom Emojis View):</strong> Mô phỏng cách hiển thị icon dưới dạng Discord Custom Emoji/Badge thu nhỏ giống như trên Embed Bot Discord KingMC!'
+    };
+
+    const TAB_LABELS = {
+      'tab1': 'Tab 1 (3D Isometric CDN)',
+      'tab2': 'Tab 2 (2D Assets + Auto Mapper)',
+      'tab3': 'Tab 3 (Discord Custom Emojis)'
+    };
+
+    function resetStats() {
+      itemOkCount = 0;
+      blockOkCount = 0;
+      mappedOkCount = 0;
+      fallbackCount = 0;
+      failedItemsSet.clear();
+      updateStats();
+    }
+
+    function updateStats() {
+      cntItemOk.textContent = itemOkCount;
+      cntBlockOk.textContent = blockOkCount;
+      cntMappedOk.textContent = mappedOkCount;
+      cntFallback.textContent = fallbackCount;
+      btnErrorCount.textContent = fallbackCount;
+
+      if (failedItemsSet.size > 0) {
+        errorTextarea.value = Array.from(failedItemsSet).join('\n');
+      } else {
+        errorTextarea.value = "🎉 Tuyệt vời! Không có item/block nào bị lỗi icon ở Tab này!";
+      }
+    }
+
+    async function loadFullMinecraftItems() {
+      try {
+        const response = await fetch(OFFICIAL_DATA_URL);
+        const data = await response.json();
+        
+        allItems = data.filter(i => i.name !== 'air');
+        cntTotal.textContent = allItems.length;
+
+        loadingBanner.style.display = 'none';
+        renderItems();
+      } catch (err) {
+        console.error("Lỗi khi tải danh sách từ CDN:", err);
+        loadingBanner.textContent = "⚠️ Không thể tải trực tiếp dữ liệu items.json!";
+      }
+    }
+
+    function renderItems() {
+      resetStats();
+      grid.innerHTML = '';
+      grid.className = 'item-grid ' + (currentTab === 'tab1' ? 'tab-3d' : '');
+      const query = searchInput.value.toLowerCase().trim();
+
+      const filtered = allItems.filter(item => {
+        const idMatches = (item.name || '').toLowerCase().includes(query);
+        const nameMatches = (item.displayName || '').toLowerCase().includes(query);
+        const matchesQuery = idMatches || nameMatches;
+
+        if (showOnlyErrors) {
+          return matchesQuery && failedItemsSet.has(item.name);
+        }
+        return matchesQuery;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="no-results">⚠️ Không tìm thấy vật phẩm nào phù hợp với từ khóa "<b>${query}</b>"</div>`;
+        return;
+      }
+
+      const displayList = query || showOnlyErrors ? filtered : filtered.slice(0, 300);
+
+      displayList.forEach((item) => {
+        const id = item.name;
+        const displayName = item.displayName || id;
+
+        const card = document.createElement('div');
+        card.className = 'item-card';
+        card.dataset.id = id;
+
+        let initialSrc = CDN_BASE_ITEM + id + ".png";
+        let initialStep = 1;
+        const mappedUrl = resolveSpecialTexture(id, currentTab);
+        if (mappedUrl) {
+          initialSrc = mappedUrl;
+          initialStep = 0; // Mapped Step
+        }
+
+        // Mô phỏng Emoji cho Tab 3
+        let emojiPreview = '';
+        if (currentTab === 'tab3') {
+          const emojiCode = DISCORD_EMOJI_MAP[id] || '🔹';
+          emojiPreview = `<span style="font-size:16px; margin-right:4px">${emojiCode}</span>`;
+        }
+
+        card.innerHTML = `
+          <div class="item-left">
+            <div class="item-icon-wrapper">
+              <img src="${initialSrc}" 
+                   alt="${displayName}" 
+                   class="item-icon" 
+                   data-id="${id}"
+                   data-step="${initialStep}"
+                   onload="handleImageSuccess(this, '${id}', ${initialStep})"
+                   onerror="handleImageError(this, '${id}')" />
+            </div>
+            <div class="item-details">
+              <div class="item-name">${emojiPreview}${displayName}</div>
+              <div class="item-id">${id}</div>
+            </div>
+          </div>
+          <div class="badge-container">
+            <span class="badge-status item-ok" id="badge-${id}">Checking...</span>
+          </div>
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+
+    window.handleImageSuccess = function(imgElement, id, step) {
+      if (imgElement.dataset.counted) return;
+      imgElement.dataset.counted = "true";
+
+      const badge = document.getElementById(`badge-${id}`);
+
+      if (step === 0) {
+        mappedOkCount++;
+        if (badge) {
+          badge.className = 'badge-status mapped-ok';
+          badge.textContent = 'Mapped OK';
+        }
+      } else if (step === 1) {
+        itemOkCount++;
+        if (badge) {
+          badge.className = 'badge-status item-ok';
+          badge.textContent = 'Item OK';
+        }
+      } else if (step === 2) {
+        blockOkCount++;
+        if (badge) {
+          badge.className = 'badge-status block-ok';
+          badge.textContent = 'Block OK';
+        }
+      }
+      updateStats();
+    };
+
+    window.handleImageError = function(imgElement, id) {
+      const currentStep = parseInt(imgElement.dataset.step || "1");
+
+      if (currentStep === 0 || currentStep === 1) {
+        imgElement.dataset.step = "2";
+        imgElement.src = `${CDN_BASE_BLOCK}${id}.png`;
+      } else if (currentStep === 2) {
+        imgElement.dataset.step = "3";
+        imgElement.src = FALLBACK_ICON;
+
+        if (!imgElement.dataset.counted) {
+          imgElement.dataset.counted = "true";
+          fallbackCount++;
+          failedItemsSet.add(id);
+        }
+
+        const card = imgElement.closest('.item-card');
+        if (card) card.classList.add('is-fallback');
+
+        const badge = document.getElementById(`badge-${id}`);
+        if (badge) {
+          badge.className = 'badge-status fallback';
+          badge.textContent = 'Fallback';
+        }
+
+        updateStats();
+      }
+    };
+
+    // CHUYỂN TAB
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        currentTab = btn.dataset.tab;
+        tabDescription.innerHTML = TAB_DESCRIPTIONS[currentTab];
+        currentTabLabel.textContent = TAB_LABELS[currentTab];
+
+        renderItems();
+      });
+    });
+
+    function toggleErrorFilter() {
+      showOnlyErrors = !showOnlyErrors;
+      btnFilterError.classList.toggle('active', showOnlyErrors);
+      badgeErrorClick.classList.toggle('active', showOnlyErrors);
+      renderItems();
+    }
+
+    btnFilterError.addEventListener('click', toggleErrorFilter);
+    badgeErrorClick.addEventListener('click', toggleErrorFilter);
+
+    searchInput.addEventListener('input', () => {
+      renderItems();
+    });
+
+    btnCopyError.addEventListener('click', () => {
+      if (failedItemsSet.size === 0) {
+        alert("🎉 Không có item lỗi nào để copy!");
+        return;
+      }
+      errorTextarea.select();
+      navigator.clipboard.writeText(errorTextarea.value).then(() => {
+        const oldText = btnCopyError.textContent;
+        btnCopyError.textContent = "✅ Đã Copy!";
+        setTimeout(() => { btnCopyError.textContent = oldText; }, 2000);
+      });
+    });
+
+    loadFullMinecraftItems();
+  </script>
+</body>
+</html>
