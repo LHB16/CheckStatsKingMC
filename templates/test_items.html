@@ -266,23 +266,18 @@
       overflow: hidden;
     }
 
-    /* 3D isometric styling for Tab 1 */
+    /* Tab 1: Clean high-res pre-rendered isometric icon styling */
     .tab-3d .item-icon-wrapper {
-      background: radial-gradient(circle, #2b2d31 0%, #18191c 100%);
-      box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
+      background: radial-gradient(circle, #313338 0%, #111214 100%);
       border-color: #f59e0b;
     }
 
     .item-icon {
-      width: 30px;
-      height: 30px;
+      width: 32px;
+      height: 32px;
       image-rendering: pixelated;
       object-fit: contain;
-      transition: transform 0.2s;
-    }
-
-    .tab-3d .item-icon {
-      filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.6));
+      transition: transform 0.15s ease-out;
     }
 
     .item-card:hover .item-icon {
@@ -431,7 +426,7 @@
 
       <!-- NAV TABS -->
       <div class="nav-tabs">
-        <button class="tab-btn active" data-tab="tab1">🎨 Tab 1: 3D Isometric CDN (Khuyên Dùng)</button>
+        <button class="tab-btn active" data-tab="tab1">🎨 Tab 1: 3D Pre-rendered Inventory Icons (Gốc MC)</button>
         <button class="tab-btn" data-tab="tab2">🖼️ Tab 2: 2D Assets + Auto Mapper Fix</button>
         <button class="tab-btn" data-tab="tab3">💬 Tab 3: Discord Custom Emojis View</button>
       </div>
@@ -447,7 +442,7 @@
 
     <!-- MÔ TẢ TAB HIỆN TẠI -->
     <div class="tab-description" id="tabDescription">
-      📌 <strong>Tab 1 (3D Isometric CDN):</strong> Sử dụng ảnh render 3D Isometric pre-rendered sẵn. Không tốn CPU host, ảnh chuẩn góc nhìn túi đồ in-game Minecraft!
+      📌 <strong>Tab 1 (3D Pre-rendered Inventory Icons):</strong> Sử dụng bộ icon render 3D Isometric gốc (Owen1212055/mc-assets) được dựng chính xác từ Block Model JSON, Texture Atlas, UV Mapping & Ambient Occlusion!
     </div>
 
     <div id="loadingBanner" class="loading-banner">⚡ Đang nạp toàn bộ 1.200+ vật phẩm Minecraft...</div>
@@ -469,11 +464,15 @@
 
     <div class="footer">
       <span>KingMC.vn Stats Bot • Full 1,200+ Assets Multi-Tab Renderer</span>
-      <span>Đang xem: <strong id="currentTabLabel" style="color:#f59e0b">Tab 1 (3D Isometric CDN)</strong></span>
+      <span>Đang xem: <strong id="currentTabLabel" style="color:#f59e0b">Tab 1 (3D Pre-rendered Inventory Icons)</strong></span>
     </div>
   </div>
 
   <script>
+    // CDN 1: Bộ 3D Inventory Renders pre-rendered chuẩn từ Block Model JSON (256x256)
+    const CDN_PRE_RENDER_3D = "https://raw.githubusercontent.com/Owen1212055/mc-assets/main/item-assets/";
+    
+    // CDN 2 & 3: Minecraft Asset Pack 1.20.1 Textures
     const RAW_CDN_PREFIX = "https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.20.1/assets/minecraft/textures/";
     const CDN_BASE_ITEM = RAW_CDN_PREFIX + "item/";
     const CDN_BASE_BLOCK = RAW_CDN_PREFIX + "block/";
@@ -495,35 +494,6 @@
 
     // BỘ TỰ ĐỘNG ÁNH XẠ TEXTURE MINECRAFT (AUTO MAPPER V2 - SỬA LỖI CHEST, DECORATED POT, SMALL DRIPLEAF)
     function resolveSpecialTexture(id, tab = 'tab1') {
-      // 1. Cấu hình cho TAB 1: 3D Isometric Pre-rendered Mapping
-      if (tab === 'tab1') {
-        const map3D = {
-          'chest': RAW_CDN_PREFIX + 'entity/chest/normal.png',
-          'chest_minecart': CDN_BASE_ITEM + 'chest_minecart.png',
-          'ender_chest': RAW_CDN_PREFIX + 'entity/chest/ender.png',
-          'trapped_chest': RAW_CDN_PREFIX + 'entity/chest/trapped.png',
-          'decorated_pot': RAW_CDN_PREFIX + 'block/decorated_pot_base.png',
-          'small_dripleaf': RAW_CDN_PREFIX + 'block/small_dripleaf_top.png',
-          'big_dripleaf': RAW_CDN_PREFIX + 'block/big_dripleaf_top.png',
-          'crafting_table': RAW_CDN_PREFIX + 'block/crafting_table_front.png',
-          'furnace': RAW_CDN_PREFIX + 'block/furnace_front.png',
-          'cactus': RAW_CDN_PREFIX + 'block/cactus_side.png',
-          'pumpkin': RAW_CDN_PREFIX + 'block/pumpkin_side.png',
-          'grass_block': RAW_CDN_PREFIX + 'block/grass_block_side.png',
-          'podzol': RAW_CDN_PREFIX + 'block/podzol_side.png',
-          'ancient_debris': RAW_CDN_PREFIX + 'block/ancient_debris_side.png',
-          'snow_block': RAW_CDN_PREFIX + 'block/snow.png',
-          'chiseled_bookshelf': RAW_CDN_PREFIX + 'block/chiseled_bookshelf_empty.png',
-          'jukebox': RAW_CDN_PREFIX + 'block/jukebox_side.png',
-          'azalea': RAW_CDN_PREFIX + 'block/azalea_side.png',
-          'flowering_azalea': RAW_CDN_PREFIX + 'block/flowering_azalea_side.png',
-          'suspicious_sand': RAW_CDN_PREFIX + 'block/suspicious_sand_0.png',
-          'suspicious_gravel': RAW_CDN_PREFIX + 'block/suspicious_gravel_0.png'
-        };
-        if (map3D[id]) return map3D[id];
-      }
-
-      // 2. Mapping chung cho Tab 1 & Tab 2 (Auto Mapper)
       const directMap = {
         'chest': RAW_CDN_PREFIX + 'entity/chest/normal.png',
         'ender_chest': RAW_CDN_PREFIX + 'entity/chest/ender.png',
@@ -560,7 +530,7 @@
         return RAW_CDN_PREFIX + directMap[id] + ".png";
       }
 
-      // Rules bổ sung
+      // Rules bổ sung cho Block Slabs / Stairs / Fences
       if (id.endsWith('_wood')) return RAW_CDN_PREFIX + `block/${id.replace(/_wood$/, '')}_log.png`;
       if (id.endsWith('_hyphae')) return RAW_CDN_PREFIX + `block/${id.replace(/_hyphae$/, '')}_stem.png`;
       if (id.endsWith('_fence')) return RAW_CDN_PREFIX + `block/${id.replace(/_fence$/, '')}_planks.png`;
@@ -619,13 +589,13 @@
     const currentTabLabel = document.getElementById('currentTabLabel');
 
     const TAB_DESCRIPTIONS = {
-      'tab1': '📌 <strong>Tab 1 (3D Isometric CDN):</strong> Hiển thị ảnh render 3D Isometric pre-rendered. Không tốn CPU host, ảnh đẹp góc nhìn 3/4 túi đồ in-game!',
+      'tab1': '📌 <strong>Tab 1 (3D Pre-rendered Inventory Icons):</strong> Sử dụng bộ icon render 3D Isometric gốc (Owen1212055/mc-assets) được dựng chính xác từ Block Model JSON, Texture Atlas, UV Mapping & Ambient Occlusion!',
       'tab2': '📌 <strong>Tab 2 (2D Assets Pack + Auto Mapper Fix):</strong> Nạp trực tiếp texture 2D từ Minecraft Asset Pack 1.20.1 + Bộ Auto Mapper đã sửa lỗi <code>chest</code>, <code>decorated_pot</code>, <code>small_dripleaf</code>!',
       'tab3': '📌 <strong>Tab 3 (Discord Custom Emojis View):</strong> Mô phỏng cách hiển thị icon dưới dạng Discord Custom Emoji/Badge thu nhỏ giống như trên Embed Bot Discord KingMC!'
     };
 
     const TAB_LABELS = {
-      'tab1': 'Tab 1 (3D Isometric CDN)',
+      'tab1': 'Tab 1 (3D Pre-rendered Inventory Icons)',
       'tab2': 'Tab 2 (2D Assets + Auto Mapper)',
       'tab3': 'Tab 3 (Discord Custom Emojis)'
     };
@@ -669,6 +639,20 @@
       }
     }
 
+    function getItemInitialSrc(id) {
+      if (currentTab === 'tab1') {
+        // Tab 1: Ưu tiên bộ render 3D Isometric pre-rendered chính chủ (Owen1212055/mc-assets)
+        return { src: CDN_PRE_RENDER_3D + id.toUpperCase() + ".png", step: 0 };
+      }
+      
+      // Tab 2 & 3: Dùng 2D Assets + Auto Mapper Fix
+      const mappedUrl = resolveSpecialTexture(id, currentTab);
+      if (mappedUrl) {
+        return { src: mappedUrl, step: 0 };
+      }
+      return { src: CDN_BASE_ITEM + id + ".png", step: 1 };
+    }
+
     function renderItems() {
       resetStats();
       grid.innerHTML = '';
@@ -701,13 +685,7 @@
         card.className = 'item-card';
         card.dataset.id = id;
 
-        let initialSrc = CDN_BASE_ITEM + id + ".png";
-        let initialStep = 1;
-        const mappedUrl = resolveSpecialTexture(id, currentTab);
-        if (mappedUrl) {
-          initialSrc = mappedUrl;
-          initialStep = 0; // Mapped Step
-        }
+        const initial = getItemInitialSrc(id);
 
         // Mô phỏng Emoji cho Tab 3
         let emojiPreview = '';
@@ -719,12 +697,12 @@
         card.innerHTML = `
           <div class="item-left">
             <div class="item-icon-wrapper">
-              <img src="${initialSrc}" 
+              <img src="${initial.src}" 
                    alt="${displayName}" 
                    class="item-icon" 
                    data-id="${id}"
-                   data-step="${initialStep}"
-                   onload="handleImageSuccess(this, '${id}', ${initialStep})"
+                   data-step="${initial.step}"
+                   onload="handleImageSuccess(this, '${id}', ${initial.step})"
                    onerror="handleImageError(this, '${id}')" />
             </div>
             <div class="item-details">
@@ -751,7 +729,7 @@
         mappedOkCount++;
         if (badge) {
           badge.className = 'badge-status mapped-ok';
-          badge.textContent = 'Mapped OK';
+          badge.textContent = currentTab === 'tab1' ? '3D Render OK' : 'Mapped OK';
         }
       } else if (step === 1) {
         itemOkCount++;
@@ -766,37 +744,62 @@
           badge.textContent = 'Block OK';
         }
       }
+
       updateStats();
     };
 
     window.handleImageError = function(imgElement, id) {
-      const currentStep = parseInt(imgElement.dataset.step || "1");
+      const currentStep = parseInt(imgElement.dataset.step || "0");
 
-      if (currentStep === 0 || currentStep === 1) {
-        imgElement.dataset.step = "2";
-        imgElement.src = `${CDN_BASE_BLOCK}${id}.png`;
-      } else if (currentStep === 2) {
-        imgElement.dataset.step = "3";
-        imgElement.src = FALLBACK_ICON;
-
-        if (!imgElement.dataset.counted) {
-          imgElement.dataset.counted = "true";
-          fallbackCount++;
-          failedItemsSet.add(id);
+      if (currentTab === 'tab1') {
+        // Tab 1 Fallback sequence:
+        // Step 0 (3D Pre-rendered) -> Step 1 (Auto Mapped 2D) -> Step 2 (Item 2D) -> Step 3 (Block 2D) -> Step 4 (Fallback Icon)
+        if (currentStep === 0) {
+          const mappedUrl = resolveSpecialTexture(id, 'tab1');
+          imgElement.dataset.step = "1";
+          imgElement.src = mappedUrl || `${CDN_BASE_ITEM}${id}.png`;
+        } else if (currentStep === 1) {
+          imgElement.dataset.step = "2";
+          imgElement.src = `${CDN_BASE_ITEM}${id}.png`;
+        } else if (currentStep === 2) {
+          imgElement.dataset.step = "3";
+          imgElement.src = `${CDN_BASE_BLOCK}${id}.png`;
+        } else if (currentStep === 3) {
+          imgElement.dataset.step = "4";
+          imgElement.src = FALLBACK_ICON;
+          markFallback(imgElement, id);
         }
-
-        const card = imgElement.closest('.item-card');
-        if (card) card.classList.add('is-fallback');
-
-        const badge = document.getElementById(`badge-${id}`);
-        if (badge) {
-          badge.className = 'badge-status fallback';
-          badge.textContent = 'Fallback';
+      } else {
+        // Tab 2 & Tab 3 Fallback sequence:
+        if (currentStep === 0 || currentStep === 1) {
+          imgElement.dataset.step = "2";
+          imgElement.src = `${CDN_BASE_BLOCK}${id}.png`;
+        } else if (currentStep === 2) {
+          imgElement.dataset.step = "3";
+          imgElement.src = FALLBACK_ICON;
+          markFallback(imgElement, id);
         }
-
-        updateStats();
       }
     };
+
+    function markFallback(imgElement, id) {
+      if (!imgElement.dataset.counted) {
+        imgElement.dataset.counted = "true";
+        fallbackCount++;
+        failedItemsSet.add(id);
+      }
+
+      const card = imgElement.closest('.item-card');
+      if (card) card.classList.add('is-fallback');
+
+      const badge = document.getElementById(`badge-${id}`);
+      if (badge) {
+        badge.className = 'badge-status fallback';
+        badge.textContent = 'Fallback';
+      }
+
+      updateStats();
+    }
 
     // CHUYỂN TAB
     document.querySelectorAll('.tab-btn').forEach(btn => {

@@ -2,9 +2,11 @@
  * commands/ah.js - Slash Command /ah <item>
  */
 
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } = require('discord.js');
 const { getCustomEmoji } = require('../helpers/utils');
 const { recordError } = require('../helpers/reportHelper');
+const configHelper = require('../helpers/configHelper');
+const { renderTableImage, formatItemDisplayName } = require('../helpers/renderHelper');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -27,12 +29,13 @@ module.exports = {
       const result = await queueDispatcher.enqueueTask('ah', itemQuery, BOT_CHECK_TIMEOUT);
 
       const items = result.items || [];
+      const itemDisplayName = formatItemDisplayName(itemQuery);
 
       // Trường hợp KHÔNG có vật phẩm nào trên AH
       if (items.length === 0) {
         const emptyEmbed = new EmbedBuilder()
-          .setTitle(`📦 Đấu Giá (AH): **${itemQuery}**`)
-          .setDescription(`⚠️ Không có vật phẩm nào trên AH cho **${itemQuery}**.`)
+          .setTitle(`📦 Đấu Giá (AH): **${itemDisplayName}**`)
+          .setDescription(`⚠️ Không có vật phẩm nào trên AH cho **${itemDisplayName}**.`)
           .setColor('#ef4444')
           .setTimestamp()
           .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
@@ -40,8 +43,38 @@ module.exports = {
         return await interaction.editReply({ embeds: [emptyEmbed] });
       }
 
-      // Trường hợp CÓ vật phẩm
+      // Lấy chế độ hiển thị từ configHelper ('text' hoặc 'image')
+      const displayMode = configHelper.getDisplayMode();
       const emoji = getCustomEmoji(itemQuery);
+
+      // CHẾ ĐỘ RENDER ẢNH (Image Mode)
+      if (displayMode === 'image') {
+        try {
+          const imageBuffer = await renderTableImage(
+            `DANH SÁCH AH: ${itemQuery.toUpperCase()}`,
+            itemQuery,
+            items,
+            'ah'
+          );
+
+          const attachment = new AttachmentBuilder(imageBuffer, { name: 'ah_table.png' });
+
+          const embed = new EmbedBuilder()
+            .setTitle(`📦 Danh sách AH: **${itemQuery.toUpperCase()}** ${emoji}`)
+            .setDescription(`📊 Tổng số vật phẩm trên AH: **${items.length}**`)
+            .setImage('attachment://ah_table.png')
+            .setColor('#2b2d31')
+            .setTimestamp()
+            .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
+
+          return await interaction.editReply({ embeds: [embed], files: [attachment] });
+        } catch (renderErr) {
+          console.error('[Discord-Bot] Lỗi render ảnh HTML, tự động chuyển về dạng text:', renderErr.message);
+          // Fallback sang text mode nếu render ảnh có lỗi
+        }
+      }
+
+      // CHẾ ĐỘ VĂN BẢN (Text Mode)
       const embed = new EmbedBuilder()
         .setTitle(`📦 Danh sách AH: **${itemQuery.toUpperCase()}** ${emoji}`)
         .setColor('#2b2d31')
@@ -50,7 +83,8 @@ module.exports = {
 
       const formattedLines = items.map((item, index) => {
         const priceText = item.price || 'N/A';
-        return `📦 **#${index + 1}** | Giá: **${priceText}**`;
+        const sellerText = item.seller ? ` | Người bán: **${item.seller}**` : '';
+        return `📦 **#${index + 1}** **${itemDisplayName}** | Giá: **${priceText}**${sellerText}`;
       });
 
       let descriptionText = formattedLines.join('\n');

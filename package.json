@@ -8,7 +8,8 @@
   },
   "dependencies": {
     "discord.js": "^14.15.3",
+    "dotenv": "^17.4.2",
     "mineflayer": "^4.37.1",
-    "dotenv": "^17.4.2"
+    "puppeteer": "^25.4.0"
   }
 }

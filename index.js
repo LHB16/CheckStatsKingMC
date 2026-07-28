@@ -13,6 +13,7 @@ const PersistentBot = require('./mc-bot');
 const QueueDispatcher = require('./queue-dispatcher');
 const CommandHandler = require('./handlers/commandHandler');
 const { handleReportButtons, sendBanAlert } = require('./helpers/reportHelper');
+const configHelper = require('./helpers/configHelper');
 
 // Cấu hình từ .env
 const BOT_ROLE = (process.env.BOT_ROLE || 'standalone').toLowerCase();
@@ -229,7 +230,19 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
 
     try {
       if (command === 'help') {
-         await message.channel.send('**Danh sách lệnh Admin:**\n- `!status` hoặc `!workers`: Xem danh sách và trạng thái toàn bộ Workers (Local & Remote)\n- `!restart`: Random tên mới và khởi động lại bot ngay lập tức\n- `!toggle off/on [lời nhắn]`: Bật/tắt việc nhận Slash Commands từ user khác.');
+         await message.channel.send('**Danh sách lệnh Admin:**\n- `!status` hoặc `!workers`: Xem danh sách và trạng thái toàn bộ Workers (Local & Remote)\n- `!restart`: Random tên mới và khởi động lại bot ngay lập tức\n- `!mode` hoặc `!render`: Chuyển đổi chế độ hiển thị danh sách (Text / Image)\n- `!toggle off/on [lời nhắn]`: Bật/tắt việc nhận Slash Commands từ user khác.');
+      } else if (command === 'mode' || command === 'render') {
+         const targetMode = args.shift()?.toLowerCase();
+         let newMode;
+         if (targetMode === 'text' || targetMode === 'image') {
+           newMode = configHelper.setDisplayMode(targetMode);
+         } else {
+           newMode = configHelper.toggleDisplayMode();
+         }
+         const modeDesc = newMode === 'image'
+           ? '🖼️ **IMAGE** (Tạo bảng HTML 3D Icon 32x32px đính kèm Embed PNG)'
+           : '📝 **TEXT** (Dòng chữ Embed truyền thống + Tên Item)';
+         await message.channel.send(`✅ Đã chuyển đổi chế độ hiển thị danh sách sang: **${newMode.toUpperCase()}**\n${modeDesc}`);
       } else if (command === 'status' || command === 'workers') {
          const workers = await queueDispatcher.getAllWorkersStatus();
          if (workers.length === 0) {

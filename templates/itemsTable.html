@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #111214;
+      color: #dbdee1;
+      padding: 16px;
+      display: inline-block;
+    }
+
+    .table-container {
+      background-color: #1e1f22;
+      border: 1px solid #2b2d31;
+      border-radius: 12px;
+      padding: 18px 24px;
+      min-width: 540px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #35363c;
+    }
+
+    .header-icon {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #f59e0b;
+      letter-spacing: 0.5px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    th {
+      text-align: left;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: #949ba4;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #35363c;
+    }
+
+    td {
+      padding: 12px 14px;
+      font-size: 14px;
+      border-bottom: 1px solid #2b2d31;
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:nth-child(even) {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .stt {
+      font-weight: 800;
+      color: #f59e0b;
+      width: 48px;
+    }
+
+    .icon-td {
+      width: 52px;
+      text-align: center;
+    }
+
+    .item-icon {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+    }
+
+    .item-name {
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .price {
+      font-weight: 700;
+      color: #10b981;
+    }
+
+    .user {
+      color: #3b82f6;
+      font-weight: 600;
+    }
+
+    .footer {
+      margin-top: 14px;
+      padding-top: 8px;
+      border-top: 1px solid #2b2d31;
+      font-size: 11px;
+      color: #949ba4;
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+  <div class="table-container">
+    <div class="header">
+      <img class="header-icon" src="{{HEADER_ICON}}" />
+      <div class="title">{{TITLE}}</div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Icon</th>
+          <th>Tên Item</th>
+          <th>Giá</th>
+          <th>{{USER_HEADER}}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ROWS}}
+      </tbody>
+    </table>
+    <div class="footer">
+      <span>KingMC.vn Stats Bot</span>
+      <span>3D Render Inventory Assets</span>
+    </div>
+  </div>
+</body>
+</html>

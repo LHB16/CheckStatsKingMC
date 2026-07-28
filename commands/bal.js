@@ -36,7 +36,7 @@ module.exports = {
       const embed = new EmbedBuilder()
         .setTitle(`${emeraldEmoji} Số dư người chơi: **${targetPlayer}**`)
         .setColor('#2b2d31')
-        .setThumbnail(`https://minotar.net/helm/${targetPlayer}/128.png`)
+        .setThumbnail(`https://mc-heads.net/head/${targetPlayer}/3d`)
         .setDescription(`${emeraldEmoji} **SỐ DƯ:** \`${cleanVal}\`\n\n\u200B`)
         .setTimestamp()
         .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });

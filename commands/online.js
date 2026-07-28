@@ -29,7 +29,7 @@ module.exports = {
         // Người chơi đang ONLINE (bỏ thanh màu bên trái theo yêu cầu)
         const embed = new EmbedBuilder()
           .setTitle(`🟢 Người chơi **${targetPlayer}** đang Online!`)
-          .setThumbnail(`https://minotar.net/helm/${targetPlayer}/128.png`)
+          .setThumbnail(`https://mc-heads.net/head/${targetPlayer}/3d`)
           .addFields(
             { name: '📶 Ping', value: `\`${result.ping || 'N/A'}\``, inline: true },
             { name: '🌐 Thế giới', value: `\`${result.world || 'N/A'}\``, inline: true }
@@ -44,7 +44,7 @@ module.exports = {
 
         const embed = new EmbedBuilder()
           .setTitle(`🔴 Trạng thái người chơi: **${targetPlayer}**`)
-          .setThumbnail(`https://minotar.net/helm/${targetPlayer}/128.png`)
+          .setThumbnail(`https://mc-heads.net/head/${targetPlayer}/3d`)
           .setDescription(`⚠️ **${serverMessage}**`)
           .setTimestamp()
           .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
