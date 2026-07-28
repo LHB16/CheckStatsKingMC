@@ -8,7 +8,7 @@
 
 require('dotenv').config();
 const http = require('http');
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, Partials } = require('discord.js');
 const PersistentBot = require('./mc-bot');
 const QueueDispatcher = require('./queue-dispatcher');
 const CommandHandler = require('./handlers/commandHandler');
@@ -20,7 +20,7 @@ const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
 const WORKER_SECRET = process.env.WORKER_SECRET || '';
-const ADMIN_ID = process.env.ADMIN_ID || ''; // Dùng để cấu hình Admin ID chạy lệnh qua DM
+const ADMIN_ID = (process.env.ADMIN_ID || '').trim(); // Dùng để cấu hình Admin ID chạy lệnh qua DM
 
 const MC_USERNAME = process.env.MC_USERNAME || 'StatsChecker';
 const MC_AUTH_TYPE = process.env.MC_AUTH_TYPE || 'offline';
@@ -157,9 +157,11 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   const client = new Client({
     intents: [
       GatewayIntentBits.Guilds,
-      GatewayIntentBits.GuildMessages
+      GatewayIntentBits.GuildMessages,
+      GatewayIntentBits.DirectMessages,
+      GatewayIntentBits.MessageContent
     ],
-    partials: ['CHANNEL']
+    partials: [Partials.Channel, Partials.Message, Partials.User]
   });
 
   if (localMcBot) {
@@ -209,41 +211,55 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   // Lắng nghe lệnh qua DM hoặc Kênh chat (Admin)
   client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
-    if (ADMIN_ID && message.author.id !== ADMIN_ID) return;
+
+    // Log debug để dễ dàng kiểm tra
+    if (message.content.startsWith('!')) {
+      console.log(`[Admin-Debug] Nhận tin nhắn: "${message.content}" từ User ID: ${message.author.id} (Tên: ${message.author.tag}). ADMIN_ID hiện tại trong .env là: "${ADMIN_ID}"`);
+    }
+
+    // Kiểm tra ADMIN_ID nếu đã được cấu hình
+    if (ADMIN_ID && message.author.id !== ADMIN_ID) {
+      console.warn(`[Admin-Debug] Bỏ qua tin nhắn vì User ID (${message.author.id}) không khớp với ADMIN_ID (${ADMIN_ID}).`);
+      return;
+    }
     
     if (!message.content.startsWith('!')) return;
     const args = message.content.slice(1).trim().split(/ +/);
     const command = args.shift().toLowerCase();
 
-    if (command === 'help') {
-       message.reply('**Danh sách lệnh Admin:**\n- `!status` hoặc `!workers`: Xem trạng thái bot\n- `!restart`: Random tên mới và khởi động lại bot ngay lập tức\n- `!toggle off/on [lời nhắn]`: Bật/tắt việc nhận Slash Commands từ user khác.');
-    } else if (command === 'status' || command === 'workers') {
-       if (localMcBot) {
-         message.reply(`**Trạng thái Worker:**\n- Online: ${localMcBot.isBotOnline ? '✅' : '❌'}\n- Tên hiện tại: \`${localMcBot.credentials.username}\`\n- Ready: ${localMcBot.isReady ? '✅' : '❌'}\n- Đang bận: ${localMcBot.targetPlayer ? localMcBot.targetPlayer : 'Không'}`);
-       } else {
-         message.reply('Bot chạy ở chế độ Master (không có local worker).');
-       }
-    } else if (command === 'restart') {
-       if (localMcBot) {
-         const newName = generateRandomUsername(Math.floor(Math.random() * 7) + 8);
-         localMcBot.credentials.username = newName;
-         if (localMcBot.bot) localMcBot.bot.quit('Admin forced restart');
-         else localMcBot.scheduleReconnect();
-         message.reply(`Đã đổi tên worker thành \`${newName}\` và bắt đầu khởi động lại.`);
-       }
-    } else if (command === 'toggle') {
-       const sub = args.shift()?.toLowerCase();
-       if (sub === 'off') {
-          global.isBotMaintenance = true;
-          global.maintenanceMessage = args.join(' ') || 'Hệ thống đang bảo trì, vui lòng quay lại sau.';
-          message.reply(`✅ Đã TẮT nhận lệnh. Lời nhắn: ${global.maintenanceMessage}`);
-       } else if (sub === 'on') {
-          global.isBotMaintenance = false;
-          global.maintenanceMessage = '';
-          message.reply('✅ Đã BẬT nhận lệnh trở lại.');
-       } else {
-          message.reply('Cú pháp: `!toggle on` hoặc `!toggle off [lời nhắn]`');
-       }
+    try {
+      if (command === 'help') {
+         await message.channel.send('**Danh sách lệnh Admin:**\n- `!status` hoặc `!workers`: Xem trạng thái bot\n- `!restart`: Random tên mới và khởi động lại bot ngay lập tức\n- `!toggle off/on [lời nhắn]`: Bật/tắt việc nhận Slash Commands từ user khác.');
+      } else if (command === 'status' || command === 'workers') {
+         if (localMcBot) {
+           await message.channel.send(`**Trạng thái Worker:**\n- Online: ${localMcBot.isBotOnline ? '✅' : '❌'}\n- Tên hiện tại: \`${localMcBot.credentials.username}\`\n- Ready: ${localMcBot.isReady ? '✅' : '❌'}\n- Đang bận: ${localMcBot.targetPlayer ? localMcBot.targetPlayer : 'Không'}`);
+         } else {
+           await message.channel.send('Bot chạy ở chế độ Master (không có local worker).');
+         }
+      } else if (command === 'restart') {
+         if (localMcBot) {
+           const newName = generateRandomUsername(Math.floor(Math.random() * 7) + 8);
+           localMcBot.credentials.username = newName;
+           if (localMcBot.bot) localMcBot.bot.quit('Admin forced restart');
+           else localMcBot.scheduleReconnect();
+           await message.channel.send(`Đã đổi tên worker thành \`${newName}\` và bắt đầu khởi động lại.`);
+         }
+      } else if (command === 'toggle') {
+         const sub = args.shift()?.toLowerCase();
+         if (sub === 'off') {
+            global.isBotMaintenance = true;
+            global.maintenanceMessage = args.join(' ') || 'Hệ thống đang bảo trì, vui lòng quay lại sau.';
+            await message.channel.send(`✅ Đã TẮT nhận lệnh. Lời nhắn: ${global.maintenanceMessage}`);
+         } else if (sub === 'on') {
+            global.isBotMaintenance = false;
+            global.maintenanceMessage = '';
+            await message.channel.send('✅ Đã BẬT nhận lệnh trở lại.');
+         } else {
+            await message.channel.send('Cú pháp: `!toggle on` hoặc `!toggle off [lời nhắn]`');
+         }
+      }
+    } catch (cmdErr) {
+      console.error('[Admin-Debug] Lỗi gửi tin nhắn trả lời:', cmdErr);
     }
   });
 
