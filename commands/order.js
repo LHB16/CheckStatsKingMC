@@ -49,14 +49,25 @@ module.exports = {
 
       // CHẾ ĐỘ RENDER ẢNH (Image Mode)
       if (displayMode === 'image') {
-        try {
-          const imageBuffer = await renderTableImage(
-            `DANH SÁCH ĐƠN HÀNG: ${itemQuery.toUpperCase()}`,
-            itemQuery,
-            orders,
-            'order'
-          );
+        let imageBuffer = null;
+        let lastError = null;
 
+        for (let attempt = 1; attempt <= 2; attempt++) {
+          try {
+            imageBuffer = await renderTableImage(
+              `DANH SÁCH ĐƠN HÀNG: ${itemQuery.toUpperCase()}`,
+              itemQuery,
+              orders,
+              'order'
+            );
+            if (imageBuffer) break;
+          } catch (renderErr) {
+            lastError = renderErr;
+            console.error(`[Discord-Bot] Lần thử ${attempt} render ảnh Order lỗi:`, renderErr.message);
+          }
+        }
+
+        if (imageBuffer) {
           const attachment = new AttachmentBuilder(imageBuffer, { name: 'order_table.png' });
 
           const embed = new EmbedBuilder()
@@ -68,10 +79,8 @@ module.exports = {
             .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
 
           return await interaction.editReply({ embeds: [embed], files: [attachment] });
-        } catch (renderErr) {
-          console.error('[Discord-Bot] Lỗi render ảnh HTML, tự động chuyển về dạng text:', renderErr.message);
-          // Fallback sang text mode nếu render ảnh có lỗi
         }
+        console.error('[Discord-Bot] Render ảnh Order thất bại sau 2 lần thử:', lastError?.message);
       }
 
       // CHẾ ĐỘ VĂN BẢN (Text Mode)

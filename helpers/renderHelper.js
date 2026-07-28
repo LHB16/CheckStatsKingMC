@@ -67,6 +67,7 @@ async function renderTableImage(title, itemQuery, items, type = 'order') {
 
   const iconUrl = getItemIconUrl(itemQuery);
   const displayName = formatItemDisplayName(itemQuery);
+  const SVG_FALLBACK = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='%23f59e0b' stroke-width='2'><path d='M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z'/><path d='m3.3 7 8.7 5 8.7-5'/><path d='M12 22V12'/></svg>";
 
   const rowsHtml = items.map((item, index) => {
     const price = item.price || 'N/A';
@@ -76,7 +77,7 @@ async function renderTableImage(title, itemQuery, items, type = 'order') {
       <tr>
         <td class="stt">#${index + 1}</td>
         <td class="icon-td">
-          <img class="item-icon" src="${iconUrl}" onerror="this.onerror=null; this.src='${RAW_CDN_PREFIX}item/${itemQuery.toLowerCase()}.png';" alt="${itemName}" />
+          <img class="item-icon" src="${iconUrl}" onerror="if(this.dataset.fb){this.src='${SVG_FALLBACK}';}else{this.dataset.fb='1';this.src='${RAW_CDN_PREFIX}item/${itemQuery.toLowerCase()}.png';}" alt="${itemName}" />
         </td>
         <td class="item-name">${itemName}</td>
         <td class="price">${price}</td>
@@ -94,17 +95,24 @@ async function renderTableImage(title, itemQuery, items, type = 'order') {
 
   try {
     await page.setViewport({ width: 640, height: 480, deviceScaleFactor: 2 });
-    await page.setContent(compiledHtml, { waitUntil: 'domcontentloaded', timeout: 5000 });
+    await page.setContent(compiledHtml, { waitUntil: 'load', timeout: 30000 });
 
-    // Đợi tối đa 1.5s cho các icon tải xong hoặc trigger fallback onerror
+    // Đợi tất cả các icon tải xong hoàn toàn hoặc chuyển sang fallback
     await page.evaluate(async () => {
       const images = Array.from(document.querySelectorAll('img'));
       await Promise.all(images.map(img => {
-        if (img.complete) return Promise.resolve();
+        if (img.complete && img.naturalWidth !== 0) return Promise.resolve();
         return new Promise(resolve => {
-          img.onload = resolve;
-          img.onerror = resolve;
-          setTimeout(resolve, 1500);
+          let done = false;
+          const finish = () => {
+            if (!done) {
+              done = true;
+              resolve();
+            }
+          };
+          img.onload = finish;
+          img.onerror = finish;
+          setTimeout(finish, 4000);
         });
       }));
     });
