@@ -94,7 +94,20 @@ async function renderTableImage(title, itemQuery, items, type = 'order') {
 
   try {
     await page.setViewport({ width: 640, height: 480, deviceScaleFactor: 2 });
-    await page.setContent(compiledHtml, { waitUntil: 'networkidle0', timeout: 10000 });
+    await page.setContent(compiledHtml, { waitUntil: 'domcontentloaded', timeout: 5000 });
+
+    // Đợi tối đa 1.5s cho các icon tải xong hoặc trigger fallback onerror
+    await page.evaluate(async () => {
+      const images = Array.from(document.querySelectorAll('img'));
+      await Promise.all(images.map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+          img.onload = resolve;
+          img.onerror = resolve;
+          setTimeout(resolve, 1500);
+        });
+      }));
+    });
 
     const elementHandle = await page.$('.table-container');
     if (!elementHandle) {
