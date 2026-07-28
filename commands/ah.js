@@ -47,6 +47,9 @@ module.exports = {
       const displayMode = configHelper.getDisplayMode();
       const emoji = getCustomEmoji(itemQuery);
 
+      const requesterName = interaction.member?.displayName || interaction.user.username;
+      const head3DUrl = `https://mc-heads.net/head/${encodeURIComponent(requesterName)}/3d`;
+
       // CHẾ ĐỘ RENDER ẢNH (Image Mode)
       if (displayMode === 'image') {
         try {
@@ -54,7 +57,8 @@ module.exports = {
             `DANH SÁCH AH: ${itemQuery.toUpperCase()}`,
             itemQuery,
             items,
-            'ah'
+            'ah',
+            requesterName
           );
 
           const attachment = new AttachmentBuilder(imageBuffer, { name: 'ah_table.png' });
@@ -62,6 +66,7 @@ module.exports = {
           const embed = new EmbedBuilder()
             .setTitle(`📦 Danh sách AH: **${itemQuery.toUpperCase()}** ${emoji}`)
             .setDescription(`📊 Tổng số vật phẩm trên AH: **${items.length}**`)
+            .setThumbnail(head3DUrl)
             .setImage('attachment://ah_table.png')
             .setColor('#2b2d31')
             .setTimestamp()
@@ -77,14 +82,14 @@ module.exports = {
       // CHẾ ĐỘ VĂN BẢN (Text Mode)
       const embed = new EmbedBuilder()
         .setTitle(`📦 Danh sách AH: **${itemQuery.toUpperCase()}** ${emoji}`)
+        .setThumbnail(head3DUrl)
         .setColor('#2b2d31')
         .setTimestamp()
         .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
 
       const formattedLines = items.map((item, index) => {
         const priceText = item.price || 'N/A';
-        const sellerText = item.seller ? ` | Người bán: **${item.seller}**` : '';
-        return `📦 **#${index + 1}** **${itemDisplayName}** | Giá: **${priceText}**${sellerText}`;
+        return `📦 **#${index + 1}** **${itemDisplayName}** | Giá: **${priceText}**`;
       });
 
       let descriptionText = formattedLines.join('\n');

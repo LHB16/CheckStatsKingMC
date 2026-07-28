@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KingMC.vn - Mẫu Xem Trước Tin Nhắn Ảnh AH & Order (3D Render)</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #0b0c0e;
+      color: #dbdee1;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+      min-height: 100vh;
+    }
+
+    .page-header {
+      text-align: center;
+      max-width: 800px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: #f59e0b;
+      margin-bottom: 8px;
+    }
+
+    .page-desc {
+      font-size: 14px;
+      color: #949ba4;
+    }
+
+    .preview-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 28px;
+      justify-content: center;
+      max-width: 1200px;
+      width: 100%;
+    }
+
+    .preview-card-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .preview-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: #3b82f6;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .table-container {
+      background-color: #1e1f22;
+      border: 1px solid #2b2d31;
+      border-radius: 14px;
+      padding: 20px 24px;
+      min-width: 520px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+      padding-bottom: 14px;
+      border-bottom: 2px solid #35363c;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-icon-wrapper {
+      width: 44px;
+      height: 44px;
+      background: radial-gradient(circle, #313338 0%, #111214 100%);
+      border: 1.5px solid #f59e0b;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+    }
+
+    .header-icon {
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
+    }
+
+    .title-box {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .title {
+      font-size: 17px;
+      font-weight: 800;
+      color: #f59e0b;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      font-size: 11px;
+      color: #949ba4;
+      font-weight: 600;
+    }
+
+    .head-3d-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background-color: rgba(255, 255, 255, 0.04);
+      padding: 4px 10px 4px 6px;
+      border-radius: 20px;
+      border: 1px solid #35363c;
+    }
+
+    .head-3d-img {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    }
+
+    .requester-tag {
+      font-size: 12px;
+      font-weight: 700;
+      color: #3b82f6;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    th {
+      text-align: left;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: #949ba4;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #35363c;
+    }
+
+    td {
+      padding: 12px 14px;
+      font-size: 14px;
+      border-bottom: 1px solid #2b2d31;
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:nth-child(even) {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .stt {
+      font-weight: 800;
+      color: #f59e0b;
+      width: 50px;
+    }
+
+    .icon-td {
+      width: 52px;
+      text-align: center;
+    }
+
+    .item-icon {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+    }
+
+    .item-name {
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .price {
+      font-weight: 700;
+      color: #10b981;
+      text-align: right;
+    }
+
+    th.th-price {
+      text-align: right;
+    }
+
+    .footer {
+      margin-top: 16px;
+      padding-top: 10px;
+      border-top: 1px solid #2b2d31;
+      font-size: 11px;
+      color: #949ba4;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-badge {
+      background-color: rgba(245, 158, 11, 0.1);
+      color: #f59e0b;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <div class="page-title">✨ MẪU XEM TRƯỚC RENDER 3D TIN NHẮN AH & ORDER ✨</div>
+    <div class="page-desc">Giao diện đã tích hợp <strong>Icon 3D Pre-rendered</strong> + <strong>Đầu Player 3D Avatar</strong> và <strong>Loại bỏ hoàn toàn thông tin người mua / người bán</strong>.</div>
+  </div>
+
+  <div class="preview-grid">
+
+    <!-- DEMO 1: AH (ĐẤU GIÁ) -->
+    <div class="preview-card-wrapper">
+      <div class="preview-label">📦 1. Mẫu Lệnh Đấu Giá (/ah elytra)</div>
+      <div class="table-container">
+        <div class="header">
+          <div class="header-left">
+            <div class="header-icon-wrapper">
+              <img class="header-icon" src="https://raw.githubusercontent.com/Owen1212055/mc-assets/main/item-assets/ELYTRA.png" />
+            </div>
+            <div class="title-box">
+              <div class="title">DANH SÁCH AH: ELYTRA</div>
+              <div class="subtitle">KingMC.vn • Tra cứu giá đấu giá</div>
+            </div>
+          </div>
+          <div class="head-3d-wrapper">
+            <img class="head-3d-img" src="https://mc-heads.net/head/BinhLH/3d" alt="Player 3D Head" />
+            <span class="requester-tag">BinhLH</span>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Icon</th>
+              <th>Vật phẩm</th>
+              <th class="th-price">Giá</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="stt">#1</td>
+              <td class="icon-td">
+                <img class="item-icon" src="https://raw.githubusercontent.com/Owen1212055/mc-assets/main/item-assets/ELYTRA.png" alt="Elytra" />
+              </td>
+              <td class="item-name">Elytra</td>
+              <td class="price">$ 610M</td>
+            </tr>
+            <tr>
+              <td class="stt">#2</td>
+              <td class="icon-td">
+                <img class="item-icon" src="https://raw.githubusercontent.com/Owen1212055/mc-assets/main/item-assets/ELYTRA.png" alt="Elytra" />
+              </td>
+              <td class="item-name">Elytra</td>
+              <td class="price">$ 611.9M</td>
+            </tr>
+            <tr>
+              <td class="stt">#3</td>
+              <td class="icon-td">
+                <img class="item-icon" src="https://raw.githubusercontent.com/Owen1212055/mc-assets/main/item-assets/ELYTRA.png" alt="Elytra" />
+              </td>
+              <td class="item-name">Elytra</td>
+              <td class="price">$ 611.9M</td>
+            </tr>
+            <tr>
+              <td class="stt">#4</td>
+              <td class="icon-td">
+                <img class="item-icon" src="https://raw.githubusercontent.com/Owen1212055/mc-assets/main/item-assets/ELYTRA.png" alt="Elytra" />
+              </td>
+              <td class="item-name">Elytra</td>
+              <td class="price">$ 615M</td>
+            </tr>
+            <tr>
+              <td class="stt">#5</td>
+              <td class="icon-td">
+                <img class="item-icon" src="https://raw.githubusercontent.com/Owen1212055/mc-assets/main/item-assets/ELYTRA.png" alt="Elytra" />
+              </td>
+              <td class="item-name">Elytra</td>
+              <td class="price">$ 629M</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="footer">
+          <span>KingMC.vn Stats Bot • Thiết kế bởi BinhLH</span>
+          <span class="footer-badge">3D Render Engine</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEMO 2: ORDER (ĐƠN HÀNG) -->
+    <div class="preview-card-wrapper">
+      <div class="preview-label">📦 2. Mẫu Lệnh Đơn Hàng (/order elytra)</div>
+      <div class="table-container">
+        <div class="header">
+          <div class="header-left">
+            <div class="header-icon-wrapper">
+              <img class="header-icon" src="https://raw.githubusercontent.com/Owen1212055/mc-assets/main/item-assets/ELYTRA.png" />
+            </div>
+            <div class="title-box">
+              <div class="title">DANH SÁCH ĐƠN HÀNG: ELYTRA</div>
+              <div class="subtitle">KingMC.vn • Tra cứu đơn mua</div>
+            </div>
+          </div>
+          <div class="head-3d-wrapper">
+            <img class="head-3d-img" src="https://mc-heads.net/head/BinhLH/3d" alt="Player 3D Head" />
+            <span class="requester-tag">BinhLH</span>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Icon</th>
+              <th>Vật phẩm</th>
+              <th class="th-price">Giá</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="stt">#1</td>
+              <td class="icon-td">
+                <img class="item-icon" src="https://raw.githubusercontent.com/Owen1212055/mc-assets/main/item-assets/ELYTRA.png" alt="Elytra" />
+              </td>
+              <td class="item-name">Elytra</td>
+              <td class="price">$ 602M</td>
+            </tr>
+            <tr>
+              <td class="stt">#2</td>
+              <td class="icon-td">
+                <img class="item-icon" src="https://raw.githubusercontent.com/Owen1212055/mc-assets/main/item-assets/ELYTRA.png" alt="Elytra" />
+              </td>
+              <td class="item-name">Elytra</td>
+              <td class="price">$ 599M</td>
+            </tr>
+            <tr>
+              <td class="stt">#3</td>
+              <td class="icon-td">
+                <img class="item-icon" src="https://raw.githubusercontent.com/Owen1212055/mc-assets/main/item-assets/ELYTRA.png" alt="Elytra" />
+              </td>
+              <td class="item-name">Elytra</td>
+              <td class="price">$ 592.0M</td>
+            </tr>
+            <tr>
+              <td class="stt">#4</td>
+              <td class="icon-td">
+                <img class="item-icon" src="https://raw.githubusercontent.com/Owen1212055/mc-assets/main/item-assets/ELYTRA.png" alt="Elytra" />
+              </td>
+              <td class="item-name">Elytra</td>
+              <td class="price">$ 581M</td>
+            </tr>
+            <tr>
+              <td class="stt">#5</td>
+              <td class="icon-td">
+                <img class="item-icon" src="https://raw.githubusercontent.com/Owen1212055/mc-assets/main/item-assets/ELYTRA.png" alt="Elytra" />
+              </td>
+              <td class="item-name">Elytra</td>
+              <td class="price">$ 420M</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="footer">
+          <span>KingMC.vn Stats Bot • Thiết kế bởi BinhLH</span>
+          <span class="footer-badge">3D Render Engine</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

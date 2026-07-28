@@ -56,7 +56,7 @@ function getItemIconUrl(id) {
  * @param {string} type - Loại lệnh ('order' hoặc 'ah')
  * @returns {Promise<Buffer>}
  */
-async function renderTableImage(title, itemQuery, items, type = 'order') {
+async function renderTableImage(title, itemQuery, items, type = 'order', requesterName = 'KingMC') {
   let templateContent = '';
   try {
     templateContent = fs.readFileSync(TEMPLATE_PATH, 'utf8');
@@ -67,11 +67,10 @@ async function renderTableImage(title, itemQuery, items, type = 'order') {
 
   const iconUrl = getItemIconUrl(itemQuery);
   const displayName = formatItemDisplayName(itemQuery);
-  const userHeader = type === 'order' ? 'Người mua' : 'Người bán';
+  const playerHeadUrl = `https://mc-heads.net/head/${encodeURIComponent(requesterName)}/3d`;
 
   const rowsHtml = items.map((item, index) => {
     const price = item.price || 'N/A';
-    const user = item.buyer || item.seller || 'N/A';
     const itemName = item.displayName || item.name ? formatItemDisplayName(item.name) : displayName;
 
     return `
@@ -82,7 +81,6 @@ async function renderTableImage(title, itemQuery, items, type = 'order') {
         </td>
         <td class="item-name">${itemName}</td>
         <td class="price">${price}</td>
-        <td class="user">${user}</td>
       </tr>
     `;
   }).join('\n');
@@ -90,7 +88,8 @@ async function renderTableImage(title, itemQuery, items, type = 'order') {
   const compiledHtml = templateContent
     .replace('{{TITLE}}', title)
     .replace('{{HEADER_ICON}}', iconUrl)
-    .replace('{{USER_HEADER}}', userHeader)
+    .replace('{{PLAYER_HEAD_URL}}', playerHeadUrl)
+    .replace('{{REQUESTER}}', requesterName)
     .replace('{{ROWS}}', rowsHtml);
 
   const browser = await getBrowser();

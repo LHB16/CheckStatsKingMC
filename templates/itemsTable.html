@@ -20,33 +20,89 @@
     .table-container {
       background-color: #1e1f22;
       border: 1px solid #2b2d31;
-      border-radius: 12px;
-      padding: 18px 24px;
-      min-width: 540px;
+      border-radius: 14px;
+      padding: 20px 24px;
+      min-width: 520px;
       box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
     }
 
     .header {
       display: flex;
       align-items: center;
-      gap: 12px;
+      justify-content: space-between;
+      gap: 16px;
       margin-bottom: 16px;
-      padding-bottom: 12px;
+      padding-bottom: 14px;
       border-bottom: 2px solid #35363c;
     }
 
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-icon-wrapper {
+      width: 44px;
+      height: 44px;
+      background: radial-gradient(circle, #313338 0%, #111214 100%);
+      border: 1.5px solid #f59e0b;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+    }
+
     .header-icon {
-      width: 36px;
-      height: 36px;
+      width: 34px;
+      height: 34px;
       object-fit: contain;
       image-rendering: pixelated;
+      filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
+    }
+
+    .title-box {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
 
     .title {
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 800;
       color: #f59e0b;
       letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      font-size: 11px;
+      color: #949ba4;
+      font-weight: 600;
+    }
+
+    .head-3d-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background-color: rgba(255, 255, 255, 0.04);
+      padding: 4px 10px 4px 6px;
+      border-radius: 20px;
+      border: 1px solid #35363c;
+    }
+
+    .head-3d-img {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    }
+
+    .requester-tag {
+      font-size: 12px;
+      font-weight: 700;
+      color: #3b82f6;
     }
 
     table {
@@ -83,7 +139,7 @@
     .stt {
       font-weight: 800;
       color: #f59e0b;
-      width: 48px;
+      width: 50px;
     }
 
     .icon-td {
@@ -107,38 +163,58 @@
     .price {
       font-weight: 700;
       color: #10b981;
+      text-align: right;
     }
 
-    .user {
-      color: #3b82f6;
-      font-weight: 600;
+    th.th-price {
+      text-align: right;
     }
 
     .footer {
-      margin-top: 14px;
-      padding-top: 8px;
+      margin-top: 16px;
+      padding-top: 10px;
       border-top: 1px solid #2b2d31;
       font-size: 11px;
       color: #949ba4;
       display: flex;
       justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-badge {
+      background-color: rgba(245, 158, 11, 0.1);
+      color: #f59e0b;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 10px;
     }
   </style>
 </head>
 <body>
   <div class="table-container">
     <div class="header">
-      <img class="header-icon" src="{{HEADER_ICON}}" />
-      <div class="title">{{TITLE}}</div>
+      <div class="header-left">
+        <div class="header-icon-wrapper">
+          <img class="header-icon" src="{{HEADER_ICON}}" />
+        </div>
+        <div class="title-box">
+          <div class="title">{{TITLE}}</div>
+          <div class="subtitle">KingMC.vn • Tra cứu giá vật phẩm</div>
+        </div>
+      </div>
+      <div class="head-3d-wrapper">
+        <img class="head-3d-img" src="{{PLAYER_HEAD_URL}}" alt="Player 3D Head" />
+        <span class="requester-tag">{{REQUESTER}}</span>
+      </div>
     </div>
     <table>
       <thead>
         <tr>
           <th>#</th>
           <th>Icon</th>
-          <th>Tên Item</th>
-          <th>Giá</th>
-          <th>{{USER_HEADER}}</th>
+          <th>Vật phẩm</th>
+          <th class="th-price">Giá</th>
         </tr>
       </thead>
       <tbody>
@@ -146,8 +222,8 @@
       </tbody>
     </table>
     <div class="footer">
-      <span>KingMC.vn Stats Bot</span>
-      <span>3D Render Inventory Assets</span>
+      <span>KingMC.vn Stats Bot • Thiết kế bởi BinhLH</span>
+      <span class="footer-badge">3D Render Engine</span>
     </div>
   </div>
 </body>
