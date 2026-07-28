@@ -246,8 +246,14 @@ class PersistentBot extends EventEmitter {
       const cleanMsg = cleanMinecraftText(msgText);
       const lowerMsg = cleanMsg.toLowerCase();
       
+      // Bỏ qua các thông báo hệ thống / nội quy mặc định của KingMC
+      const isSystemNotice = lowerMsg.includes('điều này là bị cấm') || 
+                             lowerMsg.includes('dieu nay la bi cam') || 
+                             lowerMsg.includes('điều này bị cấm') || 
+                             lowerMsg.includes('dieu nay bi cam');
+      
       // Kiểm tra xem có tin nhắn báo bị ban hay không
-      if (lowerMsg.includes('ban') || lowerMsg.includes('banned') || lowerMsg.includes('bị cấm') || lowerMsg.includes('bi cam') || lowerMsg.includes('bị ban') || lowerMsg.includes('bi ban')) {
+      if (!isSystemNotice && (lowerMsg.includes('ban') || lowerMsg.includes('banned') || lowerMsg.includes('bị cấm') || lowerMsg.includes('bi cam') || lowerMsg.includes('bị ban') || lowerMsg.includes('bi ban'))) {
         if (lowerMsg.includes('permanently') || lowerMsg.includes('bị cấm') || lowerMsg.includes('bị ban') || lowerMsg.includes('phạt cấm') || lowerMsg.includes('you are banned')) {
           console.warn(`[MC-Bot] 🚨 ĐÃ PHÁT HIỆN THÔNG BÁO BỊ BAN: ${cleanMsg}`);
           
