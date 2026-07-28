@@ -4,7 +4,8 @@
   "description": "Discord bot to check player stats on KingMC.vn using Mineflayer",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "postinstall": "npx puppeteer browsers install chrome"
   },
   "dependencies": {
     "discord.js": "^14.15.3",

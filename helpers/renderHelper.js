@@ -15,16 +15,25 @@ const FALLBACK_ICON = RAW_CDN_PREFIX + "block/chest_front.png";
 
 async function getBrowser() {
   if (!browserInstance || !browserInstance.isConnected()) {
-    browserInstance = await puppeteer.launch({
+    const launchOptions = {
       headless: true,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-accelerated-2d-canvas',
-        '--disable-gpu'
+        '--disable-gpu',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process'
       ]
-    });
+    };
+
+    if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+      launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+    }
+
+    browserInstance = await puppeteer.launch(launchOptions);
   }
   return browserInstance;
 }
