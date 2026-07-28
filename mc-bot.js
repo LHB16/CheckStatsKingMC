@@ -5,6 +5,7 @@
 
 const mineflayer = require('mineflayer');
 const EventEmitter = require('events');
+const { debugEmitter } = require('./debug/debug-server');
 
 // Hàm loại bỏ mã màu Minecraft (§a, §b, v.v.)
 function cleanMinecraftText(text) {
@@ -135,6 +136,16 @@ function extractLoreFromNbt(nbt) {
   }).filter(Boolean);
 }
 
+// Hàm sinh Username ngẫu nhiên
+function generateRandomUsername(length = 12) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
 class PersistentBot extends EventEmitter {
   constructor(credentials, hosts, port) {
     super();
@@ -158,6 +169,82 @@ class PersistentBot extends EventEmitter {
     this.statsTimeout = null;
     this.targetPlayer = null;
     this.currentAction = null; // 'stats' | 'bal' | 'order'
+
+    // Timer cho debug panel (vị trí, túi đồ, info chung)
+    this.debugInterval = setInterval(() => this.emitDebugInfo(), 2000);
+
+    // Lắng nghe các action từ debug panel
+    debugEmitter.on('client_action', (actionData) => {
+      if (!this.bot || !this.isBotOnline) return;
+      try {
+        if (actionData.type === 'chat') {
+          console.log(`[MC-Bot] Nhận lệnh chat từ Debug Panel: ${actionData.message}`);
+          this.bot.chat(actionData.message);
+        } else if (actionData.type === 'clickGui') {
+          console.log(`[MC-Bot] Nhận lệnh click GUI từ Debug Panel: slot ${actionData.slot}`);
+          if (this.bot.currentWindow) {
+            this.bot.clickWindow(actionData.slot, actionData.mouseButton || 0, actionData.mode || 0);
+          }
+        } else if (actionData.type === 'closeGui') {
+          console.log(`[MC-Bot] Nhận lệnh đóng GUI từ Debug Panel`);
+          if (this.bot.currentWindow) {
+             this.bot.closeWindow(this.bot.currentWindow);
+          }
+        }
+      } catch (e) {
+        console.error('[MC-Bot] Error executing debug action:', e.message);
+      }
+    });
+  }
+
+  emitDebugInfo() {
+    if (!this.bot || !this.isBotOnline) return;
+    
+    // Position
+    const pos = this.bot.entity ? this.bot.entity.position : { x: 0, y: 0, z: 0 };
+    const ping = this.bot.player ? this.bot.player.ping : 0;
+    debugEmitter.emit('position', {
+       x: pos.x, y: pos.y, z: pos.z, 
+       world: 'N/A', ping: ping
+    });
+
+    // Inventory (36 ô chính)
+    if (this.bot.inventory) {
+      const invSlots = [];
+      const items = this.bot.inventory.items();
+      for (const item of items) {
+        let dn = item.displayName || '';
+        if (item.customName) dn = item.customName;
+        dn = parseMinecraftJSON(dn);
+        
+        let lore = [];
+        if (item.customLore) lore = item.customLore.map(l => parseMinecraftJSON(l));
+        else lore = extractLoreFromNbt(item.nbt);
+
+        invSlots.push({
+           slot: item.slot,
+           name: item.name,
+           displayName: dn,
+           count: item.count,
+           lore: lore
+        });
+      }
+      debugEmitter.emit('inventory', { slots: invSlots });
+    }
+
+    // Status / Server Info
+    debugEmitter.emit('serverInfo', {
+       serverUsed: `${this.hosts[this.currentHostIndex]}:${this.port}`,
+       isReady: this.isReady,
+       isBusy: !this.isReady || !!this.targetPlayer,
+       currentAction: this.currentAction
+    });
+    
+    debugEmitter.emit('status', {
+      connected: true,
+      host: this.hosts[this.currentHostIndex],
+      username: this.credentials.username
+    });
   }
 
   connect() {
@@ -167,6 +254,7 @@ class PersistentBot extends EventEmitter {
 
     const host = this.hosts[this.currentHostIndex];
     console.log(`[MC-Bot] Đang kết nối tới ${host}:${this.port}...`);
+    debugEmitter.emit('status', { connected: false, host, username: this.credentials.username });
 
     const options = {
       host: host,
@@ -230,43 +318,75 @@ class PersistentBot extends EventEmitter {
       this.startAfkRoutine();
     });
 
-    // Lắng nghe tin nhắn từ server để tự động đăng nhập & phát hiện bị đá ra lobby / bị ban
+      // Lắng nghe tin nhắn từ server để tự động đăng nhập & phát hiện bị đá ra lobby / bị ban
     this.bot.on('message', (jsonMsg) => {
       const msgText = jsonMsg.toString();
       const cleanMsg = cleanMinecraftText(msgText);
       const lowerMsg = cleanMsg.toLowerCase();
       
+      debugEmitter.emit('chat', { text: cleanMsg, isJson: true });
+      
       // Kiểm tra xem có tin nhắn báo bị ban hay không
       if (lowerMsg.includes('ban') || lowerMsg.includes('banned') || lowerMsg.includes('bị cấm') || lowerMsg.includes('bi cam') || lowerMsg.includes('bị ban') || lowerMsg.includes('bi ban')) {
         if (lowerMsg.includes('permanently') || lowerMsg.includes('bị cấm') || lowerMsg.includes('bị ban') || lowerMsg.includes('phạt cấm') || lowerMsg.includes('you are banned')) {
           console.warn(`[MC-Bot] 🚨 ĐÃ PHÁT HIỆN THÔNG BÁO BỊ BAN: ${cleanMsg}`);
-          this.emit('banDetected', { username: this.credentials.username, reason: cleanMsg });
+          
+          const oldName = this.credentials.username;
+          // Random tên 100% (độ dài ngẫu nhiên từ 8 - 14 ký tự)
+          const newName = generateRandomUsername(Math.floor(Math.random() * 7) + 8);
+          this.credentials.username = newName;
+          
+          this.emit('banDetected', { 
+             oldUsername: oldName,
+             newUsername: newName,
+             password: this.credentials.password,
+             reason: cleanMsg 
+          });
+          
+          if (this.bot) this.bot.quit('Reconnecting due to ban');
         }
       }
 
-      // Kiểm tra từ khóa "kingmc.vn" (Bị đá ra lobby / yêu cầu gõ /dn và click GUI như vừa join)
+      // Kiểm tra từ khóa "kingmc.vn" kết hợp với check toạ độ (Lobby)
       if (lowerMsg.includes('kingmc.vn')) {
-        if (!this.lastAuthTime || Date.now() - this.lastAuthTime > 5000) {
-          this.lastAuthTime = Date.now();
-          console.log(`[MC-Bot] ⚠️ Nhận diện cụm từ "kingmc.vn" (Bot bị đá về lobby). Chuyển bot sang trạng thái BẬN (isReady = false) và gõ /dn...`);
-          
-          this.isReady = false; // Đặt bot ở trạng thái bận
-          this.clearAllTimers(); // Hủy các timer AFK cũ
+        const pos = this.bot.entity ? this.bot.entity.position : null;
+        let isLobby = false;
 
-          if (this.statsPromiseReject) {
-            this.statsPromiseReject(new Error('Bot bị chuyển về lobby (yêu cầu đăng nhập lại).'));
-            this.cleanupStatsState();
-          }
+        if (pos) {
+           const dx = Math.abs(pos.x - 0.50);
+           const dy = Math.abs(pos.y - 41.00);
+           const dz = Math.abs(pos.z - 0.80);
+           // Sai số khoảng 2 block
+           if (dx <= 2.0 && dy <= 2.0 && dz <= 2.0) {
+              isLobby = true;
+           } else {
+              console.log(`[MC-Bot] Có chữ kingmc.vn nhưng Toạ độ không phải Lobby (${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}, ${pos.z.toFixed(1)}). Bỏ qua...`);
+           }
+        }
 
-          if (this.credentials.password) {
-            this.bot.chat(`/dn ${this.credentials.password}`);
+        if (isLobby) {
+          if (!this.lastAuthTime || Date.now() - this.lastAuthTime > 5000) {
+            this.lastAuthTime = Date.now();
+            console.log(`[MC-Bot] ⚠️ Đã xác nhận đang ở Lobby (Toạ độ + chat). Chuyển bot sang trạng thái BẬN và gõ /dn...`);
             
-            // Đợi 2.5s rồi khởi chạy lại kịch bản AFK (gõ /menu, click slot 24, /warp afk)
-            const afkTimer = setTimeout(() => {
-              console.log(`[MC-Bot] Đã xong gõ /dn. Bắt đầu lại kịch bản click GUI chọn server...`);
-              this.startAfkRoutine();
-            }, 2500);
-            this.afkTimers.push(afkTimer);
+            this.isReady = false; // Đặt bot ở trạng thái bận
+            this.clearAllTimers(); // Hủy các timer AFK cũ
+  
+            if (this.statsPromiseReject) {
+              this.statsPromiseReject(new Error('Bot bị chuyển về lobby (yêu cầu đăng nhập lại).'));
+              this.cleanupStatsState();
+            }
+  
+            if (this.credentials.password) {
+              this.bot.chat(`/dn ${this.credentials.password}`);
+              
+              // Đợi 2.5s rồi khởi chạy lại kịch bản AFK (gõ /menu, click slot 24, /warp afk)
+              const afkTimer = setTimeout(() => {
+                console.log(`[MC-Bot] Đã xong gõ /dn. Bắt đầu lại kịch bản click GUI chọn server...`);
+                this.startAfkRoutine();
+              }, 2500);
+              this.afkTimers.push(afkTimer);
+            }
           }
         }
         return;
@@ -292,9 +412,26 @@ class PersistentBot extends EventEmitter {
 
     // Lắng nghe khi GUI mở (để lấy stats hoặc order)
     this.bot.on('windowOpen', (window) => {
+      const title = parseMinecraftJSON(window.title || '');
+      
+      // Phát sự kiện debug GUI
+      const debugSlots = [];
+      const maxSlots = Math.min(window.inventoryStart || 54, window.slots.length);
+      for (let i = 0; i < maxSlots; i++) {
+        const item = window.slots[i];
+        if (item) {
+          let dn = item.displayName || '';
+          if (item.customName) dn = item.customName;
+          dn = parseMinecraftJSON(dn);
+          debugSlots.push({ slot: i, name: item.name, displayName: dn, count: item.count });
+        } else {
+           debugSlots.push(null);
+        }
+      }
+      debugEmitter.emit('gui', { title: title, action: this.currentAction, slots: debugSlots });
+
       if (!this.targetPlayer) return;
 
-      const title = parseMinecraftJSON(window.title || '');
       console.log(`[MC-Bot] GUI Mở: "${title}" (Action: ${this.currentAction}), Đang trích xuất dữ liệu...`);
 
       if (this.currentAction === 'online') {

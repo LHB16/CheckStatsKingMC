@@ -13,6 +13,7 @@ const PersistentBot = require('./mc-bot');
 const QueueDispatcher = require('./queue-dispatcher');
 const CommandHandler = require('./handlers/commandHandler');
 const { handleReportButtons, sendBanAlert } = require('./helpers/reportHelper');
+const { startDebugServer } = require('./debug/debug-server');
 
 // Cấu hình từ .env
 const BOT_ROLE = (process.env.BOT_ROLE || 'standalone').toLowerCase();
@@ -20,6 +21,7 @@ const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
 const WORKER_SECRET = process.env.WORKER_SECRET || '';
+const ADMIN_ID = process.env.ADMIN_ID || ''; // Dùng để cấu hình Admin ID chạy lệnh qua DM
 
 const MC_USERNAME = process.env.MC_USERNAME || 'StatsChecker';
 const MC_AUTH_TYPE = process.env.MC_AUTH_TYPE || 'offline';
@@ -31,9 +33,23 @@ const MC_SERVER_HOSTS = (process.env.MC_SERVER_HOSTS || 'sgp.kingmc.vn,kingmc.vn
   .map(h => h.trim())
   .filter(h => h.length > 0);
 
+// Global Variables
+global.isBotMaintenance = false;
+global.maintenanceMessage = '';
+
 console.log(`==================================================`);
 console.log(`🚀 Bắt đầu khởi động hệ thống với Chế độ: [${BOT_ROLE.toUpperCase()}]`);
 console.log(`==================================================`);
+
+// Helper gen tên random
+function generateRandomUsername(length = 10) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
 
 // 1. Khởi tạo Local Minecraft Bot (Nếu ở chế độ 'worker' hoặc 'standalone')
 let localMcBot = null;
@@ -132,6 +148,9 @@ server.listen(PORT, () => {
   console.log(`[HTTP-Server] Đang lắng nghe trên cổng ${PORT} (${BOT_ROLE.toUpperCase()}).`);
 });
 
+// Khởi động server cho Live Debug Panel
+startDebugServer();
+
 // 3. Khởi tạo Discord Client & Queue Dispatcher (Nếu ở chế độ 'master' hoặc 'standalone')
 if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   const queueDispatcher = new QueueDispatcher();
@@ -142,14 +161,30 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   const client = new Client({
     intents: [
       GatewayIntentBits.Guilds,
-      GatewayIntentBits.GuildMessages
-    ]
+      GatewayIntentBits.GuildMessages,
+      GatewayIntentBits.DirectMessages,
+      GatewayIntentBits.MessageContent
+    ],
+    partials: ['CHANNEL']
   });
 
   if (localMcBot) {
-    localMcBot.on('banDetected', ({ username, reason }) => {
-      console.warn(`[Index] Phát hiện bot ${username} bị BAN: ${reason}`);
-      sendBanAlert(client, username, reason);
+    localMcBot.on('banDetected', async (data) => {
+      const { oldUsername, newUsername, password, reason } = data;
+      console.warn(`[Index] Phát hiện bot bị BAN. Cũ: ${oldUsername}, Mới: ${newUsername}`);
+      
+      if (ADMIN_ID) {
+         try {
+           const adminUser = await client.users.fetch(ADMIN_ID);
+           if (adminUser) {
+             adminUser.send(`🚨 **CẢNH BÁO BAN TÀI KHOẢN** 🚨\n- **Bot cũ**: \`${oldUsername}\`\n- **Mật khẩu**: ||${password}||\n- **Lý do quét được**: \`${reason}\`\n- **Tên bot mới (đã tự động đổi)**: \`${newUsername}\`\nHệ thống đang tự động khởi động lại worker này.`);
+           }
+         } catch(e) {
+           console.error('Không thể gửi DM cho Admin:', e);
+         }
+      } else {
+         sendBanAlert(client, oldUsername, reason);
+      }
     });
   }
 
@@ -162,12 +197,60 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   });
 
   client.on('interactionCreate', async (interaction) => {
+    // Chặn Slash Commands khi bảo trì
+    if (global.isBotMaintenance && interaction.isChatInputCommand()) {
+       if (!ADMIN_ID || interaction.user.id !== ADMIN_ID) {
+          return interaction.reply({ content: `⚠️ **Bảo trì:** ${global.maintenanceMessage}`, ephemeral: true });
+       }
+    }
+
     // Xử lý nút báo lỗi Admin
     const isReportHandled = await handleReportButtons(interaction, client);
     if (isReportHandled) return;
 
     // Xử lý Slash Commands
     await commandHandler.handleInteraction(interaction);
+  });
+
+  // Lắng nghe lệnh qua DM hoặc Kênh chat (Admin)
+  client.on('messageCreate', async (message) => {
+    if (message.author.bot) return;
+    if (ADMIN_ID && message.author.id !== ADMIN_ID) return;
+    
+    if (!message.content.startsWith('!')) return;
+    const args = message.content.slice(1).trim().split(/ +/);
+    const command = args.shift().toLowerCase();
+
+    if (command === 'help') {
+       message.reply('**Danh sách lệnh Admin:**\n- `!status` hoặc `!workers`: Xem trạng thái bot\n- `!restart`: Random tên mới và khởi động lại bot ngay lập tức\n- `!toggle off/on [lời nhắn]`: Bật/tắt việc nhận Slash Commands từ user khác.');
+    } else if (command === 'status' || command === 'workers') {
+       if (localMcBot) {
+         message.reply(`**Trạng thái Worker:**\n- Online: ${localMcBot.isBotOnline ? '✅' : '❌'}\n- Tên hiện tại: \`${localMcBot.credentials.username}\`\n- Ready: ${localMcBot.isReady ? '✅' : '❌'}\n- Đang bận: ${localMcBot.targetPlayer ? localMcBot.targetPlayer : 'Không'}`);
+       } else {
+         message.reply('Bot chạy ở chế độ Master (không có local worker).');
+       }
+    } else if (command === 'restart') {
+       if (localMcBot) {
+         const newName = generateRandomUsername(Math.floor(Math.random() * 7) + 8);
+         localMcBot.credentials.username = newName;
+         if (localMcBot.bot) localMcBot.bot.quit('Admin forced restart');
+         else localMcBot.scheduleReconnect();
+         message.reply(`Đã đổi tên worker thành \`${newName}\` và bắt đầu khởi động lại.`);
+       }
+    } else if (command === 'toggle') {
+       const sub = args.shift()?.toLowerCase();
+       if (sub === 'off') {
+          global.isBotMaintenance = true;
+          global.maintenanceMessage = args.join(' ') || 'Hệ thống đang bảo trì, vui lòng quay lại sau.';
+          message.reply(`✅ Đã TẮT nhận lệnh. Lời nhắn: ${global.maintenanceMessage}`);
+       } else if (sub === 'on') {
+          global.isBotMaintenance = false;
+          global.maintenanceMessage = '';
+          message.reply('✅ Đã BẬT nhận lệnh trở lại.');
+       } else {
+          message.reply('Cú pháp: `!toggle on` hoặc `!toggle off [lời nhắn]`');
+       }
+    }
   });
 
   if (DISCORD_TOKEN && DISCORD_TOKEN !== 'your_discord_bot_token_here') {

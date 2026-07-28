@@ -1,0 +1,31 @@
+# ==============================================================================
+#                 BotCheckStatsWrapper - Cấu hình Wrapper & Bot
+# ==============================================================================
+
+# Cấu hình đường dẫn thực thi Node.js
+# - Nếu để trống "", plugin sẽ cố gắng chạy lệnh "node" của hệ thống (phải được cài sẵn và có trong PATH).
+# - Nếu host free không cài sẵn Node, bạn có thể upload bản Node portable (ví dụ: giải nén Node.js cho Linux x64)
+#   vào thư mục của server, và điền đường dẫn tuyệt đối hoặc tương đối tới file thực thi node tại đây.
+#   Ví dụ: "plugins/BotCheckStatsWrapper/node-bin/bin/node"
+node-path: ""
+
+# Thư mục chứa code Node.js
+# Mặc định là thư mục con "bot" nằm bên trong thư mục plugin (plugins/BotCheckStatsWrapper/bot).
+# Bạn cần copy index.js, mc-bot.js, package.json và node_modules vào thư mục này.
+bot-folder: "bot"
+
+# Cấu hình Discord Bot
+discord:
+  token: "your_discord_bot_token_here"
+  client-id: "your_discord_client_id_here"
+  guild-id: "your_discord_test_guild_id_here"
+  admin-id: "your_discord_user_id_here"
+
+# Cấu hình Minecraft Bot kết nối vào KingMC.vn (hoặc server khác) để lấy stats
+minecraft-bot:
+  username: "CheckStatsBot"
+  auth-type: "offline" # Hỗ trợ: "offline" hoặc "microsoft"
+  password: "" # Điền mật khẩu nếu auth-type là offline và server yêu cầu login
+  hosts: "sgp.kingmc.vn,kingmc.vn" # Danh sách các host phân tách bởi dấu phẩy, bot sẽ thử theo thứ tự nếu mất kết nối
+  port: 25565
+  timeout: 15000 # Thời gian chờ tối đa khi lấy dữ liệu stats (ms)

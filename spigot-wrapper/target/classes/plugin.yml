@@ -1,0 +1,6 @@
+name: BotCheckStatsWrapper
+version: 1.0.0
+main: vn.kingmc.statsbot.StatsBotWrapper
+api-version: 1.20
+authors: [BinhLH]
+description: A Spigot/Paper plugin wrapper that runs and monitors a Node.js Discord bot subprocess.
