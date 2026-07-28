@@ -187,9 +187,64 @@ class QueueDispatcher {
         reject(new Error(`Remote Worker ${baseUrl} bị Timeout!`));
       });
 
-      req.write(postData);
-      req.end();
-    });
+  // Lấy trạng thái của toàn bộ Workers (Local + Remote)
+  async getAllWorkersStatus() {
+    const list = [];
+
+    // 1. Quét Local Worker (nếu có)
+    if (this.localBot) {
+      list.push({
+        type: 'local',
+        name: 'Local Worker',
+        username: this.localBot.credentials?.username || 'N/A',
+        online: this.localBot.isBotOnline,
+        ready: this.localBot.isReady,
+        busy: !this.localBot.isReady || !!this.localBot.targetPlayer,
+        targetPlayer: this.localBot.targetPlayer || null
+      });
+    }
+
+    // 2. Quét danh sách Remote Workers qua HTTP /health
+    for (const baseUrl of this.workerUrls) {
+      try {
+        const health = await this.checkRemoteWorkerHealth(baseUrl);
+        if (health) {
+          list.push({
+            type: 'remote',
+            name: baseUrl,
+            username: health.username || 'RemoteBot',
+            online: !!health.online,
+            ready: !!health.ready,
+            busy: !!health.busy,
+            targetPlayer: health.targetPlayer || null
+          });
+        } else {
+          list.push({
+            type: 'remote',
+            name: baseUrl,
+            username: 'N/A',
+            online: false,
+            ready: false,
+            busy: false,
+            targetPlayer: null,
+            error: 'Không thể phản hồi'
+          });
+        }
+      } catch (e) {
+        list.push({
+          type: 'remote',
+          name: baseUrl,
+          username: 'N/A',
+          online: false,
+          ready: false,
+          busy: false,
+          targetPlayer: null,
+          error: e.message
+        });
+      }
+    }
+
+    return list;
   }
 }
 

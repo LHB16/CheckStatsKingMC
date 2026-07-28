@@ -229,13 +229,35 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
 
     try {
       if (command === 'help') {
-         await message.channel.send('**Danh sách lệnh Admin:**\n- `!status` hoặc `!workers`: Xem trạng thái bot\n- `!restart`: Random tên mới và khởi động lại bot ngay lập tức\n- `!toggle off/on [lời nhắn]`: Bật/tắt việc nhận Slash Commands từ user khác.');
+         await message.channel.send('**Danh sách lệnh Admin:**\n- `!status` hoặc `!workers`: Xem danh sách và trạng thái toàn bộ Workers (Local & Remote)\n- `!restart`: Random tên mới và khởi động lại bot ngay lập tức\n- `!toggle off/on [lời nhắn]`: Bật/tắt việc nhận Slash Commands từ user khác.');
       } else if (command === 'status' || command === 'workers') {
-         if (localMcBot) {
-           await message.channel.send(`**Trạng thái Worker:**\n- Online: ${localMcBot.isBotOnline ? '✅' : '❌'}\n- Tên hiện tại: \`${localMcBot.credentials.username}\`\n- Ready: ${localMcBot.isReady ? '✅' : '❌'}\n- Đang bận: ${localMcBot.targetPlayer ? localMcBot.targetPlayer : 'Không'}`);
-         } else {
-           await message.channel.send('Bot chạy ở chế độ Master (không có local worker).');
+         const workers = await queueDispatcher.getAllWorkersStatus();
+         if (workers.length === 0) {
+           await message.channel.send('⚠️ Hiện chưa có Worker nào được cấu hình.');
+           return;
          }
+
+         let text = `📊 **DANH SÁCH WORKERS DANG HOẠT ĐỘNG (${workers.length}):**\n\n`;
+         workers.forEach((w, idx) => {
+           let statusStr = '';
+           if (!w.online) {
+             statusStr = '❌ **Offline**';
+           } else if (!w.ready) {
+             statusStr = '⏳ **Đang chuẩn bị / Đăng nhập**';
+           } else if (w.busy) {
+             statusStr = `🟡 **Đang bận** (Check: \`${w.targetPlayer || '?'}\`)`;
+           } else {
+             statusStr = '🟢 **Rảnh / Sẵn sàng**';
+           }
+
+           text += `**${idx + 1}. [${w.type.toUpperCase()}] ${w.name}**\n`;
+           text += `   - Bot Username: \`${w.username}\`\n`;
+           text += `   - Trạng thái: ${statusStr}\n`;
+           if (w.error) text += `   - Lỗi: \`${w.error}\`\n`;
+           text += '\n';
+         });
+
+         await message.channel.send(text);
       } else if (command === 'restart') {
          if (localMcBot) {
            const newName = generateRandomUsername(Math.floor(Math.random() * 7) + 8);
