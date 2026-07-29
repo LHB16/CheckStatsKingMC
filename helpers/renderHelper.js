@@ -110,6 +110,14 @@ function cleanMinecraftText(text) {
   return text.replace(/§[0-9a-fk-or]/gi, '').trim();
 }
 
+function cleanBuyerName(str) {
+  if (!str) return 'Ẩn danh';
+  let clean = cleanMinecraftText(str);
+  clean = clean.replace(/^(?:đơn\s*hàng|don\s*hang|order)?(?:\s*của|\s*cua|:|\s)*\s*/iu, '').trim();
+  clean = clean.replace(/^[:\-\s#]+/, '').trim();
+  return clean || 'Ẩn danh';
+}
+
 function parseSectionCodesToHtml(text, defaultColor = '#ffffff') {
   if (!text) return '';
   if (!text.includes('§')) {
@@ -236,6 +244,7 @@ async function renderTableImage(title, itemQuery, items, type = 'order') {
     const rawDisplay = item.displayName || '';
     const cleanDisplay = cleanMinecraftText(rawDisplay);
 
+    let iconItemQuery = '';
     if (rawName && rawName !== 'player_head' && rawName !== 'skull' && rawName !== 'air') {
       iconItemQuery = rawName;
     } else if (itemQuery) {
@@ -244,10 +253,10 @@ async function renderTableImage(title, itemQuery, items, type = 'order') {
 
     const iconUrl = getItemIconUrl(iconItemQuery);
 
-    const lowerDisplay = cleanDisplay.toLowerCase();
-    const isOrderPrefix = lowerDisplay.includes('đơn hàng') || lowerDisplay.includes('don hang') || lowerDisplay.includes('order');
+    const isOrderTitle = /^(?:đơn\s*hàng|don\s*hang|order)/iu.test(cleanDisplay);
 
-    if (rawDisplay && !isOrderPrefix && cleanDisplay !== 'Item' && cleanDisplay !== 'Vật phẩm') {
+    let itemNameHtml = '';
+    if (rawDisplay && !isOrderTitle && cleanDisplay !== 'Item' && cleanDisplay !== 'Vật phẩm') {
       itemNameHtml = formatMinecraftTextToHtml(rawDisplay, '#ffffff');
     } else {
       // Dùng trực tiếp ID đã dùng lấy hình (iconItemQuery) để tạo tên hiển thị vật phẩm
@@ -257,7 +266,10 @@ async function renderTableImage(title, itemQuery, items, type = 'order') {
 
     let subInfoHtml = '';
     if (type === 'order') {
-      const buyerName = item.buyer;
+      let buyerName = item.buyer;
+      if (!buyerName || buyerName === 'Ẩn danh' || /^(?:đơn\s*hàng|don\s*hang|order)/iu.test(buyerName)) {
+        buyerName = cleanBuyerName(rawDisplay || cleanDisplay);
+      }
       if (buyerName && buyerName !== 'Ẩn danh') {
         subInfoHtml = `<div class="sub-info">Người mua: <span class="highlight-user">${escapeHtml(buyerName)}</span></div>`;
       }

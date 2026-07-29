@@ -92,10 +92,26 @@ module.exports = {
         const priceText = order.price || 'N/A';
         const cleanDisplay = (order.displayName || '').replace(/§[0-9a-fk-or]/gi, '').trim();
         const rawName = order.itemName || order.name;
-        const nameToShow = (cleanDisplay && cleanDisplay !== 'Item' && !cleanDisplay.toLowerCase().includes('đơn hàng'))
+        const isOrderTitle = /^(?:đơn\s*hàng|don\s*hang|order)/iu.test(cleanDisplay);
+
+        let itemQueryId = '';
+        if (rawName && rawName !== 'player_head' && rawName !== 'skull' && rawName !== 'air') {
+          itemQueryId = rawName;
+        } else {
+          itemQueryId = itemQuery;
+        }
+
+        const nameToShow = (cleanDisplay && !isOrderTitle && cleanDisplay !== 'Item' && cleanDisplay !== 'Vật phẩm')
           ? cleanDisplay
-          : formatItemDisplayName(rawName || itemQuery);
-        return `📦 **#${index + 1}** **${nameToShow}** | Giá: **${priceText}**`;
+          : formatItemDisplayName(itemQueryId);
+
+        let buyerName = order.buyer;
+        if (!buyerName || buyerName === 'Ẩn danh' || /^(?:đơn\s*hàng|don\s*hang|order)/iu.test(buyerName)) {
+          buyerName = cleanDisplay.replace(/^(?:đơn\s*hàng|don\s*hang|order)?(?:\s*của|\s*cua|:|\s)*\s*/iu, '').trim();
+        }
+
+        const buyerText = (buyerName && buyerName !== 'Ẩn danh') ? ` (Người mua: **${buyerName}**)` : '';
+        return `📦 **#${index + 1}** **${nameToShow}**${buyerText} | Giá: **${priceText}**`;
       });
 
       let descriptionText = formattedLines.join('\n');

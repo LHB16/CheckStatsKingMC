@@ -21,28 +21,8 @@ function cleanBuyerName(str) {
   if (!str) return 'Ẩn danh';
   let clean = cleanMinecraftText(str);
 
-  const lower = clean.toLowerCase();
-  const prefixes = [
-    'đơn hàng của',
-    'don hang cua',
-    'đơn hàng:',
-    'don hang:',
-    'đơn hàng',
-    'don hang',
-    'order của',
-    'order cua',
-    'order:',
-    'của ',
-    'cua '
-  ];
-
-  for (const prefix of prefixes) {
-    if (lower.startsWith(prefix)) {
-      clean = clean.substring(prefix.length).trim();
-      break;
-    }
-  }
-
+  // Loại bỏ tất cả tiền tố "Đơn hàng của", "ĐƠN HÀNG CỦA", "Order của", "don hang cua", "của",...
+  clean = clean.replace(/^(?:đơn\s*hàng|don\s*hang|order)?(?:\s*của|\s*cua|:|\s)*\s*/iu, '').trim();
   clean = clean.replace(/^[:\-\s#]+/, '').trim();
   return clean || 'Ẩn danh';
 }
