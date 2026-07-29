@@ -236,22 +236,6 @@ async function renderTableImage(title, itemQuery, items, type = 'order') {
     const rawDisplay = item.displayName || '';
     const cleanDisplay = cleanMinecraftText(rawDisplay);
 
-    let itemNameHtml = '';
-    let iconItemQuery = '';
-
-    const lowerDisplay = cleanDisplay.toLowerCase();
-    const isOrderPrefix = lowerDisplay.includes('đơn hàng') || lowerDisplay.includes('don hang') || lowerDisplay.includes('order');
-
-    if (rawDisplay && !isOrderPrefix && cleanDisplay !== 'Item') {
-      itemNameHtml = formatMinecraftTextToHtml(rawDisplay, '#ffffff');
-    } else if (rawName && rawName !== 'player_head' && rawName !== 'skull' && rawName !== 'air') {
-      itemNameHtml = formatMinecraftTextToHtml(formatItemDisplayName(rawName), '#ffffff');
-    } else if (itemQuery) {
-      itemNameHtml = formatMinecraftTextToHtml(formatItemDisplayName(itemQuery), '#ffffff');
-    } else {
-      itemNameHtml = `<span style="color: #ffffff;">Vật phẩm</span>`;
-    }
-
     if (rawName && rawName !== 'player_head' && rawName !== 'skull' && rawName !== 'air') {
       iconItemQuery = rawName;
     } else if (itemQuery) {
@@ -259,6 +243,17 @@ async function renderTableImage(title, itemQuery, items, type = 'order') {
     }
 
     const iconUrl = getItemIconUrl(iconItemQuery);
+
+    const lowerDisplay = cleanDisplay.toLowerCase();
+    const isOrderPrefix = lowerDisplay.includes('đơn hàng') || lowerDisplay.includes('don hang') || lowerDisplay.includes('order');
+
+    if (rawDisplay && !isOrderPrefix && cleanDisplay !== 'Item' && cleanDisplay !== 'Vật phẩm') {
+      itemNameHtml = formatMinecraftTextToHtml(rawDisplay, '#ffffff');
+    } else {
+      // Dùng trực tiếp ID đã dùng lấy hình (iconItemQuery) để tạo tên hiển thị vật phẩm
+      const derivedName = formatItemDisplayName(iconItemQuery);
+      itemNameHtml = formatMinecraftTextToHtml(derivedName, '#ffffff');
+    }
 
     let subInfoHtml = '';
     if (type === 'order') {
