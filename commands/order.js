@@ -55,7 +55,7 @@ module.exports = {
         for (let attempt = 1; attempt <= 2; attempt++) {
           try {
             imageBuffer = await renderTableImage(
-              `DANH SÁCH ĐƠN HÀNG: ${itemQuery.toUpperCase()}`,
+              `DANH SÁCH ORDER: ${itemQuery.toUpperCase()}`,
               itemQuery,
               orders,
               'order'
@@ -71,8 +71,6 @@ module.exports = {
           const attachment = new AttachmentBuilder(imageBuffer, { name: 'order_table.png' });
 
           const embed = new EmbedBuilder()
-            .setTitle(`📦 Danh sách đơn hàng: **${itemQuery.toUpperCase()}** ${emoji}`)
-            .setDescription(`📊 Tổng số đơn hàng: **${orders.length}**`)
             .setImage('attachment://order_table.png')
             .setColor('#2b2d31')
             .setTimestamp()
@@ -92,7 +90,12 @@ module.exports = {
 
       const formattedLines = orders.map((order, index) => {
         const priceText = order.price || 'N/A';
-        return `📦 **#${index + 1}** **${itemDisplayName}** | Giá: **${priceText}**`;
+        const cleanDisplay = (order.displayName || '').replace(/§[0-9a-fk-or]/gi, '').trim();
+        const rawName = order.itemName || order.name;
+        const nameToShow = (cleanDisplay && cleanDisplay !== 'Item' && !cleanDisplay.toLowerCase().includes('đơn hàng'))
+          ? cleanDisplay
+          : formatItemDisplayName(rawName || itemQuery);
+        return `📦 **#${index + 1}** **${nameToShow}** | Giá: **${priceText}**`;
       });
 
       let descriptionText = formattedLines.join('\n');

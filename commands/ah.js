@@ -71,8 +71,6 @@ module.exports = {
           const attachment = new AttachmentBuilder(imageBuffer, { name: 'ah_table.png' });
 
           const embed = new EmbedBuilder()
-            .setTitle(`📦 Danh sách AH: **${itemQuery.toUpperCase()}** ${emoji}`)
-            .setDescription(`📊 Tổng số vật phẩm trên AH: **${items.length}**`)
             .setImage('attachment://ah_table.png')
             .setColor('#2b2d31')
             .setTimestamp()
@@ -92,7 +90,12 @@ module.exports = {
 
       const formattedLines = items.map((item, index) => {
         const priceText = item.price || 'N/A';
-        return `📦 **#${index + 1}** **${itemDisplayName}** | Giá: **${priceText}**`;
+        const cleanDisplay = (item.displayName || '').replace(/§[0-9a-fk-or]/gi, '').trim();
+        const rawName = item.itemName || item.name;
+        const nameToShow = (cleanDisplay && cleanDisplay !== 'Item' && !cleanDisplay.toLowerCase().includes('đơn hàng'))
+          ? cleanDisplay
+          : formatItemDisplayName(rawName || itemQuery);
+        return `📦 **#${index + 1}** **${nameToShow}** | Giá: **${priceText}**`;
       });
 
       let descriptionText = formattedLines.join('\n');
