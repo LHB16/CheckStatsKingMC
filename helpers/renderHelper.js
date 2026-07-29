@@ -105,6 +105,43 @@ function getItemIconUrl(id) {
   return `${CDN_PRE_RENDER_3D}${cleanId.toUpperCase()}.png`;
 }
 
+// Chuẩn hóa phông chữ Small Caps độc lạ của Server Minecraft (ví dụ: đơɴ ʜàɴɢ ᴄủᴀ -> don hang cua)
+function normalizeSmallCaps(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .replace(/ᴀ/g, 'a')
+    .replace(/ʙ/g, 'b')
+    .replace(/ᴄ/g, 'c')
+    .replace(/ᴅ/g, 'd')
+    .replace(/ᴇ/g, 'e')
+    .replace(/ғ/g, 'f')
+    .replace(/ɢ/g, 'g')
+    .replace(/ʜ/g, 'h')
+    .replace(/ɪ/g, 'i')
+    .replace(/ᴊ/g, 'j')
+    .replace(/ᴋ/g, 'k')
+    .replace(/ʟ/g, 'l')
+    .replace(/ᴍ/g, 'm')
+    .replace(/ɴ/g, 'n')
+    .replace(/ᴏ/g, 'o')
+    .replace(/ᴘ/g, 'p')
+    .replace(/ǫ/g, 'q')
+    .replace(/ʀ/g, 'r')
+    .replace(/ꜱ/g, 's')
+    .replace(/ᴛ/g, 't')
+    .replace(/ᴜ/g, 'u')
+    .replace(/ᴠ/g, 'v')
+    .replace(/ᴡ/g, 'w')
+    .replace(/x/g, 'x')
+    .replace(/ʏ/g, 'y')
+    .replace(/ᴢ/g, 'z')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
 function cleanMinecraftText(text) {
   if (!text) return '';
   return text.replace(/§[0-9a-fk-or]/gi, '').trim();
@@ -112,10 +149,26 @@ function cleanMinecraftText(text) {
 
 function cleanBuyerName(str) {
   if (!str) return 'Ẩn danh';
-  let clean = cleanMinecraftText(str);
-  clean = clean.replace(/^(?:đơn\s*hàng|don\s*hang|order)?(?:\s*của|\s*cua|:|\s)*\s*/iu, '').trim();
-  clean = clean.replace(/^[:\-\s#]+/, '').trim();
-  return clean || 'Ẩn danh';
+  let cleanText = cleanMinecraftText(str);
+  let normalized = normalizeSmallCaps(cleanText);
+
+  const prefixMatch = normalized.match(/^(?:don\s*hang|order)?(?:\s*cua|\s*of|:|\s)*\s*/iu);
+  if (prefixMatch && prefixMatch[0].length > 0) {
+    const prefixLen = prefixMatch[0].length;
+    let buyerPart = cleanText.substring(prefixLen).trim();
+    buyerPart = buyerPart.replace(/^[:\-\s#]+/, '').trim();
+    if (buyerPart) return buyerPart;
+  }
+
+  cleanText = cleanText.replace(/^(?:đơn\s*hàng|don\s*hang|order)?(?:\s*của|\s*cua|:|\s)*\s*/iu, '').trim();
+  cleanText = cleanText.replace(/^[:\-\s#]+/, '').trim();
+  return cleanText || 'Ẩn danh';
+}
+
+function getColorHex(color) {
+  if (!color) return null;
+  if (color.startsWith('#')) return color;
+  return MC_COLOR_HEX[color.toLowerCase()] || null;
 }
 
 function parseSectionCodesToHtml(text, defaultColor = '#ffffff') {
@@ -186,39 +239,74 @@ function parseSectionCodesToHtml(text, defaultColor = '#ffffff') {
   return resultHtml || `<span style="color: ${defaultColor};">${escapeHtml(text)}</span>`;
 }
 
+function parseMinecraftComponentToHtml(obj, inheritedColor = '#ffffff') {
+  if (!obj) return '';
+
+  if (typeof obj === 'string') {
+    let str = obj.trim();
+    if (str.startsWith('{') || str.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(str);
+        return parseMinecraftComponentToHtml(parsed, inheritedColor);
+      } catch (e) {}
+    }
+    if (str.includes('§')) {
+      return parseSectionCodesToHtml(str, inheritedColor);
+    }
+    return `<span style="color: ${inheritedColor};">${escapeHtml(str)}</span>`;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => parseMinecraftComponentToHtml(item, inheritedColor)).join('');
+  }
+
+  if (typeof obj === 'object') {
+    let currentColor = getColorHex(obj.color) || inheritedColor;
+    let result = '';
+
+    if (obj.text) {
+      let styles = [];
+      if (currentColor) styles.push(`color: ${currentColor}`);
+      if (obj.bold) styles.push('font-weight: bold');
+      if (obj.italic === true) styles.push('font-style: italic');
+      if (obj.italic === false) styles.push('font-style: normal');
+      let decs = [];
+      if (obj.underlined) decs.push('underline');
+      if (obj.strikethrough) decs.push('line-through');
+      if (decs.length > 0) styles.push(`text-decoration: ${decs.join(' ')}`);
+
+      const styleAttr = styles.length > 0 ? ` style="${styles.join('; ')}"` : '';
+      result += `<span${styleAttr}>${escapeHtml(obj.text)}</span>`;
+    }
+
+    if (obj.extra && Array.isArray(obj.extra)) {
+      result += parseMinecraftComponentToHtml(obj.extra, currentColor);
+    }
+
+    return result;
+  }
+
+  return `<span style="color: ${inheritedColor};">${escapeHtml(String(obj))}</span>`;
+}
+
 function formatMinecraftTextToHtml(input, defaultColor = '#ffffff') {
   if (!input) return `<span style="color: ${defaultColor};">Vật phẩm</span>`;
 
-  let textStr = String(input).trim();
-  let overrideColor = null;
-
-  const jsonMatch = textStr.match(/^(.*?)\s*(\{(?:[^{}]|"*")*\})\s*$/);
-  if (jsonMatch) {
-    const prefixText = jsonMatch[1].trim();
-    const jsonBlob = jsonMatch[2];
-    try {
-      const parsedJson = JSON.parse(jsonBlob);
-      if (parsedJson.color && MC_COLOR_HEX[parsedJson.color]) {
-        overrideColor = MC_COLOR_HEX[parsedJson.color];
-      }
-      if (parsedJson.text && parsedJson.text.trim()) {
-        textStr = parsedJson.text.trim();
-      } else if (prefixText) {
-        textStr = prefixText;
-      }
-    } catch (e) {
-      if (prefixText) textStr = prefixText;
+  if (typeof input === 'string') {
+    let str = input.trim();
+    if (str.startsWith('{') || str.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(str);
+        return parseMinecraftComponentToHtml(parsed, defaultColor);
+      } catch (e) {}
     }
   }
 
-  textStr = textStr.replace(/\{"color".*?\}/gi, '').trim();
-
-  if (textStr.includes('§')) {
-    return parseSectionCodesToHtml(textStr, overrideColor || defaultColor);
+  if (typeof input === 'object') {
+    return parseMinecraftComponentToHtml(input, defaultColor);
   }
 
-  const finalColor = overrideColor || defaultColor;
-  return `<span style="color: ${finalColor};">${escapeHtml(textStr)}</span>`;
+  return parseSectionCodesToHtml(String(input), defaultColor);
 }
 
 /**
@@ -243,6 +331,7 @@ async function renderTableImage(title, itemQuery, items, type = 'order') {
     const rawName = item.itemName || item.name;
     const rawDisplay = item.displayName || '';
     const cleanDisplay = cleanMinecraftText(rawDisplay);
+    const normalizedDisplay = normalizeSmallCaps(cleanDisplay);
 
     let iconItemQuery = '';
     if (rawName && rawName !== 'player_head' && rawName !== 'skull' && rawName !== 'air') {
@@ -253,13 +342,12 @@ async function renderTableImage(title, itemQuery, items, type = 'order') {
 
     const iconUrl = getItemIconUrl(iconItemQuery);
 
-    const isOrderTitle = /^(?:đơn\s*hàng|don\s*hang|order)/iu.test(cleanDisplay);
+    const isOrderTitle = /^(?:don\s*hang|order)/i.test(normalizedDisplay);
 
     let itemNameHtml = '';
     if (rawDisplay && !isOrderTitle && cleanDisplay !== 'Item' && cleanDisplay !== 'Vật phẩm') {
       itemNameHtml = formatMinecraftTextToHtml(rawDisplay, '#ffffff');
     } else {
-      // Dùng trực tiếp ID đã dùng lấy hình (iconItemQuery) để tạo tên hiển thị vật phẩm
       const derivedName = formatItemDisplayName(iconItemQuery);
       itemNameHtml = formatMinecraftTextToHtml(derivedName, '#ffffff');
     }
@@ -267,7 +355,7 @@ async function renderTableImage(title, itemQuery, items, type = 'order') {
     let subInfoHtml = '';
     if (type === 'order') {
       let buyerName = item.buyer;
-      if (!buyerName || buyerName === 'Ẩn danh' || /^(?:đơn\s*hàng|don\s*hang|order)/iu.test(buyerName)) {
+      if (!buyerName || buyerName === 'Ẩn danh' || /^(?:don\s*hang|order)/i.test(normalizeSmallCaps(buyerName))) {
         buyerName = cleanBuyerName(rawDisplay || cleanDisplay);
       }
       if (buyerName && buyerName !== 'Ẩn danh') {

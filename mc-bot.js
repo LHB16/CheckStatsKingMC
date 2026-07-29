@@ -16,15 +16,60 @@ function cleanMinecraftText(text) {
     .trim();
 }
 
-// Hàm làm sạch tên người đặt đơn hàng (loại bỏ mọi tiền tố "Đơn hàng của", "ĐƠN HÀNG CỦA", "của", "order của",...)
+// Chuẩn hóa phông chữ Small Caps độc lạ của Server Minecraft (ví dụ: đơɴ ʜàɴɢ ᴄủᴀ -> don hang cua)
+function normalizeSmallCaps(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .replace(/ᴀ/g, 'a')
+    .replace(/ʙ/g, 'b')
+    .replace(/ᴄ/g, 'c')
+    .replace(/ᴅ/g, 'd')
+    .replace(/ᴇ/g, 'e')
+    .replace(/ғ/g, 'f')
+    .replace(/ɢ/g, 'g')
+    .replace(/ʜ/g, 'h')
+    .replace(/ɪ/g, 'i')
+    .replace(/ᴊ/g, 'j')
+    .replace(/ᴋ/g, 'k')
+    .replace(/ʟ/g, 'l')
+    .replace(/ᴍ/g, 'm')
+    .replace(/ɴ/g, 'n')
+    .replace(/ᴏ/g, 'o')
+    .replace(/ᴘ/g, 'p')
+    .replace(/ǫ/g, 'q')
+    .replace(/ʀ/g, 'r')
+    .replace(/ꜱ/g, 's')
+    .replace(/ᴛ/g, 't')
+    .replace(/ᴜ/g, 'u')
+    .replace(/ᴠ/g, 'v')
+    .replace(/ᴡ/g, 'w')
+    .replace(/x/g, 'x')
+    .replace(/ʏ/g, 'y')
+    .replace(/ᴢ/g, 'z')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+// Hàm làm sạch tên người đặt đơn hàng (loại bỏ mọi tiền tố "Đơn hàng của", "ĐƠN HÀNG CỦA", "đơɴ ʜàɴɢ ᴄủᴀ",...)
 function cleanBuyerName(str) {
   if (!str) return 'Ẩn danh';
-  let clean = cleanMinecraftText(str);
+  let cleanText = cleanMinecraftText(str);
+  let normalized = normalizeSmallCaps(cleanText);
 
-  // Loại bỏ tất cả tiền tố "Đơn hàng của", "ĐƠN HÀNG CỦA", "Order của", "don hang cua", "của",...
-  clean = clean.replace(/^(?:đơn\s*hàng|don\s*hang|order)?(?:\s*của|\s*cua|:|\s)*\s*/iu, '').trim();
-  clean = clean.replace(/^[:\-\s#]+/, '').trim();
-  return clean || 'Ẩn danh';
+  const prefixMatch = normalized.match(/^(?:don\s*hang|order)?(?:\s*cua|\s*of|:|\s)*\s*/iu);
+  if (prefixMatch && prefixMatch[0].length > 0) {
+    const prefixLen = prefixMatch[0].length;
+    let buyerPart = cleanText.substring(prefixLen).trim();
+    buyerPart = buyerPart.replace(/^[:\-\s#]+/, '').trim();
+    if (buyerPart) return buyerPart;
+  }
+
+  cleanText = cleanText.replace(/^(?:đơn\s*hàng|don\s*hang|order)?(?:\s*của|\s*cua|:|\s)*\s*/iu, '').trim();
+  cleanText = cleanText.replace(/^[:\-\s#]+/, '').trim();
+  return cleanText || 'Ẩn danh';
 }
 
 // Map tên màu Minecraft sang mã §
