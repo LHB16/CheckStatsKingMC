@@ -14,7 +14,7 @@ const RAW_CDN_PREFIX = "https://raw.githubusercontent.com/InventivetalentDev/min
 const FALLBACK_ICON = RAW_CDN_PREFIX + "block/chest_front.png";
 
 async function getBrowser() {
-  if (!browserInstance || !browserInstance.isConnected()) {
+  if (!browserInstance || !browserInstance.connected) {
     const launchOptions = {
       headless: true,
       args: [
