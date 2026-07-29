@@ -11,7 +11,22 @@ let browserInstance = null;
 const TEMPLATE_PATH = path.join(__dirname, '../templates/itemsTable.html');
 const CDN_PRE_RENDER_3D = "https://raw.githubusercontent.com/Owen1212055/mc-assets/main/item-assets/";
 const RAW_CDN_PREFIX = "https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.20.1/assets/minecraft/textures/";
-const FALLBACK_ICON = RAW_CDN_PREFIX + "block/chest_front.png";
+const FALLBACK_ICON = RAW_CDN_PREFIX + "item/paper.png";
+const SVG_FALLBACK = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='%23f59e0b' stroke-width='2'><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/><polyline points='14 2 14 8 20 8'/><line x1='16' y1='13' x2='8' y2='13'/><line x1='16' y1='17' x2='8' y2='17'/></svg>";
+
+const ITEM_ALIASES = {
+  'shulker': 'SHULKER_BOX',
+  'red': 'REDSTONE',
+  'gold': 'GOLD_INGOT',
+  'diamond': 'DIAMOND',
+  'emerald': 'EMERALD',
+  'iron': 'IRON_INGOT',
+  'netherite': 'NETHERITE_INGOT',
+  'coal': 'COAL',
+  'lapis': 'LAPIS_LAZULI',
+  'quartz': 'QUARTZ',
+  'copper': 'COPPER_INGOT'
+};
 
 async function getBrowser() {
   if (!browserInstance || !browserInstance.connected) {
@@ -54,12 +69,20 @@ function formatItemDisplayName(id) {
  */
 function getItemIconUrl(id) {
   if (!id) return FALLBACK_ICON;
-  return `${CDN_PRE_RENDER_3D}${id.toUpperCase()}.png`;
+  const cleanId = id.toLowerCase().trim();
+  if (cleanId === 'player_head' || cleanId === 'skull') return FALLBACK_ICON;
+  const target = ITEM_ALIASES[cleanId] || cleanId.toUpperCase();
+  return `${CDN_PRE_RENDER_3D}${target}.png`;
+}
+
+function cleanMinecraftText(text) {
+  if (!text) return '';
+  return text.replace(/§[0-9a-fk-or]/gi, '').trim();
 }
 
 /**
  * Render bảng danh sách vật phẩm ra Buffer ảnh PNG
- * @param {string} title - Tiêu đề bảng (ví dụ: "DANH SÁCH ĐƠN HÀNG: ELYTRA")
+ * @param {string} title - Tiêu đề bảng (ví dụ: "DANH SÁCH ORDER: ELYTRA")
  * @param {string} itemQuery - Tên item tra cứu
  * @param {Array} items - Danh sách đơn hàng/vật phẩm
  * @param {string} type - Loại lệnh ('order' hoặc 'ah')
@@ -74,14 +97,7 @@ async function renderTableImage(title, itemQuery, items, type = 'order') {
     throw err;
   }
 
-  const iconUrl = getItemIconUrl(itemQuery);
   const displayName = formatItemDisplayName(itemQuery);
-  const SVG_FALLBACK = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='%23f59e0b' stroke-width='2'><path d='M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z'/><path d='m3.3 7 8.7 5 8.7-5'/><path d='M12 22V12'/></svg>";
-
-function cleanMinecraftText(text) {
-  if (!text) return '';
-  return text.replace(/§[0-9a-fk-or]/gi, '').trim();
-}
 
   const rowsHtml = items.map((item, index) => {
     const price = item.price || 'N/A';
@@ -89,17 +105,30 @@ function cleanMinecraftText(text) {
     const cleanDisplay = cleanMinecraftText(item.displayName);
 
     let itemName = displayName;
-    if (cleanDisplay && cleanDisplay !== 'Item' && !cleanDisplay.toLowerCase().includes('đơn hàng')) {
-      itemName = cleanDisplay;
-    } else if (rawName) {
-      itemName = formatItemDisplayName(rawName);
+    let iconItemQuery = itemQuery;
+
+    if (type === 'order') {
+      // Đối với lệnh /order, VẬT PHẨM hiển thị tên item tra cứu, tuyệt đối không lấy tên slot người mua
+      itemName = displayName;
+      iconItemQuery = itemQuery;
+    } else {
+      if (cleanDisplay && cleanDisplay !== 'Item' && !cleanDisplay.toLowerCase().includes('đơn hàng')) {
+        itemName = cleanDisplay;
+      } else if (rawName && rawName !== 'player_head' && rawName !== 'skull') {
+        itemName = formatItemDisplayName(rawName);
+      }
+      if (rawName && rawName !== 'player_head' && rawName !== 'skull') {
+        iconItemQuery = rawName;
+      }
     }
+
+    const iconUrl = getItemIconUrl(iconItemQuery);
 
     return `
       <tr>
         <td class="stt">#${index + 1}</td>
         <td class="icon-td">
-          <img class="item-icon" src="${iconUrl}" onerror="if(this.dataset.fb){this.src='${SVG_FALLBACK}';}else{this.dataset.fb='1';this.src='${RAW_CDN_PREFIX}item/${itemQuery.toLowerCase()}.png';}" alt="${itemName}" />
+          <img class="item-icon" src="${iconUrl}" onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='${RAW_CDN_PREFIX}item/${iconItemQuery.toLowerCase()}.png';}else if(this.dataset.fb==='1'){this.dataset.fb='2';this.src='${FALLBACK_ICON}';}else{this.dataset.fb='3';this.src='${SVG_FALLBACK}';}" alt="${itemName}" />
         </td>
         <td class="item-name">${itemName}</td>
         <td class="price">${price}</td>
@@ -109,7 +138,6 @@ function cleanMinecraftText(text) {
 
   const compiledHtml = templateContent
     .replace('{{TITLE}}', title)
-    .replace('{{HEADER_ICON}}', iconUrl)
     .replace('{{ROWS}}', rowsHtml);
 
   const browser = await getBrowser();
@@ -123,18 +151,19 @@ function cleanMinecraftText(text) {
     await page.evaluate(async () => {
       const images = Array.from(document.querySelectorAll('img'));
       await Promise.all(images.map(img => {
-        if (img.complete && img.naturalWidth !== 0) return Promise.resolve();
         return new Promise(resolve => {
-          let done = false;
-          const finish = () => {
-            if (!done) {
-              done = true;
+          let attempts = 0;
+          const check = () => {
+            attempts++;
+            if ((img.complete && img.naturalWidth !== 0) || attempts > 25) {
               resolve();
+            } else {
+              setTimeout(check, 100);
             }
           };
-          img.onload = finish;
-          img.onerror = finish;
-          setTimeout(finish, 4000);
+          img.onload = check;
+          img.onerror = () => setTimeout(check, 150);
+          check();
         });
       }));
     });
