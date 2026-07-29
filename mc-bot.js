@@ -47,17 +47,37 @@ function cleanBuyerName(str) {
   return clean || 'Ẩn danh';
 }
 
-// Hàm parse chuẩn Minecraft JSON Text Component (có đệ quy đọc extra, text)
+// Map tên màu Minecraft sang mã §
+const MC_COLOR_CODES = {
+  'black': '§0', 'dark_blue': '§1', 'dark_green': '§2', 'dark_aqua': '§3',
+  'dark_red': '§4', 'dark_purple': '§5', 'gold': '§6', 'gray': '§7',
+  'dark_gray': '§8', 'blue': '§9', 'green': '§a', 'aqua': '§b',
+  'red': '§c', 'light_purple': '§d', 'yellow': '§e', 'white': '§f'
+};
+
+// Hàm parse chuẩn Minecraft JSON Text Component (có đệ quy đọc extra, text và gắn mã màu)
 function parseMinecraftJSON(input) {
   if (!input) return '';
+
   if (typeof input === 'string') {
-    try {
-      if (input.startsWith('{') || input.startsWith('[')) {
-        const obj = JSON.parse(input);
+    let str = input.trim();
+    if (str.startsWith('{') || str.startsWith('[')) {
+      try {
+        const obj = JSON.parse(str);
         return parseMinecraftJSON(obj);
-      }
-    } catch(e) {}
-    return cleanMinecraftText(input);
+      } catch (e) {}
+    }
+    const jsonMatch = str.match(/^(.*?)\s*(\{(?:[^{}]|"*")*\})\s*$/);
+    if (jsonMatch) {
+      const prefixText = jsonMatch[1].trim();
+      try {
+        const parsedJson = JSON.parse(jsonMatch[2]);
+        const innerText = parseMinecraftJSON(parsedJson);
+        if (innerText) return (prefixText ? prefixText + ' ' : '') + innerText;
+      } catch (e) {}
+      if (prefixText) str = prefixText;
+    }
+    return str.replace(/\{"color".*?\}/gi, '').trim();
   }
 
   if (Array.isArray(input)) {
@@ -66,34 +86,40 @@ function parseMinecraftJSON(input) {
 
   if (typeof input === 'object') {
     let result = '';
+    let colorPrefix = '';
+
+    if (input.color && MC_COLOR_CODES[input.color]) {
+      colorPrefix = MC_COLOR_CODES[input.color];
+    }
     
     if (input.value !== undefined && typeof input.value === 'string') {
       try {
         const obj = JSON.parse(input.value);
-        return parseMinecraftJSON(obj);
+        return colorPrefix + parseMinecraftJSON(obj);
       } catch (e) {
-        return cleanMinecraftText(input.value);
+        result = String(input.value);
       }
     }
 
     if (input[''] !== undefined) {
-        if (typeof input[''] === 'string') result += input[''];
-        else if (typeof input[''] === 'object' && input[''].value) result += String(input[''].value);
+      if (typeof input[''] === 'string') result += input[''];
+      else if (typeof input[''] === 'object' && input[''].value) result += String(input[''].value);
     }
     
     if (input.text !== undefined) {
-        if (typeof input.text === 'string') result += input.text;
-        else if (typeof input.text === 'object' && input.text.value) result += String(input.text.value);
+      if (typeof input.text === 'string') result += input.text;
+      else if (typeof input.text === 'object' && input.text.value) result += String(input.text.value);
     }
     
     if (input.extra && Array.isArray(input.extra)) {
       result += parseMinecraftJSON(input.extra);
     }
     
-    return cleanMinecraftText(result || JSON.stringify(input));
+    result = result.replace(/\{"color".*?\}/gi, '').trim();
+    return result ? (colorPrefix + result) : '';
   }
   
-  return cleanMinecraftText(String(input));
+  return String(input).replace(/\{"color".*?\}/gi, '').trim();
 }
 
 // Helper giải mã NBT/Component chứa Lore của vật phẩm trong Mineflayer
