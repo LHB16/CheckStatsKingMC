@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
+    "debug": "node debug/debug_bot.js",
     "postinstall": "npx puppeteer browsers install chrome"
   },
   "dependencies": {
