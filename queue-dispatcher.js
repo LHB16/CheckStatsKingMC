@@ -251,6 +251,94 @@ class QueueDispatcher {
 
     return list;
   }
+
+  // Gửi lệnh restart tới 1 Remote Worker qua API /api/restart
+  restartRemoteWorker(baseUrl) {
+    return new Promise((resolve, reject) => {
+      const url = new URL('/api/restart', baseUrl);
+      const transport = url.protocol === 'https:' ? https : http;
+
+      const options = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-worker-secret': this.workerSecret
+        },
+        timeout: 5000
+      };
+
+      const req = transport.request(url.href, options, (res) => {
+        let rawData = '';
+        res.on('data', chunk => rawData += chunk);
+        res.on('end', () => {
+          try {
+            const parsed = JSON.parse(rawData);
+            if (res.statusCode === 200 && parsed.success) {
+              resolve(parsed);
+            } else {
+              reject(new Error(parsed.error || `Lỗi HTTP ${res.statusCode}`));
+            }
+          } catch (e) {
+            reject(new Error(`Lỗi parse dữ liệu từ Worker: ${e.message}`));
+          }
+        });
+      });
+
+      req.on('error', (err) => reject(new Error(`Lỗi kết nối tới Worker ${baseUrl}: ${err.message}`)));
+      req.on('timeout', () => {
+        req.destroy();
+        reject(new Error(`Worker ${baseUrl} bị Timeout!`));
+      });
+
+      req.end();
+    });
+  }
+
+  // Gửi lệnh restart tới toàn bộ Workers (Local + Remote)
+  async restartAllWorkers() {
+    const results = [];
+
+    // Helper gen chuỗi ngẫu nhiên 10 ký tự
+    const generateRandomStr = (len = 10) => {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let res = '';
+      for (let i = 0; i < len; i++) {
+        res += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return res;
+    };
+
+    // 1. Restart Local Worker nếu có
+    if (this.localBot) {
+      try {
+        const newName = generateRandomStr(10);
+        const newPass = generateRandomStr(10);
+        this.localBot.credentials.username = newName;
+        this.localBot.credentials.password = newPass;
+
+        if (this.localBot.bot) {
+          this.localBot.bot.quit('Restart request from Master');
+        } else {
+          this.localBot.scheduleReconnect();
+        }
+        results.push({ type: 'local', name: 'Local Worker', success: true, username: newName });
+      } catch (e) {
+        results.push({ type: 'local', name: 'Local Worker', success: false, error: e.message });
+      }
+    }
+
+    // 2. Restart tất cả Remote Workers
+    for (const baseUrl of this.workerUrls) {
+      try {
+        const res = await this.restartRemoteWorker(baseUrl);
+        results.push({ type: 'remote', name: baseUrl, success: true, username: res.username || 'RemoteBot' });
+      } catch (e) {
+        results.push({ type: 'remote', name: baseUrl, success: false, error: e.message });
+      }
+    }
+
+    return results;
+  }
 }
 
 module.exports = QueueDispatcher;

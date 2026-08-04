@@ -41,9 +41,9 @@ console.log(`==================================================`);
 console.log(`🚀 Bắt đầu khởi động hệ thống với Chế độ: [${BOT_ROLE.toUpperCase()}]`);
 console.log(`==================================================`);
 
-// Helper gen tên random
+// Helper gen chuỗi ngẫu nhiên 10 ký tự (chữ hoa, chữ thường, số)
 function generateRandomUsername(length = 10) {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_';
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
   for (let i = 0; i < length; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -54,11 +54,17 @@ function generateRandomUsername(length = 10) {
 // 1. Khởi tạo Local Minecraft Bot (Nếu ở chế độ 'worker' hoặc 'standalone')
 let localMcBot = null;
 if (BOT_ROLE === 'worker' || BOT_ROLE === 'standalone') {
+  // Nếu không cấu hình tên/pass cụ thể hoặc để mặc định ➔ Tự tạo random 10 ký tự chữ hoa/thường
+  const autoUsername = (MC_USERNAME && MC_USERNAME !== 'StatsChecker') ? MC_USERNAME : generateRandomUsername(10);
+  const autoPassword = MC_PASSWORD ? MC_PASSWORD : generateRandomUsername(10);
+
   const credentials = {
-    username: MC_USERNAME,
+    username: autoUsername,
     authType: MC_AUTH_TYPE,
-    password: MC_PASSWORD
+    password: autoPassword
   };
+
+  console.log(`[Worker] Khởi tạo Minecraft Bot với Username: [${credentials.username}] và Password: [${credentials.password}]`);
   localMcBot = new PersistentBot(credentials, MC_SERVER_HOSTS, MC_SERVER_PORT);
   localMcBot.connect();
 }
@@ -81,10 +87,46 @@ const server = http.createServer((req, res) => {
       online: isOnline,
       ready: isReady,
       busy: isBusy,
-      username: MC_USERNAME,
+      username: localMcBot ? localMcBot.credentials.username : MC_USERNAME,
       timestamp: new Date().toISOString()
     };
     return res.end(JSON.stringify(healthStatus));
+  }
+
+  // Endpoint API restart dành cho Worker Node từ xa
+  if (url.pathname === '/api/restart' && req.method === 'POST') {
+    if (WORKER_SECRET) {
+      const authHeader = req.headers['x-worker-secret'];
+      if (authHeader !== WORKER_SECRET) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ success: false, error: 'Unauthorized: Sai WORKER_SECRET' }));
+      }
+    }
+
+    if (!localMcBot) {
+      res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+      return res.end(JSON.stringify({ success: false, error: 'Node này không chạy Local Worker' }));
+    }
+
+    const newUsername = generateRandomUsername(10);
+    const newPassword = generateRandomUsername(10);
+    localMcBot.credentials.username = newUsername;
+    localMcBot.credentials.password = newPassword;
+
+    console.log(`[Worker] 🔄 Nhận lệnh restart từ xa từ Master. Username mới: [${newUsername}], Password mới: [${newPassword}]`);
+
+    if (localMcBot.bot) {
+      localMcBot.bot.quit('Remote restart request');
+    } else {
+      localMcBot.scheduleReconnect();
+    }
+
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    return res.end(JSON.stringify({
+      success: true,
+      message: 'Đã nhận lệnh restart thành công',
+      username: newUsername
+    }));
   }
 
   // Endpoint API thực thi lệnh dành cho Worker Node
@@ -272,13 +314,23 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
 
          await message.channel.send(text);
       } else if (command === 'restart') {
-         if (localMcBot) {
-           const newName = generateRandomUsername(Math.floor(Math.random() * 7) + 8);
-           localMcBot.credentials.username = newName;
-           if (localMcBot.bot) localMcBot.bot.quit('Admin forced restart');
-           else localMcBot.scheduleReconnect();
-           await message.channel.send(`Đã đổi tên worker thành \`${newName}\` và bắt đầu khởi động lại.`);
+         const statusMsg = await message.channel.send('🔄 **Đang gửi yêu cầu khởi động lại (restart) tới tất cả các Workers...**');
+         const results = await queueDispatcher.restartAllWorkers();
+
+         if (results.length === 0) {
+           await statusMsg.edit('⚠️ Hiện không tìm thấy Worker nào (Local hoặc Remote) được cấu hình để restart.');
+           return;
          }
+
+         let replyText = `✅ **ĐÃ GỬI LỆNH RESTART TỚI TẤT CẢ WORKERS (${results.length}):**\n\n`;
+         results.forEach((res, idx) => {
+           if (res.success) {
+             replyText += `**${idx + 1}. [${res.type.toUpperCase()}] ${res.name}**\n   - Trạng thái: 🟢 Đã nhận lệnh restart (Tên mới: \`${res.username}\`)\n`;
+           } else {
+             replyText += `**${idx + 1}. [${res.type.toUpperCase()}] ${res.name}**\n   - Trạng thái: ❌ Thất bại (\`${res.error}\`)\n`;
+           }
+         });
+         await statusMsg.edit(replyText);
       } else if (command === 'toggle') {
          const sub = args.shift()?.toLowerCase();
          if (sub === 'off') {
