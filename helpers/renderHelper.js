@@ -144,7 +144,17 @@ function normalizeSmallCaps(str) {
 
 function cleanMinecraftText(text) {
   if (!text) return '';
-  return text.replace(/§[0-9a-fk-or]/gi, '').trim();
+  return String(text)
+    .replace(/§x(§[0-9a-f]){6}/gi, '')
+    .replace(/&x(&[0-9a-f]){6}/gi, '')
+    .replace(/&#[0-9a-f]{6}/gi, '')
+    .replace(/§#[0-9a-f]{6}/gi, '')
+    .replace(/§[0-9a-fk-or]/gi, '')
+    .replace(/&[0-9a-fk-or]/gi, '')
+    .replace(/§./g, '')
+    .replace(/[\u00A0\u200B\uFEFF]/g, ' ')
+    .normalize('NFC')
+    .trim();
 }
 
 function cleanBuyerName(str) {

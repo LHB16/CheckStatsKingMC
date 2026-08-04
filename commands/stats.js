@@ -3,7 +3,7 @@
  */
 
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { getCustomEmoji, getStatsLabel, isDecorationItem } = require('../helpers/utils');
+const { getCustomEmoji, getStatsLabel, isDecorationItem, cleanMinecraftText } = require('../helpers/utils');
 const { recordError } = require('../helpers/reportHelper');
 
 module.exports = {
@@ -43,11 +43,13 @@ module.exports = {
         const formattedItems = [];
         
         validItems.forEach(item => {
+          const rawCleanDisplay = cleanMinecraftText(item.displayName);
           const label = getStatsLabel(item);
+          const displayTitle = (rawCleanDisplay || label).trim();
           const emoji = getCustomEmoji(item.name);
           
           const cleanLoreLines = (item.lore || [])
-            .map(line => line.trim())
+            .map(line => cleanMinecraftText(line))
             .filter(line => {
               if (!line) return false;
               if (/^[_\-+=*~]*$/.test(line)) return false;
@@ -59,7 +61,7 @@ module.exports = {
 
           const valueText = cleanLoreLines.join(', ');
           if (valueText) {
-            formattedItems.push(`${emoji} **${(item.displayName || label).toUpperCase()}** | \`${valueText}\``);
+            formattedItems.push(`${emoji} **${displayTitle.toUpperCase()}** | \`${valueText}\``);
           }
         });
 

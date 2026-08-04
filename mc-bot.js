@@ -6,10 +6,16 @@
 const mineflayer = require('mineflayer');
 const EventEmitter = require('events');
 
-// Hàm loại bỏ mã màu Minecraft (§a, §b, v.v.)
+// Hàm loại bỏ mã màu Minecraft (§a, &a, &#RRGGBB, §x..., v.v.)
 function cleanMinecraftText(text) {
   if (!text) return '';
   return String(text)
+    .replace(/§x(§[0-9a-f]){6}/gi, '')
+    .replace(/&x(&[0-9a-f]){6}/gi, '')
+    .replace(/&#[0-9a-f]{6}/gi, '')
+    .replace(/§#[0-9a-f]{6}/gi, '')
+    .replace(/§[0-9a-fk-or]/gi, '')
+    .replace(/&[0-9a-fk-or]/gi, '')
     .replace(/§./g, '')
     .replace(/[\u00A0\u200B\uFEFF]/g, ' ')
     .normalize('NFC')

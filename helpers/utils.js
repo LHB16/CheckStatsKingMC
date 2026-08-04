@@ -44,10 +44,27 @@ function formatItemName(name) {
   return name.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 
+// Hàm loại bỏ mã màu Minecraft (§a, &a, &#RRGGBB, §x..., v.v.)
+function cleanMinecraftText(text) {
+  if (!text) return '';
+  return String(text)
+    .replace(/§x(§[0-9a-f]){6}/gi, '')
+    .replace(/&x(&[0-9a-f]){6}/gi, '')
+    .replace(/&#[0-9a-f]{6}/gi, '')
+    .replace(/§#[0-9a-f]{6}/gi, '')
+    .replace(/§[0-9a-fk-or]/gi, '')
+    .replace(/&[0-9a-fk-or]/gi, '')
+    .replace(/§./g, '')
+    .replace(/[\u00A0\u200B\uFEFF]/g, ' ')
+    .normalize('NFC')
+    .trim();
+}
+
 // Hàm phân loại tên để lấy tiêu đề nhãn
 function getStatsLabel(item) {
   const nameLower = (item.name || '').toLowerCase();
-  const displayNameLower = (item.displayName || '').toLowerCase();
+  const rawClean = cleanMinecraftText(item.displayName || '');
+  const displayNameLower = rawClean.toLowerCase();
 
   if (displayNameLower.includes('tiền') || displayNameLower.includes('xu') || displayNameLower.includes('money') || displayNameLower.includes('coin')) return 'Tài chính';
   if (displayNameLower.includes('shard') || displayNameLower.includes('ngôi sao') || displayNameLower.includes('sao') || displayNameLower.includes('★')) return 'Shards';
@@ -56,18 +73,18 @@ function getStatsLabel(item) {
   if (displayNameLower.includes('thời gian') || displayNameLower.includes('time') || displayNameLower.includes('giờ') || displayNameLower.includes('playtime')) return 'Thời gian chơi';
   if (displayNameLower.includes('rank') || displayNameLower.includes('danh hiệu') || displayNameLower.includes('cấp') || displayNameLower.includes('level')) return 'Rank/Cấp độ';
 
-  return item.displayName || 'Thông tin';
+  return rawClean || 'Thông tin';
 }
 
 // Lọc các item trang trí không cần thiết trong GUI stats
 function isDecorationItem(item) {
   const nameLower = (item.name || '').toLowerCase();
-  const displayName = (item.displayName || '').trim();
+  const displayName = cleanMinecraftText(item.displayName || '');
   
   if (nameLower.includes('glass_pane') || nameLower === 'air' || nameLower === 'barrier') {
     return true;
   }
-  if (!displayName || displayName === ' ' || displayName === '§f') {
+  if (!displayName) {
     return true;
   }
   if ((!item.lore || item.lore.length === 0) && (nameLower.includes('pane') || nameLower.includes('stained'))) {
@@ -79,6 +96,7 @@ function isDecorationItem(item) {
 
 module.exports = {
   CUSTOM_EMOJIS,
+  cleanMinecraftText,
   getCustomEmoji,
   formatItemName,
   getStatsLabel,
