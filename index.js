@@ -111,7 +111,7 @@ const server = http.createServer((req, res) => {
     console.log(`[Worker] 🔄 Nhận lệnh restart từ xa từ Master. Username mới: [${newUsername}], Password mới: [${newPassword}]`);
 
     if (localMcBot.bot) {
-      localMcBot.bot.quit('Remote restart request');
+      localMcBot.bot.end('Remote restart request');
     } else {
       localMcBot.scheduleReconnect();
     }

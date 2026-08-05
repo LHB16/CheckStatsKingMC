@@ -59,6 +59,16 @@ function normalizeSmallCaps(str) {
     .toLowerCase();
 }
 
+// Helper gen chuỗi ngẫu nhiên 10 ký tự (chữ hoa, chữ thường, số)
+function generateRandomUsername(length = 10) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
 // Hàm làm sạch tên người đặt đơn hàng (loại bỏ mọi tiền tố "Đơn hàng của", "ĐƠN HÀNG CỦA", "đơɴ ʜàɴɢ ᴄủᴀ",...)
 function cleanBuyerName(str) {
   if (!str) return 'Ẩn danh';
@@ -336,7 +346,7 @@ class PersistentBot extends EventEmitter {
              reason: cleanMsg 
           });
           
-          if (this.bot) this.bot.quit('Reconnecting due to ban');
+          if (this.bot) this.bot.end('Reconnecting due to ban');
         }
       }
 

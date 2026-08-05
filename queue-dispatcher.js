@@ -317,7 +317,7 @@ class QueueDispatcher {
         this.localBot.credentials.password = newPass;
 
         if (this.localBot.bot) {
-          this.localBot.bot.quit('Restart request from Master');
+          this.localBot.bot.end('Restart request from Master');
         } else {
           this.localBot.scheduleReconnect();
         }
