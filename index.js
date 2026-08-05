@@ -34,6 +34,7 @@ const MC_SERVER_HOSTS = (process.env.MC_SERVER_HOSTS || 'sgp.kingmc.vn,kingmc.vn
 // Global Variables
 global.isBotMaintenance = false;
 global.maintenanceMessage = '';
+global.globalDiscordClient = null;
 
 console.log(`==================================================`);
 console.log(`🚀 Bắt đầu khởi động hệ thống với Chế độ: [${BOT_ROLE.toUpperCase()}]`);
@@ -61,6 +62,32 @@ if (BOT_ROLE === 'worker' || BOT_ROLE === 'standalone') {
 
   console.log(`[Worker] Khởi tạo Minecraft Bot với Username: [${credentials.username}] và Password: [${credentials.password}]`);
   localMcBot = new PersistentBot(credentials, MC_SERVER_HOSTS, MC_SERVER_PORT);
+  
+  localMcBot.on('notifyAdmin', async (message) => {
+    const MASTER_URL = process.env.MASTER_URL;
+    if (BOT_ROLE === 'standalone' && global.globalDiscordClient && ADMIN_ID) {
+      try {
+        const adminUser = await global.globalDiscordClient.users.fetch(ADMIN_ID);
+        if (adminUser) adminUser.send(message);
+      } catch (e) {}
+    } else if (MASTER_URL) {
+      const targetUrl = new URL('/api/notify', MASTER_URL);
+      const transport = targetUrl.protocol === 'https:' ? require('https') : require('http');
+      const reqNotify = transport.request(targetUrl.href, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-worker-secret': WORKER_SECRET || ''
+        }
+      });
+      reqNotify.on('error', (err) => console.error(`[Worker] Lỗi gửi notify về Master: ${err.message}`));
+      reqNotify.write(JSON.stringify({ message }));
+      reqNotify.end();
+    } else if (BOT_ROLE === 'worker') {
+      console.log(`[Worker-Notify] Cần thông báo nhưng thiếu MASTER_URL: ${message}`);
+    }
+  });
+
   localMcBot.connect();
 }
 
@@ -133,6 +160,39 @@ const server = http.createServer((req, res) => {
         return res.end(JSON.stringify({ success: false, error: 'Unauthorized: Sai WORKER_SECRET' }));
       }
     }
+    
+    // Endpoint API nhận thông báo (từ Worker gửi về Master)
+    if (url.pathname === '/api/notify' && req.method === 'POST') {
+      if (WORKER_SECRET) {
+        const authHeader = req.headers['x-worker-secret'];
+        if (authHeader !== WORKER_SECRET) {
+          res.writeHead(401, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ success: false, error: 'Unauthorized: Sai WORKER_SECRET' }));
+        }
+      }
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', async () => {
+        try {
+          const payload = JSON.parse(body);
+          const { message } = payload;
+          if (global.globalDiscordClient && ADMIN_ID && message) {
+            try {
+              const adminUser = await global.globalDiscordClient.users.fetch(ADMIN_ID);
+              if (adminUser) adminUser.send(message);
+            } catch(e) {
+              console.error('Không thể gửi DM notify:', e.message);
+            }
+          }
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true }));
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: err.message }));
+        }
+      });
+      return;
+    }
 
     let body = '';
     req.on('data', chunk => body += chunk);
@@ -201,6 +261,8 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     ],
     partials: [Partials.Channel, Partials.Message, Partials.User]
   });
+  
+  global.globalDiscordClient = client;
 
   if (localMcBot) {
     localMcBot.on('banDetected', async (data) => {

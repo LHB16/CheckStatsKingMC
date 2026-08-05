@@ -283,6 +283,8 @@ class PersistentBot extends EventEmitter {
       const lowerReason = cleanReason.toLowerCase();
       if (lowerReason.includes('ban') || lowerReason.includes('banned') || lowerReason.includes('bị cấm') || lowerReason.includes('bi cam') || lowerReason.includes('bị ban') || lowerReason.includes('bi ban')) {
         this.emit('banDetected', { username: this.credentials.username, reason: cleanReason });
+      } else {
+        this.emit('notifyAdmin', `⚠️ **Worker [\`${this.credentials.username}\`]** bị kick khỏi server! Lý do: \`${cleanReason}\``);
       }
     });
 
@@ -290,6 +292,7 @@ class PersistentBot extends EventEmitter {
       this.isBotOnline = false;
       this.isReady = false;
       console.log(`[MC-Bot] Mất kết nối. Đang lên lịch Reconnect sau 10 giây...`);
+      this.emit('notifyAdmin', `🔴 **Worker [\`${this.credentials.username}\`]** mất kết nối. Đang chờ reconnect sau 10 giây...`);
       this.currentHostIndex = (this.currentHostIndex + 1) % this.hosts.length;
       
       if (this.statsPromiseReject) {
@@ -887,6 +890,7 @@ class PersistentBot extends EventEmitter {
       }
       
       this.isReady = true;
+      this.emit('notifyAdmin', `🟢 **Worker [\`${this.credentials.username}\`]** đã READY và rảnh rỗi chờ lệnh.`);
       console.log(`[MC-Bot] ✅ Đã hoàn tất /rtp và sẵn sàng nhận lệnh từ Discord. Sẽ lặp lại sau 1 giờ.`);
       
       // Lặp lại sau 1 giờ (3600000 ms)
