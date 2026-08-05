@@ -297,6 +297,16 @@ class PersistentBot extends EventEmitter {
       this.startAfkRoutine();
     });
 
+    this.bot.on('death', () => {
+      console.log(`[MC-Bot] Bot đã chết. Đang chờ hồi sinh và thực hiện lại /rtp sau 5 giây...`);
+      const deathTimer = setTimeout(() => {
+        if (this.isBotOnline) {
+          this.performRtp();
+        }
+      }, 5000);
+      this.afkTimers.push(deathTimer);
+    });
+
       // Lắng nghe tin nhắn từ server để tự động đăng nhập & phát hiện bị đá ra lobby / bị ban
     this.bot.on('message', (jsonMsg) => {
       const msgText = jsonMsg.toString();
@@ -812,7 +822,7 @@ class PersistentBot extends EventEmitter {
   startAfkRoutine() {
     this.afkRoutineRunning = true;
     this.isReady = false;
-    console.log(`[MC-Bot] Đang khởi động kịch bản AFK. Sẽ gõ lệnh /menu sau 60 giây nữa...`);
+    console.log(`[MC-Bot] Đang khởi động kịch bản AFK. Sẽ gõ lệnh /menu sau 6 giây nữa...`);
 
     const delay1 = setTimeout(() => {
       if (!this.afkRoutineRunning || !this.bot || !this.isBotOnline) return;
@@ -836,19 +846,49 @@ class PersistentBot extends EventEmitter {
 
         const delay3 = setTimeout(() => {
           if (!this.afkRoutineRunning || !this.bot || !this.isBotOnline) return;
-          console.log(`[MC-Bot] Đang gõ /warp afk...`);
-          this.bot.chat('/warp afk');
-
-          this.isReady = true;
-          console.log(`[MC-Bot] ✅ Bot đã hoàn tất kịch bản AFK và sẵn sàng nhận lệnh từ Discord! (isReady = true)`);
-        }, 10000);
+          this.performRtp();
+        }, 6000);
         this.afkTimers.push(delay3);
 
       }, 4000);
       this.afkTimers.push(delay2);
 
-    }, 60000);
+    }, 6000);
     this.afkTimers.push(delay1);
+  }
+
+  performRtp() {
+    this.isReady = false; // Chuyển sang trạng thái bận
+    console.log(`[MC-Bot] Đang gõ /rtp...`);
+    this.bot.chat('/rtp');
+    
+    const rtpDelay = setTimeout(() => {
+      if (!this.bot || !this.isBotOnline) return;
+      console.log(`[MC-Bot] Đang click slot 15 trong GUI /rtp...`);
+      try {
+        const currentWindow = this.bot.currentWindow;
+        if (currentWindow) {
+          this.bot.clickWindow(15, 0, 0);
+        } else {
+          console.log(`[MC-Bot] Không có window /rtp nào đang mở để click!`);
+        }
+      } catch (e) {
+        console.error(`[MC-Bot] Lỗi click rtp: ${e.message}`);
+      }
+      
+      this.isReady = true;
+      console.log(`[MC-Bot] ✅ Đã hoàn tất /rtp và sẵn sàng nhận lệnh từ Discord. Sẽ lặp lại sau 1 giờ.`);
+      
+      // Lặp lại sau 1 giờ (3600000 ms)
+      const nextRtpTimer = setTimeout(() => {
+        if (this.isBotOnline) {
+          this.performRtp();
+        }
+      }, 3600000);
+      this.afkTimers.push(nextRtpTimer);
+      
+    }, 2000);
+    this.afkTimers.push(rtpDelay);
   }
 
   getBalance(player, timeoutMs = 15000) {

@@ -255,6 +255,63 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
 
+    // --- Hỗ trợ lệnh tiền tố '?' cho mọi user trên Discord (không yêu cầu Admin) ---
+    if (message.content.startsWith('?')) {
+      const args = message.content.slice(1).trim().split(/ +/);
+      const commandName = args.shift().toLowerCase();
+
+      // Chỉ cho phép một số lệnh cụ thể qua tiền tố '?'
+      const allowedCommands = ['stats', 'order', 'bal', 'ah', 'online'];
+      if (!allowedCommands.includes(commandName)) return;
+
+      const command = client.commands.get(commandName);
+      if (!command) return;
+
+      // Chặn nếu đang bảo trì (trừ Admin)
+      if (global.isBotMaintenance) {
+         if (!ADMIN_ID || message.author.id !== ADMIN_ID) {
+            return message.channel.send(`⚠️ **Bảo trì:** ${global.maintenanceMessage}`);
+         }
+      }
+
+      const argStr = args.join(' ').trim();
+      if (!argStr) {
+         return message.channel.send(`⚠️ Lệnh \`?${commandName}\` cần có tham số (tên người chơi hoặc vật phẩm). VD: \`?${commandName} BinhLH\``);
+      }
+
+      // Fake Interaction Object để dùng chung logic với Slash Commands
+      const interaction = {
+        user: message.author,
+        options: {
+          getString: (name) => argStr
+        },
+        deferReply: async () => {
+           interaction._replyMessage = await message.channel.send('⏳ Đang xử lý yêu cầu...');
+        },
+        editReply: async (data) => {
+           if (interaction._replyMessage) {
+              await interaction._replyMessage.edit(data);
+           } else {
+              await message.channel.send(data);
+           }
+        },
+        reply: async (data) => {
+           await message.channel.send(data);
+        },
+        followUp: async (data) => {
+           await message.channel.send(data);
+        }
+      };
+
+      try {
+        await command.execute(interaction, queueDispatcher);
+      } catch (error) {
+        console.error(`[Discord] Lỗi lệnh text ?${commandName}:`, error);
+      }
+      return;
+    }
+
+    // --- Xử lý lệnh tiền tố '!' (Chỉ dành cho Admin) ---
     // Log debug để dễ dàng kiểm tra
     if (message.content.startsWith('!')) {
       console.log(`[Admin-Debug] Nhận tin nhắn: "${message.content}" từ User ID: ${message.author.id} (Tên: ${message.author.tag}). ADMIN_ID hiện tại trong .env là: "${ADMIN_ID}"`);
@@ -262,7 +319,9 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
 
     // Kiểm tra ADMIN_ID nếu đã được cấu hình
     if (ADMIN_ID && message.author.id !== ADMIN_ID) {
-      console.warn(`[Admin-Debug] Bỏ qua tin nhắn vì User ID (${message.author.id}) không khớp với ADMIN_ID (${ADMIN_ID}).`);
+      if (message.content.startsWith('!')) {
+         console.warn(`[Admin-Debug] Bỏ qua tin nhắn vì User ID (${message.author.id}) không khớp với ADMIN_ID (${ADMIN_ID}).`);
+      }
       return;
     }
     
