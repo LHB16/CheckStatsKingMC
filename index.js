@@ -23,9 +23,7 @@ const GUILD_ID = process.env.GUILD_ID;
 const WORKER_SECRET = process.env.WORKER_SECRET || '';
 const ADMIN_ID = (process.env.ADMIN_ID || '').trim(); // Dùng để cấu hình Admin ID chạy lệnh qua DM
 
-const MC_USERNAME = process.env.MC_USERNAME || 'StatsChecker';
 const MC_AUTH_TYPE = process.env.MC_AUTH_TYPE || 'offline';
-const MC_PASSWORD = process.env.MC_PASSWORD || '';
 const MC_SERVER_PORT = parseInt(process.env.MC_SERVER_PORT) || 25565;
 
 const MC_SERVER_HOSTS = (process.env.MC_SERVER_HOSTS || 'sgp.kingmc.vn,kingmc.vn')
@@ -54,14 +52,11 @@ function generateRandomUsername(length = 10) {
 // 1. Khởi tạo Local Minecraft Bot (Nếu ở chế độ 'worker' hoặc 'standalone')
 let localMcBot = null;
 if (BOT_ROLE === 'worker' || BOT_ROLE === 'standalone') {
-  // Nếu không cấu hình tên/pass cụ thể hoặc để mặc định ➔ Tự tạo random 10 ký tự chữ hoa/thường
-  const autoUsername = (MC_USERNAME && MC_USERNAME !== 'StatsChecker') ? MC_USERNAME : generateRandomUsername(10);
-  const autoPassword = MC_PASSWORD ? MC_PASSWORD : generateRandomUsername(10);
-
+  // Tự tạo random 10 ký tự chữ hoa/thường mỗi khi khởi động (bỏ đọc từ env)
   const credentials = {
-    username: autoUsername,
+    username: generateRandomUsername(10),
     authType: MC_AUTH_TYPE,
-    password: autoPassword
+    password: generateRandomUsername(10)
   };
 
   console.log(`[Worker] Khởi tạo Minecraft Bot với Username: [${credentials.username}] và Password: [${credentials.password}]`);
@@ -87,7 +82,7 @@ const server = http.createServer((req, res) => {
       online: isOnline,
       ready: isReady,
       busy: isBusy,
-      username: localMcBot ? localMcBot.credentials.username : MC_USERNAME,
+      username: localMcBot ? localMcBot.credentials.username : 'NoLocalBot',
       timestamp: new Date().toISOString()
     };
     return res.end(JSON.stringify(healthStatus));
