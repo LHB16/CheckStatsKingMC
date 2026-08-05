@@ -324,6 +324,7 @@ class PersistentBot extends EventEmitter {
     this.bot.on('message', (jsonMsg) => {
       const msgText = jsonMsg.toString();
       const cleanMsg = cleanMinecraftText(msgText);
+      console.log(`[MC-Bot Chat] ${cleanMsg}`);
       const lowerMsg = cleanMsg.toLowerCase();
       
       // Bỏ qua các thông báo hệ thống / nội quy mặc định của KingMC
