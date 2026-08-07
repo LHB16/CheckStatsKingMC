@@ -11,6 +11,8 @@ class CommandHandler {
     this.client = client;
     this.queueDispatcher = queueDispatcher;
     this.client.commands = new Collection();
+    this.cooldowns = new Collection();
+    this.activeUsers = new Set();
   }
 
   // Khởi tạo và nạp tất cả các file lệnh trong thư mục commands/
@@ -61,6 +63,38 @@ class CommandHandler {
     }
   }
 
+  // Phương thức kiểm tra Spam (Cooldown & Overlap)
+  checkSpam(userId) {
+    if (this.activeUsers.has(userId)) {
+      return { isSpam: true, message: '⚠️ Bạn đang có một lệnh đang được xử lý, vui lòng đợi!' };
+    }
+
+    const now = Date.now();
+    const cooldownAmount = 5000; // 5 giây
+
+    if (this.cooldowns.has(userId)) {
+      const expirationTime = this.cooldowns.get(userId) + cooldownAmount;
+      if (now < expirationTime) {
+        const timeLeft = ((expirationTime - now) / 1000).toFixed(1);
+        return { isSpam: true, message: `⏳ Vui lòng đợi **${timeLeft}s** trước khi dùng lệnh tiếp theo.` };
+      }
+    }
+
+    // Đánh dấu người dùng đang active và thời điểm dùng lệnh
+    this.cooldowns.set(userId, now);
+    this.activeUsers.add(userId);
+
+    // Tự động dọn dẹp cooldown sau 5 giây để tránh rò rỉ bộ nhớ
+    setTimeout(() => this.cooldowns.delete(userId), cooldownAmount);
+
+    return { isSpam: false };
+  }
+
+  // Gỡ bỏ trạng thái Active của user sau khi lệnh xong
+  finishUserTask(userId) {
+    this.activeUsers.delete(userId);
+  }
+
   // Xử lý sự kiện Interaction
   async handleInteraction(interaction) {
     if (!interaction.isChatInputCommand()) return;
@@ -69,6 +103,12 @@ class CommandHandler {
     if (!command) {
       console.error(`[CommandHandler] Không tìm thấy handler xử lý cho lệnh /${interaction.commandName}`);
       return;
+    }
+
+    const userId = interaction.user.id;
+    const spamCheck = this.checkSpam(userId);
+    if (spamCheck.isSpam) {
+      return interaction.reply({ content: spamCheck.message, ephemeral: true });
     }
 
     try {
@@ -85,6 +125,8 @@ class CommandHandler {
       } else {
         await interaction.reply(replyPayload);
       }
+    } finally {
+      this.finishUserTask(userId);
     }
   }
 }

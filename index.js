@@ -93,8 +93,52 @@ if (BOT_ROLE === 'worker' || BOT_ROLE === 'standalone') {
 
 // 2. Khởi tạo HTTP Server (Health Check cho Render & Worker API endpoints)
 const PORT = process.env.PORT || 3000;
+
+// Bộ nhớ đệm giới hạn IP (Rate Limiter)
+const ipRateLimitMap = new Map();
+
+// Tự động dọn dẹp bộ nhớ đệm IP mỗi 10 giây
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, data] of ipRateLimitMap.entries()) {
+    if (now - data.startTime > 10000) {
+      ipRateLimitMap.delete(ip);
+    }
+  }
+}, 10000);
+
 const server = http.createServer((req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host}`);
+  // --- IP Rate Limiting (Chống Spam/DDoS Lớp 7) ---
+  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  const authSecret = req.headers['x-worker-secret'];
+  
+  // NẾU CÓ KHÓA BÍ MẬT HỢP LỆ (TỪ MASTER GỬI TỚI) -> BỎ QUA RATE LIMIT
+  const isMaster = WORKER_SECRET && authSecret === WORKER_SECRET;
+
+  if (clientIp && !isMaster) {
+    const now = Date.now();
+    let rateData = ipRateLimitMap.get(clientIp);
+    
+    if (!rateData) {
+      rateData = { count: 1, startTime: now };
+      ipRateLimitMap.set(clientIp, rateData);
+    } else {
+      if (now - rateData.startTime < 10000) { // Khung thời gian: 10 giây
+        rateData.count++;
+        if (rateData.count > 20) { // Giới hạn: Tối đa 20 requests / 10 giây
+          res.writeHead(429, { 'Content-Type': 'text/plain' });
+          return res.end('429 Too Many Requests: Bạn đang spam quá nhanh!');
+        }
+      } else {
+        // Hết khung 10s, reset lại bộ đếm
+        rateData.count = 1;
+        rateData.startTime = now;
+      }
+    }
+  }
+  // --- Kết thúc Rate Limiting ---
+
+  const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
 
   // Endpoint kiểm tra Health Check
   if (url.pathname === '/health' || url.pathname === '/') {
@@ -336,6 +380,12 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
          return message.channel.send(`⚠️ Lệnh \`?${commandName}\` cần có tham số (tên người chơi hoặc vật phẩm). VD: \`?${commandName} BinhLH\``);
       }
 
+      const userId = message.author.id;
+      const spamCheck = commandHandler.checkSpam(userId);
+      if (spamCheck.isSpam) {
+        return message.channel.send(spamCheck.message);
+      }
+
       // Fake Interaction Object để dùng chung logic với Slash Commands
       const interaction = {
         user: message.author,
@@ -364,6 +414,8 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
         await command.execute(interaction, queueDispatcher);
       } catch (error) {
         console.error(`[Discord] Lỗi lệnh text ?${commandName}:`, error);
+      } finally {
+        commandHandler.finishUserTask(userId);
       }
       return;
     }
