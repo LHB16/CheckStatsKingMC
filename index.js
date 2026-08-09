@@ -36,7 +36,10 @@ const MC_SERVER_HOSTS = (process.env.MC_SERVER_HOSTS || 'sgp.kingmc.vn,kingmc.vn
 // Global Variables
 global.isBotMaintenance = false;
 global.maintenanceMessage = '';
+global.isAiChatEnabled = true;
+global.aiDisableReason = '';
 global.globalDiscordClient = null;
+
 
 console.log(`==================================================`);
 console.log(`🚀 Bắt đầu khởi động hệ thống với Chế độ: [${BOT_ROLE.toUpperCase()}]`);
@@ -448,7 +451,21 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
 
     try {
       if (command === 'help') {
-         await message.channel.send('**Danh sách lệnh Admin:**\n- `!status` hoặc `!workers`: Xem danh sách và trạng thái toàn bộ Workers (Local & Remote)\n- `!restart`: Random tên mới và khởi động lại bot ngay lập tức\n- `!mode` hoặc `!render`: Chuyển đổi chế độ hiển thị danh sách (Text / Image)\n- `!toggle off/on [lời nhắn]`: Bật/tắt việc nhận Slash Commands từ user khác.');
+         await message.channel.send('**Danh sách lệnh Admin:**\n- `!status` hoặc `!workers`: Xem danh sách và trạng thái toàn bộ Workers (Local & Remote)\n- `!restart`: Random tên mới và khởi động lại bot ngay lập tức\n- `!mode` hoặc `!render`: Chuyển đổi chế độ hiển thị danh sách (Text / Image)\n- `!toggle off/on [lời nhắn]`: Bật/tắt việc nhận Slash Commands từ user khác.\n- `!ai off/on [lời nhắn]`: Bật/tắt tính năng trò chuyện AI với người dùng.');
+      } else if (command === 'ai') {
+         const sub = args.shift()?.toLowerCase();
+         if (sub === 'off') {
+            global.isAiChatEnabled = false;
+            global.aiDisableReason = args.join(' ') || 'Tính năng trò chuyện AI hiện đang tạm tắt.';
+            await message.channel.send(`🔴 Đã **TẮT** tính năng trò chuyện AI. Lời nhắn: \`${global.aiDisableReason}\``);
+         } else if (sub === 'on') {
+            global.isAiChatEnabled = true;
+            global.aiDisableReason = '';
+            await message.channel.send('🟢 Đã **BẬT** lại tính năng trò chuyện AI.');
+         } else {
+            const statusStr = global.isAiChatEnabled ? '🟢 Đang **BẬT**' : `🔴 Đang **TẮT** (Lý do: \`${global.aiDisableReason}\`)`;
+            await message.channel.send(`🤖 **Trạng thái AI Chat:** ${statusStr}\n\nCú pháp Admin: \`!ai on\` hoặc \`!ai off [lời nhắn]\``);
+         }
       } else if (command === 'mode' || command === 'render') {
          const targetMode = args.shift()?.toLowerCase();
          let newMode;

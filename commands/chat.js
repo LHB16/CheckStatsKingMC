@@ -23,6 +23,13 @@ module.exports = {
 
     await interaction.deferReply();
 
+    // 0. Kiểm tra nếu Admin đã tắt tính năng AI Chat
+    if (global.isAiChatEnabled === false) {
+      return await interaction.editReply({
+        content: `⚠️ **Thông báo:** ${global.aiDisableReason || 'Tính năng trò chuyện AI hiện đang tạm tắt.'}`
+      });
+    }
+
     // 1. Kiểm tra từ ngữ nhạy cảm (Im lặng bỏ qua)
     const filterResult = checkSensitiveContent(question);
     if (filterResult.isBlocked) {

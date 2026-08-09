@@ -24,6 +24,12 @@ async function handleAiChatMessage(message) {
     // Nếu không được mention thì bỏ qua
     if (!isMentioned) return;
 
+    // 2.5 Kiểm tra xem tính năng AI Chat có đang bị Admin TẮT hay không
+    if (global.isAiChatEnabled === false) {
+      console.log(`[AIChat] Bỏ qua câu hỏi vì tính năng AI Chat hiện đang bị TẮT.`);
+      return;
+    }
+
     // 3. Tách lấy câu hỏi sạch (xóa tag bot khỏi chuỗi tin nhắn)
     const mentionRegex = new RegExp(`<@!?${clientUser.id}>`, 'g');
     const promptText = message.content.replace(mentionRegex, '').trim();
