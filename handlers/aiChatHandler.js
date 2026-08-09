@@ -33,11 +33,10 @@ async function handleAiChatMessage(message) {
       return;
     }
 
-    // 4. Kiểm tra từ ngữ nhạy cảm / không phù hợp
+    // 4. Kiểm tra từ ngữ nhạy cảm / không phù hợp (Im lặng bỏ qua, không nhắn vào kênh)
     const filterResult = checkSensitiveContent(promptText);
     if (filterResult.isBlocked) {
       console.log(`[AIChat] 🛑 Chặn câu hỏi nhạy cảm từ ${message.author.tag}: "${promptText}" (Từ vi phạm: ${filterResult.matchedWord})`);
-      await message.reply(filterResult.blockMessage);
       return;
     }
 

@@ -23,16 +23,14 @@ module.exports = {
 
     await interaction.deferReply();
 
-    // 1. Kiểm tra từ ngữ nhạy cảm
+    // 1. Kiểm tra từ ngữ nhạy cảm (Im lặng bỏ qua)
     const filterResult = checkSensitiveContent(question);
     if (filterResult.isBlocked) {
-      const blockEmbed = new EmbedBuilder()
-        .setTitle('🛡️ Nội dung không phù hợp')
-        .setDescription(filterResult.blockMessage)
-        .setColor('#ef4444')
-        .setTimestamp();
-      
-      return await interaction.editReply({ embeds: [blockEmbed] });
+      console.log(`[Slash-Chat] 🛑 Chặn câu hỏi nhạy cảm từ ${interaction.user.tag}: "${question}" (Từ vi phạm: ${filterResult.matchedWord})`);
+      try {
+        await interaction.deleteReply();
+      } catch (e) {}
+      return;
     }
 
     try {
