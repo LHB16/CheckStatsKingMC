@@ -1,4 +1,5 @@
 const { checkSensitiveContent } = require('../helpers/filterHelper');
+const { performWebSearch, shouldPerformWebSearch } = require('../helpers/searchHelper');
 const groqManager = require('../helpers/groqHelper');
 
 // Bộ nhớ đệm lưu lịch sử chat ngắn hạn theo channelId hoặc userId
@@ -43,7 +44,20 @@ async function handleAiChatMessage(message) {
     // 5. Hiển thị trạng thái "đang gõ..." (typing indicator)
     await message.channel.sendTyping();
 
-    // 6. Quản lý lịch sử cuộc hội thoại
+    // 6. Tự động tìm kiếm thông tin trên Internet nếu câu hỏi yêu cầu dữ liệu thời gian thực
+    let finalPromptContent = promptText;
+    if (shouldPerformWebSearch(promptText)) {
+      const searchResults = await performWebSearch(promptText, 4);
+      if (searchResults.length > 0) {
+        const searchContext = searchResults
+          .map((item, idx) => `[${idx + 1}] ${item.title}\nNội dung: ${item.snippet}\nNguồn: ${item.url}`)
+          .join('\n\n');
+        
+        finalPromptContent = `[Dữ liệu tìm kiếm thời gian thực từ Internet]:\n${searchContext}\n\n[Câu hỏi của người dùng]: "${promptText}"\n\nHãy dựa vào dữ liệu tìm kiếm thời gian thực trên (nếu có ích) để tổng hợp và trả lời ngắn gọn, chính xác bằng tiếng Việt.`;
+      }
+    }
+
+    // 7. Quản lý lịch sử cuộc hội thoại
     const historyKey = message.channel.isDMBased() ? message.author.id : message.channel.id;
     if (!conversationHistory.has(historyKey)) {
       conversationHistory.set(historyKey, []);
@@ -53,10 +67,10 @@ async function handleAiChatMessage(message) {
     // Chuẩn bị tin nhắn gửi sang Groq AI
     const messages = [
       ...history,
-      { role: 'user', content: promptText }
+      { role: 'user', content: finalPromptContent }
     ];
 
-    // 7. Gửi câu hỏi sang Groq AI (với cơ chế xoay vòng API Keys)
+    // 8. Gửi câu hỏi sang Groq AI (với cơ chế xoay vòng API Keys)
     const aiReply = await groqManager.chat(messages);
 
     // 8. Cập nhật lịch sử thoại

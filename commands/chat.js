@@ -5,12 +5,13 @@
 
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { checkSensitiveContent } = require('../helpers/filterHelper');
+const { performWebSearch, shouldPerformWebSearch } = require('../helpers/searchHelper');
 const groqManager = require('../helpers/groqHelper');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('chat')
-    .setDescription('Trò chuyện thông minh với Groq AI')
+    .setDescription('Trò chuyện thông minh với Groq AI (Có hỗ trợ Tra cứu Web)')
     .addStringOption(option =>
       option.setName('question')
         .setDescription('Câu hỏi hoặc nội dung bạn muốn trò chuyện với AI')
@@ -35,17 +36,33 @@ module.exports = {
     }
 
     try {
-      // 2. Gửi câu hỏi sang Groq AI
-      const aiReply = await groqManager.chat([{ role: 'user', content: question }]);
+      // 2. Tra cứu Internet nếu câu hỏi yêu cầu dữ liệu thực tế / thời gian thực
+      let finalPrompt = question;
+      let usedWebSearch = false;
 
-      // 3. Hiển thị kết quả dạng Embed hoặc tin nhắn tùy độ dài
+      if (shouldPerformWebSearch(question)) {
+        const searchResults = await performWebSearch(question, 4);
+        if (searchResults.length > 0) {
+          usedWebSearch = true;
+          const searchContext = searchResults
+            .map((item, idx) => `[${idx + 1}] ${item.title}\nNội dung: ${item.snippet}\nNguồn: ${item.url}`)
+            .join('\n\n');
+          
+          finalPrompt = `[Dữ liệu tìm kiếm thời gian thực từ Internet]:\n${searchContext}\n\n[Câu hỏi của người dùng]: "${question}"\n\nHãy dựa vào dữ liệu tìm kiếm thời gian thực trên (nếu có ích) để tổng hợp và trả lời ngắn gọn, chính xác bằng tiếng Việt.`;
+        }
+      }
+
+      // 3. Gửi câu hỏi sang Groq AI
+      const aiReply = await groqManager.chat([{ role: 'user', content: finalPrompt }]);
+
+      // 4. Hiển thị kết quả dạng Embed hoặc tin nhắn tùy độ dài
       if (aiReply.length <= 4000) {
         const embed = new EmbedBuilder()
           .setTitle(`💬 Trả lời cho: "${question.length > 50 ? question.substring(0, 47) + '...' : question}"`)
           .setDescription(aiReply)
-          .setColor('#3b82f6')
+          .setColor(usedWebSearch ? '#10b981' : '#3b82f6')
           .setTimestamp()
-          .setFooter({ text: 'Powered by Groq AI • Thiết kế bởi BinhLH' });
+          .setFooter({ text: `Powered by Groq AI ${usedWebSearch ? '• 🌐 Đã tra cứu Internet' : ''} • Thiết kế bởi BinhLH` });
 
         await interaction.editReply({ embeds: [embed] });
       } else {
