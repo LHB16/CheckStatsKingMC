@@ -14,6 +14,8 @@ const QueueDispatcher = require('./queue-dispatcher');
 const CommandHandler = require('./handlers/commandHandler');
 const { handleReportButtons, sendBanAlert } = require('./helpers/reportHelper');
 const configHelper = require('./helpers/configHelper');
+const { handleAiChatMessage } = require('./handlers/aiChatHandler');
+
 
 // Cấu hình từ .env
 const BOT_ROLE = (process.env.BOT_ROLE || 'standalone').toLowerCase();
@@ -355,6 +357,12 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   // Lắng nghe lệnh qua DM hoặc Kênh chat (Admin)
   client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
+
+    // --- Hỗ trợ Trò chuyện với AI khi Tag/Mention Bot ---
+    if (message.mentions.has(client.user)) {
+      await handleAiChatMessage(message);
+      return;
+    }
 
     // --- Hỗ trợ lệnh tiền tố '?' cho mọi user trên Discord (không yêu cầu Admin) ---
     if (message.content.startsWith('?')) {
