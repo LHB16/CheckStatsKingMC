@@ -67,7 +67,9 @@ module.exports = {
     const embed = new EmbedBuilder()
       .setTitle('ping')
       .setColor('#2b2d31')
-      .setDescription(`\`\`\`text\n${lines}\n\`\`\``);
+      .setDescription(`\`\`\`text\n${lines}\n\`\`\``)
+      .setTimestamp()
+      .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
 
     if (interaction.editReply) {
       await interaction.editReply({ embeds: [embed] });
