@@ -14,6 +14,7 @@
     "duck-duck-scrape": "^2.2.7",
     "groq-sdk": "^1.5.0",
     "mineflayer": "^4.37.1",
+    "ping-minecraft-server": "^1.0.1",
     "puppeteer": "^25.4.0"
   }
 }

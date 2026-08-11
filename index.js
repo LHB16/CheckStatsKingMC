@@ -373,7 +373,7 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
       const commandName = args.shift().toLowerCase();
 
       // Chỉ cho phép một số lệnh cụ thể qua tiền tố '?'
-      const allowedCommands = ['stats', 'order', 'bal', 'ah', 'online'];
+      const allowedCommands = ['stats', 'order', 'bal', 'ah', 'online', 'ping', 'help'];
       if (!allowedCommands.includes(commandName)) return;
 
       const command = client.commands.get(commandName);
@@ -387,7 +387,8 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
       }
 
       const argStr = args.join(' ').trim();
-      if (!argStr) {
+      const noArgRequiredCommands = ['ping', 'help'];
+      if (!noArgRequiredCommands.includes(commandName) && !argStr) {
          return message.channel.send(`⚠️ Lệnh \`?${commandName}\` cần có tham số (tên người chơi hoặc vật phẩm). VD: \`?${commandName} BinhLH\``);
       }
 
@@ -400,6 +401,7 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
       // Fake Interaction Object để dùng chung logic với Slash Commands
       const interaction = {
         user: message.author,
+        client: client,
         options: {
           getString: (name) => argStr
         },
