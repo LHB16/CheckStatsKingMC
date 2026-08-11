@@ -49,8 +49,6 @@ module.exports = {
     .setDescription('Kiểm tra độ trễ (ping) của Discord Bot & trạng thái Server KingMC'),
 
   async execute(interaction) {
-    const startTime = Date.now();
-
     if (interaction.deferReply) {
       await interaction.deferReply();
     }
@@ -58,54 +56,18 @@ module.exports = {
     // Ping tất cả các host của KingMC song song
     const pingResults = await Promise.all(KINGMC_HOSTS.map(pingSingleHost));
 
-    const roundtripMs = Date.now() - startTime;
-    const wsPing = interaction.client?.ws?.ping ?? -1;
-
-    // Tìm node có kết quả tốt nhất (online, players cao nhất, ping thấp nhất)
-    const onlineResults = pingResults.filter(r => r.online);
-    let bestNodeText = '❌ Tất cả các Node KingMC đều không phản hồi';
-
-    if (onlineResults.length > 0) {
-      const bestNode = [...onlineResults].sort((a, b) => {
-        if (a.players !== b.players) return b.players - a.players;
-        return a.ping - b.ping;
-      })[0];
-      bestNodeText = `🟢 **${bestNode.name}** (\`${bestNode.host}\`) | Ping: \`${bestNode.ping}ms\` | Players: \`${bestNode.players}/${bestNode.maxPlayers}\``;
-    }
-
-    // Format danh sách Node
-    const nodeLines = pingResults.map(res => {
+    const lines = pingResults.map(res => {
       if (res.online) {
-        return `🟢 **${res.name}** (\`${res.host}\`)\n   └ Độ trễ: \`${res.ping}ms\` • Người chơi: \`${res.players}/${res.maxPlayers}\``;
+        return `${res.host} : ${res.ping}ms : ${res.players}/${res.maxPlayers}`;
       } else {
-        return `🔴 **${res.name}** (\`${res.host}\`)\n   └ Trạng thái: \`Offline / Timeout\``;
+        return `${res.host} : Offline`;
       }
-    }).join('\n\n');
+    }).join('\n');
 
     const embed = new EmbedBuilder()
-      .setTitle('🏓 **Kiểm Tra Trạng Thái & Độ Trễ (Ping)** 🏓')
+      .setTitle('ping')
       .setColor('#2b2d31')
-      .setThumbnail('https://mc-heads.net/head/BinhLH/3d')
-      .setDescription(`Dưới đây là thông số kết nối của **Discord Bot** và các máy chủ **KingMC.vn**`)
-      .addFields(
-        {
-          name: '🤖 **DISCORD BOT LATENCY**',
-          value: `• **WebSocket Ping:** \`${wsPing >= 0 ? wsPing + 'ms' : 'N/A'}\`\n• **Phản hồi hệ thống (Roundtrip):** \`${roundtripMs}ms\``,
-          inline: false
-        },
-        {
-          name: '🌐 **TRẠNG THÁI CÁC NODE KINGMC**',
-          value: nodeLines || 'Không có dữ liệu',
-          inline: false
-        },
-        {
-          name: '⚡ **NODE KHUYÊN DÙNG (TỐI ƯU NHẤT)**',
-          value: bestNodeText,
-          inline: false
-        }
-      )
-      .setTimestamp()
-      .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
+      .setDescription(`\`\`\`text\n${lines}\n\`\`\``);
 
     if (interaction.editReply) {
       await interaction.editReply({ embeds: [embed] });
