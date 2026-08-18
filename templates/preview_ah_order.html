@@ -146,8 +146,8 @@
 
     /* Khung ô Slot Inventory mặc định Minecraft */
     .mc-slot {
-      width: 40px;
-      height: 40px;
+      width: 42px;
+      height: 42px;
       background-color: #8b8b8b;
       border-top: 2.5px solid #373737;
       border-left: 2.5px solid #373737;
@@ -160,14 +160,28 @@
       margin: 0 auto;
       border-radius: 2px;
       box-sizing: border-box;
+      position: relative;
     }
 
     .item-icon {
-      width: 30px;
-      height: 30px;
+      width: 32px;
+      height: 32px;
       object-fit: contain;
       image-rendering: pixelated;
       filter: drop-shadow(1px 2px 3px rgba(0, 0, 0, 0.5));
+    }
+
+    .slot-count {
+      position: absolute;
+      right: 2px;
+      bottom: 1px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #ffffff;
+      text-shadow: 1.5px 1.5px 0px #3f3f3f;
+      font-family: monospace, sans-serif;
+      line-height: 1;
+      pointer-events: none;
     }
 
     .item-name {

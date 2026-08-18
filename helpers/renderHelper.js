@@ -84,6 +84,108 @@ async function getBrowser() {
   return browserInstance;
 }
 
+const RAW_CDN_PREFIX = "https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.20.1/assets/minecraft/textures/";
+
+// Bộ nhớ đệm RAM chứa chuỗi base64 của texture cục bộ để tối ưu hiệu năng
+const localTextureBase64Cache = new Map();
+
+/**
+ * Đọc file texture cục bộ và chuyển sang Data URI (base64)
+ */
+function getLocalTextureBase64(subdir, filename) {
+  const cacheKey = `${subdir}/${filename}`;
+  if (localTextureBase64Cache.has(cacheKey)) {
+    return localTextureBase64Cache.get(cacheKey);
+  }
+  const localPath = subdir
+    ? path.join(__dirname, '../public/textures', subdir, filename)
+    : path.join(__dirname, '../public/textures', filename);
+
+  if (fs.existsSync(localPath)) {
+    try {
+      const buffer = fs.readFileSync(localPath);
+      const dataUri = `data:image/png;base64,${buffer.toString('base64')}`;
+      localTextureBase64Cache.set(cacheKey, dataUri);
+      return dataUri;
+    } catch (err) {
+      console.error(`[RenderHelper] Không thể đọc texture ${localPath}:`, err.message);
+    }
+  }
+  localTextureBase64Cache.set(cacheKey, null);
+  return null;
+}
+
+/**
+ * Ánh xạ khối đặc biệt (Special Block Resolver) đồng bộ theo forLongdz22
+ */
+function resolveSpecialTexture(id) {
+  if (!id) return null;
+  const cleanId = id.toLowerCase().trim();
+
+  const directMap = {
+    'crafting_table': RAW_CDN_PREFIX + 'block/crafting_table_front.png',
+    'furnace': RAW_CDN_PREFIX + 'block/furnace_front.png',
+    'cactus': RAW_CDN_PREFIX + 'block/cactus_side.png',
+    'pumpkin': RAW_CDN_PREFIX + 'block/pumpkin_side.png',
+    'grass_block': RAW_CDN_PREFIX + 'block/grass_block_side.png',
+    'podzol': RAW_CDN_PREFIX + 'block/podzol_side.png',
+    'ancient_debris': RAW_CDN_PREFIX + 'block/ancient_debris_side.png',
+    'snow_block': RAW_CDN_PREFIX + 'block/snow.png',
+    'chiseled_bookshelf': RAW_CDN_PREFIX + 'block/chiseled_bookshelf_empty.png',
+    'decorated_pot': RAW_CDN_PREFIX + 'block/decorated_pot_base.png',
+    'jukebox': RAW_CDN_PREFIX + 'block/jukebox_side.png',
+    'mangrove_roots': RAW_CDN_PREFIX + 'block/mangrove_roots_side.png',
+    'muddy_mangrove_roots': RAW_CDN_PREFIX + 'block/muddy_mangrove_roots_side.png',
+    'azalea': RAW_CDN_PREFIX + 'block/azalea_side.png',
+    'flowering_azalea': RAW_CDN_PREFIX + 'block/flowering_azalea_side.png',
+    'small_dripleaf': RAW_CDN_PREFIX + 'block/small_dripleaf_top.png',
+    'big_dripleaf': RAW_CDN_PREFIX + 'block/big_dripleaf_top.png',
+    'suspicious_sand': RAW_CDN_PREFIX + 'block/suspicious_sand_0.png',
+    'suspicious_gravel': RAW_CDN_PREFIX + 'block/suspicious_gravel_0.png',
+    'smooth_stone_slab': RAW_CDN_PREFIX + 'block/smooth_stone.png',
+    'smooth_red_sandstone': RAW_CDN_PREFIX + 'block/red_sandstone_top.png',
+    'smooth_sandstone': RAW_CDN_PREFIX + 'block/sandstone_top.png',
+    'smooth_quartz': RAW_CDN_PREFIX + 'block/quartz_block_bottom.png',
+    'petrified_oak_slab': RAW_CDN_PREFIX + 'block/oak_planks.png',
+    'moss_carpet': RAW_CDN_PREFIX + 'block/moss_block.png',
+    'chest': RAW_CDN_PREFIX + 'entity/chest/normal.png',
+    'ender_chest': RAW_CDN_PREFIX + 'entity/chest/ender.png',
+    'trapped_chest': RAW_CDN_PREFIX + 'entity/chest/trapped.png'
+  };
+
+  if (directMap[cleanId]) return directMap[cleanId];
+
+  if (cleanId.endsWith('_wood')) return RAW_CDN_PREFIX + `block/${cleanId.replace(/_wood$/, '')}_log.png`;
+  if (cleanId.endsWith('_hyphae')) return RAW_CDN_PREFIX + `block/${cleanId.replace(/_hyphae$/, '')}_stem.png`;
+  if (cleanId.endsWith('_fence')) return RAW_CDN_PREFIX + `block/${cleanId.replace(/_fence$/, '')}_planks.png`;
+
+  if (cleanId.endsWith('_slab') || cleanId.endsWith('_stairs')) {
+    let base = cleanId.replace(/_slab$/, '').replace(/_stairs$/, '');
+    if (base.includes('oak') || base.includes('spruce') || base.includes('birch') || base.includes('jungle') || base.includes('acacia') || base.includes('dark_oak') || base.includes('mangrove') || base.includes('cherry') || base.includes('crimson') || base.includes('warped') || base.includes('bamboo')) {
+      if (base.includes('mosaic')) return RAW_CDN_PREFIX + 'block/bamboo_mosaic.png';
+      const parts = base.split('_');
+      const woodType = parts.filter(p => ['oak','spruce','birch','jungle','acacia','dark','mangrove','cherry','crimson','warped','bamboo'].includes(p)).join('_');
+      return RAW_CDN_PREFIX + `block/${woodType}_planks.png`;
+    }
+    if (base.includes('cobblestone')) return RAW_CDN_PREFIX + 'block/cobblestone.png';
+    if (base.includes('stone_brick')) return RAW_CDN_PREFIX + 'block/stone_bricks.png';
+    if (base.includes('stone')) return RAW_CDN_PREFIX + 'block/stone.png';
+    if (base.includes('brick')) return RAW_CDN_PREFIX + 'block/bricks.png';
+    if (base.includes('nether_brick')) return RAW_CDN_PREFIX + 'block/nether_bricks.png';
+    if (base.includes('quartz')) return RAW_CDN_PREFIX + 'block/quartz_block_side.png';
+    if (base.includes('purpur')) return RAW_CDN_PREFIX + 'block/purpur_block.png';
+    if (base.includes('dark_prismarine')) return RAW_CDN_PREFIX + 'block/dark_prismarine.png';
+    if (base.includes('prismarine_brick')) return RAW_CDN_PREFIX + 'block/prismarine_bricks.png';
+    if (base.includes('prismarine')) return RAW_CDN_PREFIX + 'block/prismarine.png';
+    if (base.includes('cut_red_sandstone')) return RAW_CDN_PREFIX + 'block/cut_red_sandstone.png';
+    if (base.includes('red_sandstone')) return RAW_CDN_PREFIX + 'block/red_sandstone_top.png';
+    if (base.includes('cut_sandstone')) return RAW_CDN_PREFIX + 'block/cut_sandstone.png';
+    if (base.includes('sandstone')) return RAW_CDN_PREFIX + 'block/sandstone_top.png';
+  }
+
+  return null;
+}
+
 /**
  * Format tên item từ id (ví dụ: 'blaze_rod' -> 'Blaze Rod')
  */
@@ -96,39 +198,78 @@ function formatItemDisplayName(id) {
 }
 
 /**
- * Lấy URL Icon 3D Pre-rendered với fallback dấu hỏi (?)
+ * Lấy URL Icon 3D Pre-rendered với Pipeline Fallback đa tầng (đồng bộ forLongdz22)
+ * @param {string|object} itemOrId - ID hoặc Object item { name, skullOwner, count }
  */
-function getItemIconUrl(id) {
-  if (!id) return SVG_QUESTION_MARK;
-  const cleanId = id.toLowerCase().trim();
-  if (cleanId === 'player_head' || cleanId === 'skull' || cleanId === 'air' || cleanId === 'barrier') {
+function getItemIconUrl(itemOrId) {
+  if (!itemOrId) return SVG_QUESTION_MARK;
+  let cleanId = '';
+  let skullOwner = null;
+
+  if (typeof itemOrId === 'object') {
+    cleanId = (itemOrId.name || itemOrId.itemName || '').toLowerCase().trim();
+    skullOwner = itemOrId.skullOwner || null;
+  } else {
+    cleanId = String(itemOrId).toLowerCase().trim();
+  }
+
+  if (!cleanId || cleanId === 'air' || cleanId === 'barrier') {
     return SVG_QUESTION_MARK;
   }
-  
-  // Tìm kiếm cả tên viết thường và viết hoa
-  const filenames = [`${cleanId}.png`, `${cleanId.toUpperCase()}.png`];
-  // Các thư mục con có thể chứa ảnh
-  const subdirs = ['item', 'block', '3d', 'entity', ''];
-  
-  for (const filename of filenames) {
-    for (const subdir of subdirs) {
-      const localPath = subdir
-        ? path.join(__dirname, '../public/textures', subdir, filename)
-        : path.join(__dirname, '../public/textures', filename);
-        
-      if (fs.existsSync(localPath)) {
-        try {
-          const fileBuffer = fs.readFileSync(localPath);
-          return `data:image/png;base64,${fileBuffer.toString('base64')}`;
-        } catch (err) {
-          console.error(`[RenderHelper] Không thể đọc file texture cục bộ ${localPath}:`, err.message);
-        }
-      }
+
+  // 1. Xử lý các loại đầu lâu (Player Heads / Mob Skulls)
+  if (cleanId.includes('head') || cleanId.includes('skull')) {
+    if (skullOwner) {
+      return `https://mc-heads.net/avatar/${skullOwner}/32`;
     }
+    const mhfMap = {
+      'creeper_head': 'MHF_Creeper',
+      'zombie_head': 'MHF_Zombie',
+      'skeleton_skull': 'MHF_Skeleton',
+      'wither_skeleton_skull': 'MHF_WitherSkeleton',
+      'player_head': 'MHF_Steve',
+      'dragon_head': 'MHF_EnderDragon',
+      'piglin_head': 'MHF_Piglin'
+    };
+    const mhfName = mhfMap[cleanId] || 'MHF_Steve';
+    return `https://mc-heads.net/avatar/${mhfName}/32`;
   }
-  
-  // Fallback về CDN online nếu offline không có
-  return `${CDN_PRE_RENDER_3D}${cleanId.toUpperCase()}.png`;
+
+  // 2. ƯU TIÊN SỐ 1: 3D Isometric Pre-rendered Icon Cục Bộ (/textures/3d/NAME.png)
+  const local3d = getLocalTextureBase64('3d', `${cleanId.toUpperCase()}.png`)
+    || getLocalTextureBase64('3d', `${cleanId}.png`);
+  if (local3d) return local3d;
+
+  // 3. Ưu tiên 2: 2D Item Cục Bộ (/textures/item/name.png)
+  const localItem = getLocalTextureBase64('item', `${cleanId}.png`)
+    || getLocalTextureBase64('item', `${cleanId.toUpperCase()}.png`);
+  if (localItem) return localItem;
+
+  // 4. Ưu tiên 3: 2D Block Cục Bộ (/textures/block/name.png)
+  const localBlock = getLocalTextureBase64('block', `${cleanId}.png`)
+    || getLocalTextureBase64('block', `${cleanId.toUpperCase()}.png`);
+  if (localBlock) return localBlock;
+
+  // 5. Ưu tiên 4: Khối đặc thù Entity Cục Bộ (vd: normal chest)
+  if (cleanId === 'chest') {
+    const localChest = getLocalTextureBase64('entity/chest', 'normal.png');
+    if (localChest) return localChest;
+  } else if (cleanId === 'ender_chest') {
+    const localEnderChest = getLocalTextureBase64('entity/chest', 'ender.png');
+    if (localEnderChest) return localEnderChest;
+  } else if (cleanId === 'trapped_chest') {
+    const localTrappedChest = getLocalTextureBase64('entity/chest', 'trapped.png');
+    if (localTrappedChest) return localTrappedChest;
+  }
+
+  // 6. Fallback CDN 3D Isometric Online
+  const cdn3d = `${CDN_PRE_RENDER_3D}${cleanId.toUpperCase()}.png`;
+
+  // 7. Fallback Special Block Resolver
+  const mappedSpecial = resolveSpecialTexture(cleanId);
+  if (mappedSpecial) return mappedSpecial;
+
+  return cdn3d;
 }
 
 // Chuẩn hóa phông chữ Small Caps độc lạ của Server Minecraft (ví dụ: đơɴ ʜàɴɢ ᴄủᴀ -> don hang cua)
@@ -370,13 +511,17 @@ async function renderTableImage(title, itemQuery, items, type = 'order') {
     const normalizedDisplay = normalizeSmallCaps(cleanDisplay);
 
     let iconItemQuery = '';
-    if (rawName && rawName !== 'player_head' && rawName !== 'skull' && rawName !== 'air') {
+    if (rawName && rawName !== 'air') {
       iconItemQuery = rawName;
     } else if (itemQuery) {
       iconItemQuery = itemQuery;
     }
 
-    const iconUrl = getItemIconUrl(iconItemQuery);
+    const itemPayload = (typeof item === 'object' && item !== null)
+      ? { ...item, name: iconItemQuery }
+      : iconItemQuery;
+
+    const iconUrl = getItemIconUrl(itemPayload);
 
     const isOrderTitle = /^(?:don\s*hang|order)/i.test(normalizedDisplay);
 
@@ -401,12 +546,16 @@ async function renderTableImage(title, itemQuery, items, type = 'order') {
       subInfoHtml = `<div class="sub-info">Người bán: <span class="highlight-user">${escapeHtml(item.seller)}</span></div>`;
     }
 
+    const count = parseInt(item.count) || 1;
+    const countBadge = count > 1 ? `<span class="slot-count">${count}</span>` : '';
+
     return `
       <tr>
         <td class="stt">#${index + 1}</td>
         <td class="icon-td">
           <div class="mc-slot">
             <img class="item-icon" src="${iconUrl}" onerror="this.onerror=null;this.src='${SVG_QUESTION_MARK}';" alt="${rawName || 'item'}" />
+            ${countBadge}
           </div>
         </td>
         <td class="item-name">
