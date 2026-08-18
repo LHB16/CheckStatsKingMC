@@ -4,7 +4,7 @@ class GroqManager {
   constructor() {
     this.apiKeys = this.loadApiKeys();
     this.currentIndex = 0;
-    this.defaultModel = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+    this.defaultModel = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
     this.systemPrompt = process.env.GROQ_SYSTEM_PROMPT || 
       'Bạn là một AI trợ lý thân thiện, thông minh và hữu ích trên Discord. Hãy trả lời ngắn gọn, lịch sự và bằng tiếng Việt ngoại trừ khi người dùng yêu cầu ngôn ngữ khác.';
   }

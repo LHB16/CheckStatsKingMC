@@ -4,6 +4,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const url = require('url');
 const puppeteer = require('puppeteer');
 
 let browserInstance = null;
@@ -69,7 +70,8 @@ async function getBrowser() {
         '--disable-gpu',
         '--no-first-run',
         '--no-zygote',
-        '--single-process'
+        '--single-process',
+        '--allow-file-access-from-files'
       ]
     };
 
@@ -102,6 +104,30 @@ function getItemIconUrl(id) {
   if (cleanId === 'player_head' || cleanId === 'skull' || cleanId === 'air' || cleanId === 'barrier') {
     return SVG_QUESTION_MARK;
   }
+  
+  // Tìm kiếm cả tên viết thường và viết hoa
+  const filenames = [`${cleanId}.png`, `${cleanId.toUpperCase()}.png`];
+  // Các thư mục con có thể chứa ảnh
+  const subdirs = ['item', 'block', '3d', 'entity', ''];
+  
+  for (const filename of filenames) {
+    for (const subdir of subdirs) {
+      const localPath = subdir
+        ? path.join(__dirname, '../public/textures', subdir, filename)
+        : path.join(__dirname, '../public/textures', filename);
+        
+      if (fs.existsSync(localPath)) {
+        try {
+          const fileBuffer = fs.readFileSync(localPath);
+          return `data:image/png;base64,${fileBuffer.toString('base64')}`;
+        } catch (err) {
+          console.error(`[RenderHelper] Không thể đọc file texture cục bộ ${localPath}:`, err.message);
+        }
+      }
+    }
+  }
+  
+  // Fallback về CDN online nếu offline không có
   return `${CDN_PRE_RENDER_3D}${cleanId.toUpperCase()}.png`;
 }
 
