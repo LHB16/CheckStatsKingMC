@@ -505,6 +505,34 @@ async function getTrackerOverview() {
   const players = [];
   const cutoffTime = Date.now() - THREE_DAYS_MS;
 
+  if (isMongoConnected && TrackedPlayerModel) {
+    try {
+      const docs = await TrackedPlayerModel.find({ isTracking: true }).sort({ lastChecked: -1 });
+      for (const doc of docs) {
+        const history = doc.history || [];
+        const validPoints = history.filter(h => {
+          const t = h.timestamp ? (h.timestamp instanceof Date ? h.timestamp.getTime() : new Date(h.timestamp).getTime()) : 0;
+          return t >= cutoffTime;
+        });
+        const latestPoint = history[history.length - 1];
+        players.push({
+          name: doc.playerName,
+          pointsCount: validPoints.length,
+          lastChecked: doc.lastChecked ? new Date(doc.lastChecked) : null,
+          latestBalance: latestPoint ? (latestPoint.formatted || String(latestPoint.balance)) : 'Chưa có'
+        });
+      }
+      return {
+        isMongoConnected,
+        totalTracked: players.length,
+        players
+      };
+    } catch (e) {
+      console.error('[TrackerHelper] Lỗi truy vấn getTrackerOverview từ MongoDB:', e.message);
+    }
+  }
+
+  // Fallback qua RAM Cache
   for (const [key, val] of localCache.entries()) {
     if (val.isTracking) {
       const validPoints = (val.history || []).filter(h => h.timestamp >= cutoffTime);

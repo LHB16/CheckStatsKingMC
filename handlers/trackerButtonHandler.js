@@ -171,9 +171,113 @@ async function handleTrackerButtons(interaction) {
     return true;
   }
 
+  // 4. Nút Phân trang danh sách Tracker Overview
+  if (customId.startsWith('tracker_page_')) {
+    const pageStr = customId.replace('tracker_page_', '');
+    const pageNum = parseInt(pageStr) || 1;
+    await interaction.deferUpdate();
+
+    try {
+      const overview = await trackerHelper.getTrackerOverview();
+      const payload = buildTrackerOverviewMessage(overview, pageNum);
+      await interaction.editReply(payload);
+    } catch (err) {
+      console.error('[TrackerButton] Lỗi chuyển trang tracker:', err.message);
+    }
+    return true;
+  }
+
+  // 5. Nút Kích hoạt chu kỳ kiểm tra ngay lập tức (Admin)
+  if (customId === 'tracker_run_check') {
+    const ADMIN_ID = (process.env.ADMIN_ID || '').trim();
+    if (ADMIN_ID && interaction.user.id !== ADMIN_ID) {
+      await interaction.reply({
+        content: '⚠️ Chỉ Admin mới có quyền kích hoạt chu kỳ kiểm tra số dư ngay lập tức!',
+        ephemeral: true
+      });
+      return true;
+    }
+
+    await interaction.reply({
+      content: '🔄 **Đang bắt đầu chu kỳ kiểm tra số dư định kỳ cho các người chơi ngay lập tức...**',
+      ephemeral: true
+    });
+
+    if (global.trackerSchedulerInstance) {
+      global.trackerSchedulerInstance.runCheckCycle(interaction.channel);
+    }
+    return true;
+  }
+
   return false;
 }
 
+/**
+ * Tạo Discord Embed & Button ActionRow cho danh sách người chơi theo dõi (có phân trang)
+ * @param {object} overview - Dữ liệu từ trackerHelper.getTrackerOverview()
+ * @param {number} page - Trang hiện tại (1-indexed)
+ * @param {number} pageSize - Số người chơi trên mỗi trang (mặc định 8)
+ */
+function buildTrackerOverviewMessage(overview, page = 1, pageSize = 8) {
+  const total = overview.totalTracked || 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const currentPage = Math.min(Math.max(1, page), totalPages);
+
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, total);
+  const currentPlayers = (overview.players || []).slice(startIndex, endIndex);
+
+  const embed = new EmbedBuilder()
+    .setTitle(`📊 HỆ THỐNG THEO DÕI SỐ DƯ (BALANCE TRACKER)`)
+    .setColor('#10b981')
+    .setThumbnail('https://mc-heads.net/head/BinhLH/3d')
+    .setTimestamp()
+    .setFooter({
+      text: `Trang ${currentPage}/${totalPages} • Tổng cộng: ${total} người chơi • KingMC.vn Stats Bot`
+    });
+
+  let desc = `• Kết nối CSDL: ${overview.isMongoConnected ? '🟢 **MongoDB Atlas (Đám mây)**' : '🟡 **Dự phòng file JSON**'}\n`;
+  desc += `• Tổng số người chơi đang theo dõi: **${total}**\n\n`;
+
+  if (total === 0) {
+    desc += `_Hiện chưa có người chơi nào được theo dõi. Dùng \`!tracker add <tên>\` hoặc nút **Theo dõi** sau khi tra cứu \`/bal <tên>\` để thêm!_`;
+  } else {
+    currentPlayers.forEach((p, idx) => {
+      const timeStr = p.lastChecked ? p.lastChecked.toLocaleString('vi-VN') : 'Chưa đo';
+      desc += `**${startIndex + idx + 1}. ${p.name}**\n`;
+      desc += `   └ Số dư: \`${p.latestBalance}\` • Lần đo: **${p.pointsCount}** • Gần nhất: \`${timeStr}\`\n`;
+    });
+    desc += `\n_Lệnh Admin: \`!tracker check\` (kiểm tra ngay) • \`!tracker add <tên>\` • \`!tracker untrack <tên>\`_`;
+  }
+
+  embed.setDescription(desc);
+
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`tracker_page_${currentPage - 1}`)
+      .setLabel('◀️ Trước')
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(currentPage <= 1),
+    new ButtonBuilder()
+      .setCustomId('tracker_page_indicator')
+      .setLabel(`${currentPage}/${totalPages}`)
+      .setStyle(ButtonStyle.Primary)
+      .setDisabled(true),
+    new ButtonBuilder()
+      .setCustomId(`tracker_page_${currentPage + 1}`)
+      .setLabel('Sau ▶️')
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(currentPage >= totalPages),
+    new ButtonBuilder()
+      .setCustomId('tracker_run_check')
+      .setLabel('🔄 Kiểm tra ngay')
+      .setStyle(ButtonStyle.Success)
+  );
+
+  return { embeds: [embed], components: [row] };
+}
+
 module.exports = {
-  handleTrackerButtons
+  handleTrackerButtons,
+  buildTrackerOverviewMessage
 };
