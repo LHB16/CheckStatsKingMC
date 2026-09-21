@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const url = require('url');
 const puppeteer = require('puppeteer');
+const skinHelper = require('./skinHelper');
 
 let browserInstance = null;
 
@@ -231,7 +232,7 @@ function getItemIconUrl(itemOrId) {
   // 1. Xử lý các loại đầu lâu (Player Heads / Mob Skulls)
   if (cleanId.includes('head') || cleanId.includes('skull')) {
     if (skullOwner) {
-      return `https://mc-heads.net/avatar/${skullOwner}/32`;
+      return skinHelper.getAvatarUrl(skullOwner, 32, false);
     }
     const mhfMap = {
       'creeper_head': 'MHF_Creeper',
@@ -968,7 +969,7 @@ async function renderBalanceChart(playerName, historyPayload) {
     `;
   }
 
-  const avatarUrl = `https://mc-heads.net/head/${encodeURIComponent(playerName)}/64`;
+  const avatarUrl = skinHelper.getAvatarUrl(playerName, 64, false);
 
   const compiledHtml = templateContent
     .replace(/\{\{PLAYER_NAME\}\}/g, escapeHtml(playerName))

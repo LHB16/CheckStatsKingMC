@@ -18,6 +18,7 @@ const { handleAiChatMessage } = require('./handlers/aiChatHandler');
 const trackerHelper = require('./helpers/trackerHelper');
 const { handleTrackerButtons, buildTrackerOverviewMessage } = require('./handlers/trackerButtonHandler');
 const { handlePaginationButtons } = require('./helpers/paginationHelper');
+const skinHelper = require('./helpers/skinHelper');
 
 
 // Cấu hình từ .env
@@ -47,6 +48,9 @@ global.globalDiscordClient = null;
 console.log(`==================================================`);
 console.log(`🚀 Bắt đầu khởi động hệ thống với Chế độ: [${BOT_ROLE.toUpperCase()}]`);
 console.log(`==================================================`);
+
+// Khởi tạo SkinHelper sớm để nạp Cache
+skinHelper.initSkinHelper().catch(e => console.warn('[SkinHelper] Lỗi khởi tạo ban đầu:', e.message));
 
 // Helper gen chuỗi ngẫu nhiên 10 ký tự (chữ hoa, chữ thường, số)
 function generateRandomUsername(length = 10) {
@@ -462,6 +466,9 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
 
     // Khởi tạo hệ thống lưu trữ theo dõi số dư (MongoDB / JSON)
     await trackerHelper.initTracker();
+
+    // Khởi tạo hệ thống lưu trữ skin (MongoDB / JSON)
+    await skinHelper.initSkinHelper();
 
     // Khởi chạy tiến trình kiểm tra số dư định kỳ 1 giờ / lần
     global.trackerSchedulerInstance = startTrackerScheduler(queueDispatcher);

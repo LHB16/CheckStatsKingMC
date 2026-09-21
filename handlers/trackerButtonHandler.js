@@ -6,6 +6,7 @@ const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBu
 const trackerHelper = require('../helpers/trackerHelper');
 const { renderBalanceChart } = require('../helpers/renderHelper');
 const { getCustomEmoji } = require('../helpers/utils');
+const skinHelper = require('../helpers/skinHelper');
 
 /**
  * Xử lý các tương tác nút bấm liên quan đến Balance Tracker
@@ -43,7 +44,7 @@ async function handleTrackerButtons(interaction) {
       const successEmbed = new EmbedBuilder()
         .setTitle(`🔔 Đã Bật Theo Dõi: **${playerName}**`)
         .setColor('#10b981')
-        .setThumbnail(`https://mc-heads.net/head/${playerName}/3d`)
+        .setThumbnail(skinHelper.getAvatarUrl(playerName, 64, true))
         .setDescription(
           `✅ Hệ thống đã bắt đầu theo dõi số dư của người chơi **${playerName}**.\n\n` +
           `⏰ **Chu kỳ:** Tự động kiểm tra định kỳ **1 giờ / lần** khi có Worker rảnh.\n` +

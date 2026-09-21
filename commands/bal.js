@@ -6,6 +6,7 @@ const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Butt
 const { getCustomEmoji } = require('../helpers/utils');
 const { recordError } = require('../helpers/reportHelper');
 const trackerHelper = require('../helpers/trackerHelper');
+const skinHelper = require('../helpers/skinHelper');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -45,7 +46,7 @@ module.exports = {
       const embed = new EmbedBuilder()
         .setTitle(`${emeraldEmoji} Số dư người chơi: **${targetPlayer}**`)
         .setColor('#2b2d31')
-        .setThumbnail(`https://mc-heads.net/head/${targetPlayer}/3d`)
+        .setThumbnail(skinHelper.getAvatarUrl(targetPlayer, 64, true))
         .setDescription(`${emeraldEmoji} **SỐ DƯ:** \`${cleanVal}\`\n\n\u200B`)
         .setTimestamp()
         .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });

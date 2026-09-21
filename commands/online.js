@@ -4,6 +4,7 @@
 
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { recordError } = require('../helpers/reportHelper');
+const skinHelper = require('../helpers/skinHelper');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -29,7 +30,7 @@ module.exports = {
         // Người chơi đang ONLINE (bỏ thanh màu bên trái theo yêu cầu)
         const embed = new EmbedBuilder()
           .setTitle(`🟢 Người chơi **${targetPlayer}** đang Online!`)
-          .setThumbnail(`https://mc-heads.net/head/${targetPlayer}/3d`)
+          .setThumbnail(skinHelper.getAvatarUrl(targetPlayer, 64, true))
           .addFields(
             { name: '📶 Ping', value: `\`${result.ping || 'N/A'}\``, inline: true },
             { name: '🌐 Thế giới', value: `\`${result.world || 'N/A'}\``, inline: true }
@@ -44,7 +45,7 @@ module.exports = {
 
         const embed = new EmbedBuilder()
           .setTitle(`🔴 Trạng thái người chơi: **${targetPlayer}**`)
-          .setThumbnail(`https://mc-heads.net/head/${targetPlayer}/3d`)
+          .setThumbnail(skinHelper.getAvatarUrl(targetPlayer, 64, true))
           .setDescription(`⚠️ **${serverMessage}**`)
           .setTimestamp()
           .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });

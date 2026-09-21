@@ -5,6 +5,7 @@
 
 const mineflayer = require('mineflayer');
 const EventEmitter = require('events');
+const skinHelper = require('./helpers/skinHelper');
 
 // Hàm loại bỏ mã màu Minecraft (§a, &a, &#RRGGBB, §x..., v.v.)
 function cleanMinecraftText(text) {
@@ -354,7 +355,39 @@ class PersistentBot extends EventEmitter {
       this.isBotOnline = true;
       this.isReady = false;
       console.log(`[MC-Bot] Đã spawn vào server thành công! Bắt đầu kịch bản AFK.`);
+
+      // Quét toàn bộ người chơi hiện có trong Tablist khi vừa spawn
+      try {
+        if (this.bot.players) {
+          let tabCount = 0;
+          for (const [uname, p] of Object.entries(this.bot.players)) {
+            if (p && p.username && p.skinData && p.skinData.url) {
+              skinHelper.saveSkin(p.username, p.skinData.url, p.skinData.model);
+              tabCount++;
+            }
+          }
+          if (tabCount > 0) {
+            console.log(`[MC-Bot] 🎭 Đã quét và nạp ${tabCount} skin từ Tablist khi vừa vào server.`);
+          }
+        }
+      } catch (err) {
+        console.warn(`[MC-Bot] Lỗi khi quét Tablist ban đầu: ${err.message}`);
+      }
+
       this.startAfkRoutine();
+    });
+
+    // Lắng nghe sự kiện người chơi vào server hoặc cập nhật Tablist để gom skin 24/7
+    this.bot.on('playerJoined', (player) => {
+      if (player && player.username && player.skinData && player.skinData.url) {
+        skinHelper.saveSkin(player.username, player.skinData.url, player.skinData.model);
+      }
+    });
+
+    this.bot.on('playerUpdated', (player) => {
+      if (player && player.username && player.skinData && player.skinData.url) {
+        skinHelper.saveSkin(player.username, player.skinData.url, player.skinData.model);
+      }
     });
 
     this.bot.on('death', () => {
@@ -479,6 +512,19 @@ class PersistentBot extends EventEmitter {
         for (let i = 0; i < maxSlots; i++) {
           const item = window.slots[i];
           if (!item) continue;
+
+          // Trích xuất Skin từ NBT của vật phẩm Head trong GUI TPA
+          if (item.nbt) {
+            try {
+              const skinData = skinHelper.extractSkinDataFromNbt(item.nbt);
+              if (skinData && skinData.url) {
+                console.log(`[MC-Bot] 🎭 Đã bóc tách thành công Skin từ GUI TPA cho [${this.targetPlayer}]: ${skinData.url}`);
+                skinHelper.saveSkin(this.targetPlayer, skinData.url, skinData.model);
+              }
+            } catch (err) {
+              console.warn(`[MC-Bot] Lỗi khi bóc tách Skin NBT: ${err.message}`);
+            }
+          }
 
           let displayName = item.displayName || '';
           if (item.customName) displayName = item.customName;
