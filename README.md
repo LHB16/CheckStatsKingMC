@@ -40,6 +40,7 @@ Tài liệu này hướng dẫn bạn cách triển khai bot theo mô hình **Ma
    * `CLIENT_ID`: Application ID Discord
    * `GUILD_ID`: ID Guild test (hoặc để trống nếu global)
    * `ADMIN_ID`: Discord ID Admin nhận tin nhắn báo lỗi
+   * `MONGODB_URI`: Chuỗi kết nối MongoDB Atlas M0 Free (ví dụ: `mongodb+srv://user:pass@cluster.mongodb.net/kingmc_stats?retryWrites=true&w=majority`) để lưu trữ lịch sử số dư 3 ngày không bao giờ mất khi Render reset.
 7. Nhấn **Deploy**. Copy URL của Master (Ví dụ: `https://kingmc-master-bot.onrender.com`).
 
 ---
@@ -108,4 +109,34 @@ function keepAllBotsAlive() {
 
 3. Đặt Trigger tự động chạy hàm `keepAllBotsAlive` **mỗi 5 phút**.
 
-Chúc mừng! Hệ thống Bot Discord của bạn giờ đây đã được vận hành chuyên nghiệp với kiến trúc phân tán nhiều IP, có Hàng đợi điều phối tự động 24/7 và hệ thống notify về Discord Admin!
+---
+
+## 📈 Tính Năng Theo Dõi Số Dư (Balance Tracker) & Biểu Đồ 3 Ngày
+
+Hệ thống tích hợp tính năng tự động theo dõi biến động số dư của người chơi và xuất biểu đồ trực quan:
+
+1. **Cách theo dõi số dư:**
+   - Người dùng gõ lệnh `/bal <tên_người_chơi>` (hoặc `?bal <tên>`).
+   - Nhấn nút **`🔔 Theo dõi số dư`** bên dưới tin nhắn kết quả để kích hoạt theo dõi.
+   - Master sẽ tự động điều phối lần lượt cho các Worker rảnh kiểm tra số dư định kỳ **1 giờ / lần** và lưu trữ lịch sử trên **MongoDB Atlas** (lưu trữ tối đa 3 ngày gần nhất).
+
+2. **Xuất biểu đồ biến động:**
+   - Khi đang theo dõi, người dùng bấm nút **`📈 Xem biểu đồ biến động`** (hoặc nhấn theo dõi lần nữa).
+   - Bot sẽ sử dụng Puppeteer kết xuất ra ảnh **Biểu đồ đường (Line Chart PNG)** sắc nét kèm avatar skin 3D, số dư cao nhất (Đỉnh), thấp nhất (Đáy), số dư hiện tại và mức biến động (+/- $ và %).
+   - Bấm **`Hủy theo dõi`** nếu muốn dừng theo dõi người chơi đó.
+
+3. **Tự động nhận diện biến môi trường Render:**
+   - Hệ thống tự động đọc các biến môi trường có tiền tố `td-<tên_người_chơi>` (ví dụ `td-BinhLH`) khi khởi động để đưa vào danh sách theo dõi.
+
+---
+
+## ⚙️ Các Chế Độ Mặc Định & Lệnh Quản Trị Admin
+
+* **Chế độ hiển thị danh sách (`displayMode`):** Mặc định là **`IMAGE`** (xuất bảng ảnh 3D icon Minecraft cho `/ah`, `/order`). Đổi chế độ qua lệnh `!mode text` hoặc `!mode image`.
+* **Tính năng Trò chuyện AI:** Mặc định **TẮT**. Bật lại bằng lệnh `!ai on [lời_nhắn]` (hoặc tắt bằng `!ai off`).
+* **Lệnh Quản trị Balance Tracker:**
+  - `!tracker`: Xem danh sách toàn bộ người chơi đang được theo dõi và trạng thái MongoDB.
+  - `!tracker check`: Kích hoạt chu kỳ kiểm tra số dư ngay lập tức mà không cần chờ 1 giờ.
+  - `!tracker untrack <tên>`: Hủy theo dõi một người chơi thủ công.
+
+Chúc mừng! Hệ thống Bot Discord của bạn giờ đây đã được vận hành chuyên nghiệp với kiến trúc phân tán nhiều IP, có Hàng đợi điều phối tự động 24/7 và hệ thống theo dõi số dư đám mây MongoDB Atlas!
