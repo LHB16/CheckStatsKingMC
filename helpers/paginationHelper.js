@@ -126,7 +126,8 @@ function formatOrderTextPage(orders, itemQuery, pageIndex, pageSize = 9) {
  * @returns {string} sessionId
  */
 function createPaginationSession({ interaction, type, itemQuery, pages, displayMode, initialImageBuffers = null, initialImageBuffer = null }) {
-  const sessionId = Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 6);
+  // Sinh sessionId ngẫu nhiên không chứa dấu gạch dưới để tránh xung đột định dạng customId
+  const sessionId = Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
 
   const cachedImages = new Map();
   if (Array.isArray(initialImageBuffers)) {
@@ -184,11 +185,12 @@ async function handlePaginationButtons(interaction) {
 
   if (!customId.startsWith('page_')) return false;
 
-  const parts = customId.split('_');
-  if (parts.length < 3) return false;
+  // Trích xuất chính xác sessionId và action bằng Regex an toàn tuyệt đối
+  const match = customId.match(/^page_(.+)_(prev|next|indicator)$/);
+  if (!match) return false;
 
-  const sessionId = parts[1];
-  const action = parts[2]; // 'prev' | 'next' | 'indicator'
+  const sessionId = match[1];
+  const action = match[2]; // 'prev' | 'next' | 'indicator'
 
   if (action === 'indicator') {
     return true;
