@@ -10,8 +10,8 @@ const { getCustomEmoji } = require('./utils');
 // Bộ nhớ đệm lưu trữ các phiên phân trang đang hoạt động
 const paginationSessions = new Map();
 
-// Thời gian sống của phiên (20 giây)
-const SESSION_TTL_MS = 20000;
+// Thời gian sống của phiên (5 phút = 300,000 ms)
+const SESSION_TTL_MS = 5 * 60 * 1000;
 
 /**
  * Chia một mảng thành các mảng con (chunking) theo kích thước chỉ định
@@ -114,21 +114,26 @@ function formatOrderTextPage(orders, itemQuery, pageIndex, pageSize = 9) {
 }
 
 /**
- * Khởi tạo một phiên phân trang mới với TTL 20 giây
+ * Khởi tạo một phiên phân trang mới với TTL 5 phút
  * @param {object} params
  * @param {import('discord.js').CommandInteraction} params.interaction
  * @param {'ah'|'order'} params.type
  * @param {string} params.itemQuery
  * @param {Array<Array>} params.pages
  * @param {'image'|'text'} params.displayMode
+ * @param {Array<Buffer>|Buffer|null} params.initialImageBuffers
  * @param {Buffer|null} params.initialImageBuffer
  * @returns {string} sessionId
  */
-function createPaginationSession({ interaction, type, itemQuery, pages, displayMode, initialImageBuffer = null }) {
+function createPaginationSession({ interaction, type, itemQuery, pages, displayMode, initialImageBuffers = null, initialImageBuffer = null }) {
   const sessionId = Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 6);
 
   const cachedImages = new Map();
-  if (initialImageBuffer) {
+  if (Array.isArray(initialImageBuffers)) {
+    initialImageBuffers.forEach((buf, idx) => {
+      if (buf) cachedImages.set(idx + 1, buf);
+    });
+  } else if (initialImageBuffer) {
     cachedImages.set(1, initialImageBuffer);
   }
 
@@ -145,7 +150,7 @@ function createPaginationSession({ interaction, type, itemQuery, pages, displayM
     timer: null
   };
 
-  // Kích hoạt bộ đếm thời gian 20 giây để dọn dẹp RAM và làm mờ nút
+  // Kích hoạt bộ đếm thời gian 5 phút để dọn dẹp RAM và làm mờ nút
   const scheduleCleanup = () => {
     return setTimeout(async () => {
       try {
@@ -191,10 +196,10 @@ async function handlePaginationButtons(interaction) {
 
   const session = paginationSessions.get(sessionId);
 
-  // Phiên đã hết hạn (sau 20s)
+  // Phiên đã hết hạn (sau 5 phút)
   if (!session) {
     await interaction.reply({
-      content: '⚠️ Phiên xem trang đã hết hạn (20s) để giải phóng tài nguyên. Vui lòng gõ lại lệnh nếu muốn tra cứu tiếp nhé!',
+      content: '⚠️ Phiên xem trang đã hết hạn (5 phút) để giải phóng tài nguyên. Vui lòng gõ lại lệnh nếu muốn tra cứu tiếp nhé!',
       ephemeral: true
     }).catch(() => {});
     return true;

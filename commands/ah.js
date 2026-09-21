@@ -6,7 +6,7 @@ const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Butt
 const { getCustomEmoji } = require('../helpers/utils');
 const { recordError } = require('../helpers/reportHelper');
 const configHelper = require('../helpers/configHelper');
-const { renderTableImage, formatItemDisplayName } = require('../helpers/renderHelper');
+const { renderBatchTablePages, formatItemDisplayName } = require('../helpers/renderHelper');
 const { chunkArray, buildPaginationRow, createPaginationSession, formatAhTextPage } = require('../helpers/paginationHelper');
 
 module.exports = {
@@ -53,32 +53,29 @@ module.exports = {
       const displayMode = configHelper.getDisplayMode();
       const emoji = getCustomEmoji(itemQuery);
 
-      // CHẾ ĐỘ RENDER ẢNH (Image Mode)
+      // CHẾ ĐỘ RENDER ẢNH (Image Mode) - Chụp đồng thời 1 lần tất cả các trang
       if (displayMode === 'image') {
-        let imageBuffer = null;
+        let imageBuffers = null;
         let lastError = null;
-        const page1Title = totalPages > 1
-          ? `DANH SÁCH AH: ${itemQuery.toUpperCase()} (TRANG 1/${totalPages})`
-          : `DANH SÁCH AH: ${itemQuery.toUpperCase()}`;
 
         for (let attempt = 1; attempt <= 2; attempt++) {
           try {
-            imageBuffer = await renderTableImage(
-              page1Title,
+            imageBuffers = await renderBatchTablePages(
+              'DANH SÁCH AH',
               itemQuery,
-              page1Items,
-              'ah',
-              1
+              pages,
+              'ah'
             );
-            if (imageBuffer) break;
+            if (imageBuffers && imageBuffers.length > 0) break;
           } catch (renderErr) {
             lastError = renderErr;
-            console.error(`[Discord-Bot] Lần thử ${attempt} render ảnh AH lỗi:`, renderErr.message);
+            console.error(`[Discord-Bot] Lần thử ${attempt} batch render ảnh AH lỗi:`, renderErr.message);
           }
         }
 
-        if (imageBuffer) {
-          const attachment = new AttachmentBuilder(imageBuffer, { name: 'ah_table_p1.png' });
+        if (imageBuffers && imageBuffers.length > 0) {
+          const page1Buffer = imageBuffers[0];
+          const attachment = new AttachmentBuilder(page1Buffer, { name: 'ah_table_p1.png' });
 
           const embed = new EmbedBuilder()
             .setImage('attachment://ah_table_p1.png')
@@ -90,7 +87,7 @@ module.exports = {
                 : 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH'
             });
 
-          // Nếu có từ 2 trang trở lên, tạo session phân trang (20s TTL) và gắn nút
+          // Nếu có từ 2 trang trở lên, tạo session phân trang (5 phút TTL) và gắn nút
           if (totalPages > 1) {
             const sessionId = createPaginationSession({
               interaction,
@@ -98,7 +95,7 @@ module.exports = {
               itemQuery,
               pages,
               displayMode: 'image',
-              initialImageBuffer: imageBuffer
+              initialImageBuffers: imageBuffers
             });
 
             const row = buildPaginationRow(sessionId, 1, totalPages);

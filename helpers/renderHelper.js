@@ -71,7 +71,18 @@ async function getBrowser() {
         '--no-first-run',
         '--no-zygote',
         '--single-process',
-        '--allow-file-access-from-files'
+        '--allow-file-access-from-files',
+        '--disable-background-networking',
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-breakpad',
+        '--disable-component-extensions-with-background-pages',
+        '--disable-extensions',
+        '--disable-features=Translate,BackForwardCache,AcceptCHFrame,MediaRouter,OptimizationHints',
+        '--disable-ipc-flooding-protection',
+        '--disable-renderer-backgrounding',
+        '--metrics-recording-only',
+        '--mute-audio'
       ]
     };
 
@@ -487,23 +498,10 @@ function formatMinecraftTextToHtml(input, defaultColor = '#ffffff') {
 }
 
 /**
- * Render bảng danh sách vật phẩm ra Buffer ảnh PNG
- * @param {string} title - Tiêu đề bảng (ví dụ: "DANH SÁCH ORDER: ELYTRA")
- * @param {string} itemQuery - Tên item tra cứu
- * @param {Array} items - Danh sách đơn hàng/vật phẩm
- * @param {string} type - Loại lệnh ('order' hoặc 'ah')
- * @returns {Promise<Buffer>}
+ * Tạo chuỗi HTML các dòng tr cho bảng
  */
-async function renderTableImage(title, itemQuery, items, type = 'order', startIndex = 1) {
-  let templateContent = '';
-  try {
-    templateContent = fs.readFileSync(TEMPLATE_PATH, 'utf8');
-  } catch (err) {
-    console.error('[RenderHelper] Không thể đọc file templates/itemsTable.html:', err.message);
-    throw err;
-  }
-
-  const rowsHtml = items.map((item, index) => {
+function generateTableRowsHtml(items, itemQuery, type = 'order', startIndex = 1) {
+  return items.map((item, index) => {
     const price = item.price || 'N/A';
     const rawName = item.itemName || item.name;
     const rawDisplay = item.displayName || '';
@@ -566,10 +564,70 @@ async function renderTableImage(title, itemQuery, items, type = 'order', startIn
       </tr>
     `;
   }).join('\n');
+}
 
-  const compiledHtml = templateContent
-    .replace('{{TITLE}}', title)
-    .replace('{{ROWS}}', rowsHtml);
+/**
+ * Tạo chuỗi HTML cho 1 khối bảng table-container
+ */
+function generateTableContainerHtml(title, rowsHtml) {
+  return `
+    <div class="table-container" style="margin-bottom: 24px;">
+      <div class="header">
+        <div class="title-box">
+          <div class="title">${title}</div>
+          <div class="subtitle">KingMC.vn • Tra cứu giá vật phẩm</div>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Icon</th>
+            <th>Vật phẩm</th>
+            <th class="th-price">Giá</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/**
+ * Render đồng loạt tất cả các trang bảng trong 1 lần nạp DOM duy nhất (Single-Pass Batch Render)
+ * Chụp cùng lúc cả 5 trang trả về mảng Buffer ảnh [buf1, buf2, ...]
+ * @param {string} titlePrefix - Tiêu đề (ví dụ "DANH SÁCH AH")
+ * @param {string} itemQuery - Tên item tra cứu
+ * @param {Array<Array>} pages - Mảng các trang vật phẩm (mỗi trang tối đa 9 items)
+ * @param {string} type - 'ah' | 'order'
+ * @returns {Promise<Array<Buffer>>}
+ */
+async function renderBatchTablePages(titlePrefix, itemQuery, pages, type = 'order') {
+  if (!Array.isArray(pages) || pages.length === 0) return [];
+
+  let templateContent = '';
+  try {
+    templateContent = fs.readFileSync(TEMPLATE_PATH, 'utf8');
+  } catch (err) {
+    console.error('[RenderHelper] Không thể đọc file templates/itemsTable.html:', err.message);
+    throw err;
+  }
+
+  const totalPages = pages.length;
+  const containersHtml = pages.map((pageItems, pageIdx) => {
+    const pageNum = pageIdx + 1;
+    const title = totalPages > 1
+      ? `${titlePrefix}: ${itemQuery.toUpperCase()} (TRANG ${pageNum}/${totalPages})`
+      : `${titlePrefix}: ${itemQuery.toUpperCase()}`;
+    const startIndex = pageIdx * 9 + 1;
+    const rowsHtml = generateTableRowsHtml(pageItems, itemQuery, type, startIndex);
+    return generateTableContainerHtml(title, rowsHtml);
+  }).join('\n');
+
+  // Nạp toàn bộ các container trang vào chung 1 thẻ <body>
+  const compiledHtml = templateContent.replace(/<body>[\s\S]*?<\/body>/i, `<body>${containersHtml}</body>`);
 
   const browser = await getBrowser();
   const page = await browser.newPage();
@@ -578,7 +636,68 @@ async function renderTableImage(title, itemQuery, items, type = 'order', startIn
     await page.setViewport({ width: 640, height: 480, deviceScaleFactor: 2 });
     await page.setContent(compiledHtml, { waitUntil: 'load', timeout: 30000 });
 
-    // Đợi tất cả các icon tải xong hoàn toàn hoặc chuyển sang fallback
+    // Đợi tất cả icon của toàn bộ các trang nạp xong
+    await page.evaluate(async () => {
+      const images = Array.from(document.querySelectorAll('img'));
+      await Promise.all(images.map(img => {
+        return new Promise(resolve => {
+          let attempts = 0;
+          const check = () => {
+            attempts++;
+            if ((img.complete && img.naturalWidth !== 0) || attempts > 25) {
+              resolve();
+            } else {
+              setTimeout(check, 100);
+            }
+          };
+          img.onload = check;
+          img.onerror = () => setTimeout(check, 150);
+          check();
+        });
+      }));
+    });
+
+    // Lấy danh sách tất cả các khối .table-container
+    const containers = await page.$$('.table-container');
+
+    // Chụp song song tất cả các trang
+    const imageBuffers = await Promise.all(
+      containers.map(container => container.screenshot({
+        type: 'png',
+        omitBackground: true
+      }))
+    );
+
+    return imageBuffers;
+  } finally {
+    await page.close();
+  }
+}
+
+/**
+ * Render 1 bảng đơn lẻ (Tương thích ngược)
+ */
+async function renderTableImage(title, itemQuery, items, type = 'order', startIndex = 1) {
+  const rowsHtml = generateTableRowsHtml(items, itemQuery, type, startIndex);
+  const containerHtml = generateTableContainerHtml(title, rowsHtml);
+
+  let templateContent = '';
+  try {
+    templateContent = fs.readFileSync(TEMPLATE_PATH, 'utf8');
+  } catch (err) {
+    console.error('[RenderHelper] Không thể đọc file templates/itemsTable.html:', err.message);
+    throw err;
+  }
+
+  const compiledHtml = templateContent.replace(/<body>[\s\S]*?<\/body>/i, `<body>${containerHtml}</body>`);
+
+  const browser = await getBrowser();
+  const page = await browser.newPage();
+
+  try {
+    await page.setViewport({ width: 640, height: 480, deviceScaleFactor: 2 });
+    await page.setContent(compiledHtml, { waitUntil: 'load', timeout: 30000 });
+
     await page.evaluate(async () => {
       const images = Array.from(document.querySelectorAll('img'));
       await Promise.all(images.map(img => {
@@ -904,6 +1023,7 @@ async function renderBalanceChart(playerName, historyPayload) {
 
 module.exports = {
   renderTableImage,
+  renderBatchTablePages,
   renderBalanceChart,
   formatItemDisplayName,
   getItemIconUrl,
