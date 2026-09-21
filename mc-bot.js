@@ -691,9 +691,6 @@ class PersistentBot extends EventEmitter {
             expiration: expiration || null,
             lore: loreArray
           });
-
-          // Giới hạn lấy tối đa 9 vật phẩm đầu tiên
-          if (ahItems.length >= 9) break;
         }
 
         if (this.statsPromiseResolve) {
@@ -1016,7 +1013,7 @@ class PersistentBot extends EventEmitter {
 
           orders.push({
             slot: i,
-            page: currentPage,
+            page: 1,
             itemName: item.name,
             displayName: displayName,
             buyer: buyer || 'Ẩn danh',
@@ -1025,44 +1022,13 @@ class PersistentBot extends EventEmitter {
             delivered: delivered || null,
             lore: loreArray
           });
-
-          // Giới hạn lấy tối đa 9 đơn hàng đầu tiên
-          if (orders.length >= 9) break;
         }
       };
 
-      // Quét trang đầu tiên
+      // Quét toàn bộ 45 slot đầu tiên (5 hàng x 9 slot)
       scanWindow(initialWindow);
 
-      // Vòng lặp chuyển trang qua Slot 53 nếu chưa đủ 9 đơn hàng
-      while (orders.length < 9 && currentPage < MAX_PAGES && this.statsPromiseResolve && this.bot && this.isBotOnline) {
-        const currentWin = this.bot.currentWindow || initialWindow;
-        const nextSlot = currentWin.slots ? currentWin.slots[53] : null;
-
-        // Kiểm tra xem slot 53 có icon chuyển trang không (khác null, air, barrier)
-        if (!nextSlot || (nextSlot.name || '').toLowerCase() === 'air' || (nextSlot.name || '').toLowerCase() === 'barrier') {
-          console.log(`[MC-Bot] [Order] Đã quét đến trang cuối hoặc slot 53 không có nút chuyển trang.`);
-          break;
-        }
-
-        console.log(`[MC-Bot] [Order] Đã tìm được ${orders.length}/9 đơn (${rawTarget}), đang nhấn slot 53 để sang trang ${currentPage + 1}...`);
-
-        try {
-          // Bắt đầu chờ cập nhật GUI trước khi click slot 53
-          const waitPromise = waitForGuiUpdate(this.bot, 1500);
-          this.bot.clickWindow(53, 0, 0);
-          await waitPromise;
-
-          currentPage++;
-          const updatedWin = this.bot.currentWindow || initialWindow;
-          scanWindow(updatedWin);
-        } catch (pageErr) {
-          console.error(`[MC-Bot] [Order] Lỗi khi chuyển trang: ${pageErr.message}`);
-          break;
-        }
-      }
-
-      const finalTitle = parseMinecraftJSON((this.bot.currentWindow || initialWindow).title || initialWindow.title || '');
+      const finalTitle = parseMinecraftJSON(initialWindow.title || '');
 
       if (this.statsPromiseResolve) {
         this.statsPromiseResolve({
@@ -1074,7 +1040,7 @@ class PersistentBot extends EventEmitter {
 
         if (this.bot && this.isBotOnline) {
           try {
-            this.bot.closeWindow(this.bot.currentWindow || initialWindow);
+            this.bot.closeWindow(initialWindow);
           } catch (e) {}
         }
         this.cleanupStatsState();

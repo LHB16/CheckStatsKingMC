@@ -494,7 +494,7 @@ function formatMinecraftTextToHtml(input, defaultColor = '#ffffff') {
  * @param {string} type - Loại lệnh ('order' hoặc 'ah')
  * @returns {Promise<Buffer>}
  */
-async function renderTableImage(title, itemQuery, items, type = 'order') {
+async function renderTableImage(title, itemQuery, items, type = 'order', startIndex = 1) {
   let templateContent = '';
   try {
     templateContent = fs.readFileSync(TEMPLATE_PATH, 'utf8');
@@ -551,7 +551,7 @@ async function renderTableImage(title, itemQuery, items, type = 'order') {
 
     return `
       <tr>
-        <td class="stt">#${index + 1}</td>
+        <td class="stt">#${startIndex + index}</td>
         <td class="icon-td">
           <div class="mc-slot">
             <img class="item-icon" src="${iconUrl}" onerror="this.onerror=null;this.src='${SVG_QUESTION_MARK}';" alt="${rawName || 'item'}" />

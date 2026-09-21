@@ -17,6 +17,7 @@ const configHelper = require('./helpers/configHelper');
 const { handleAiChatMessage } = require('./handlers/aiChatHandler');
 const trackerHelper = require('./helpers/trackerHelper');
 const { handleTrackerButtons, buildTrackerOverviewMessage } = require('./handlers/trackerButtonHandler');
+const { handlePaginationButtons } = require('./helpers/paginationHelper');
 
 
 // Cấu hình từ .env
@@ -481,6 +482,10 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     // Xử lý nút Theo dõi & Xuất biểu đồ số dư
     const isTrackerHandled = await handleTrackerButtons(interaction);
     if (isTrackerHandled) return;
+
+    // Xử lý nút Phân trang (AH & Order) với TTL 20s
+    const isPaginationHandled = await handlePaginationButtons(interaction);
+    if (isPaginationHandled) return;
 
     // Xử lý Slash Commands
     await commandHandler.handleInteraction(interaction);

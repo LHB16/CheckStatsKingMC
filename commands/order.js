@@ -7,6 +7,7 @@ const { getCustomEmoji } = require('../helpers/utils');
 const { recordError } = require('../helpers/reportHelper');
 const configHelper = require('../helpers/configHelper');
 const { renderTableImage, formatItemDisplayName } = require('../helpers/renderHelper');
+const { chunkArray, buildPaginationRow, createPaginationSession, formatOrderTextPage } = require('../helpers/paginationHelper');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -43,6 +44,11 @@ module.exports = {
         return await interaction.editReply({ embeds: [emptyEmbed] });
       }
 
+      // Chia nhỏ danh sách đơn hàng thành các trang 9 món (tối đa 5 trang)
+      const pages = chunkArray(orders, 9);
+      const totalPages = pages.length;
+      const page1Orders = pages[0];
+
       // Lấy chế độ hiển thị từ configHelper ('text' hoặc 'image')
       const displayMode = configHelper.getDisplayMode();
       const emoji = getCustomEmoji(itemQuery);
@@ -51,14 +57,18 @@ module.exports = {
       if (displayMode === 'image') {
         let imageBuffer = null;
         let lastError = null;
+        const page1Title = totalPages > 1
+          ? `DANH SÁCH ORDER: ${itemQuery.toUpperCase()} (TRANG 1/${totalPages})`
+          : `DANH SÁCH ORDER: ${itemQuery.toUpperCase()}`;
 
         for (let attempt = 1; attempt <= 2; attempt++) {
           try {
             imageBuffer = await renderTableImage(
-              `DANH SÁCH ORDER: ${itemQuery.toUpperCase()}`,
+              page1Title,
               itemQuery,
-              orders,
-              'order'
+              page1Orders,
+              'order',
+              1
             );
             if (imageBuffer) break;
           } catch (renderErr) {
@@ -68,13 +78,32 @@ module.exports = {
         }
 
         if (imageBuffer) {
-          const attachment = new AttachmentBuilder(imageBuffer, { name: 'order_table.png' });
+          const attachment = new AttachmentBuilder(imageBuffer, { name: 'order_table_p1.png' });
 
           const embed = new EmbedBuilder()
-            .setImage('attachment://order_table.png')
+            .setImage('attachment://order_table_p1.png')
             .setColor('#2b2d31')
             .setTimestamp()
-            .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
+            .setFooter({
+              text: totalPages > 1
+                ? `KingMC.vn Stats Bot • Trang 1/${totalPages} • Thiết kế bởi BinhLH`
+                : 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH'
+            });
+
+          // Nếu có từ 2 trang trở lên, tạo session phân trang (20s TTL) và gắn nút
+          if (totalPages > 1) {
+            const sessionId = createPaginationSession({
+              interaction,
+              type: 'order',
+              itemQuery,
+              pages,
+              displayMode: 'image',
+              initialImageBuffer: imageBuffer
+            });
+
+            const row = buildPaginationRow(sessionId, 1, totalPages);
+            return await interaction.editReply({ embeds: [embed], files: [attachment], components: [row] });
+          }
 
           return await interaction.editReply({ embeds: [embed], files: [attachment] });
         }
@@ -82,45 +111,36 @@ module.exports = {
       }
 
       // CHẾ ĐỘ VĂN BẢN (Text Mode)
+      const textTitle = totalPages > 1
+        ? `📦 Danh sách đơn hàng: **${itemQuery.toUpperCase()}** ${emoji} (Trang 1/${totalPages})`
+        : `📦 Danh sách đơn hàng: **${itemQuery.toUpperCase()}** ${emoji}`;
+
       const embed = new EmbedBuilder()
-        .setTitle(`📦 Danh sách đơn hàng: **${itemQuery.toUpperCase()}** ${emoji}`)
+        .setTitle(textTitle)
         .setColor('#2b2d31')
         .setTimestamp()
-        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
+        .setFooter({
+          text: totalPages > 1
+            ? `KingMC.vn Stats Bot • Trang 1/${totalPages} • Thiết kế bởi BinhLH`
+            : 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH'
+        });
 
-      const formattedLines = orders.map((order, index) => {
-        const priceText = order.price || 'N/A';
-        const cleanDisplay = (order.displayName || '').replace(/§[0-9a-fk-or]/gi, '').trim();
-        const rawName = order.itemName || order.name;
-        const isOrderTitle = /^(?:đơn\s*hàng|don\s*hang|order)/iu.test(cleanDisplay);
-
-        let itemQueryId = '';
-        if (rawName && rawName !== 'player_head' && rawName !== 'skull' && rawName !== 'air') {
-          itemQueryId = rawName;
-        } else {
-          itemQueryId = itemQuery;
-        }
-
-        const nameToShow = (cleanDisplay && !isOrderTitle && cleanDisplay !== 'Item' && cleanDisplay !== 'Vật phẩm')
-          ? cleanDisplay
-          : formatItemDisplayName(itemQueryId);
-
-        let buyerName = order.buyer;
-        if (!buyerName || buyerName === 'Ẩn danh' || /^(?:đơn\s*hàng|don\s*hang|order)/iu.test(buyerName)) {
-          buyerName = cleanDisplay.replace(/^(?:đơn\s*hàng|don\s*hang|order)?(?:\s*của|\s*cua|:|\s)*\s*/iu, '').trim();
-        }
-
-        const buyerText = (buyerName && buyerName !== 'Ẩn danh') ? ` (Người mua: **${buyerName}**)` : '';
-        return `📦 **#${index + 1}** **${nameToShow}**${buyerText} | Giá: **${priceText}**`;
-      });
-
-      let descriptionText = formattedLines.join('\n');
-
-      if (descriptionText.length > 4096) {
-        descriptionText = descriptionText.substring(0, 4080) + '...';
-      }
-
+      const descriptionText = formatOrderTextPage(page1Orders, itemQuery, 1, 9);
       embed.setDescription(descriptionText);
+
+      // Nếu có từ 2 trang trở lên, tạo session phân trang (20s TTL) và gắn nút
+      if (totalPages > 1) {
+        const sessionId = createPaginationSession({
+          interaction,
+          type: 'order',
+          itemQuery,
+          pages,
+          displayMode: 'text'
+        });
+
+        const row = buildPaginationRow(sessionId, 1, totalPages);
+        return await interaction.editReply({ embeds: [embed], components: [row] });
+      }
 
       await interaction.editReply({ embeds: [embed] });
 

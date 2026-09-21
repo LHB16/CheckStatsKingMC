@@ -7,6 +7,7 @@ const { getCustomEmoji } = require('../helpers/utils');
 const { recordError } = require('../helpers/reportHelper');
 const configHelper = require('../helpers/configHelper');
 const { renderTableImage, formatItemDisplayName } = require('../helpers/renderHelper');
+const { chunkArray, buildPaginationRow, createPaginationSession, formatAhTextPage } = require('../helpers/paginationHelper');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -43,6 +44,11 @@ module.exports = {
         return await interaction.editReply({ embeds: [emptyEmbed] });
       }
 
+      // Chia nhỏ danh sách vật phẩm thành các trang 9 món (tối đa 5 trang)
+      const pages = chunkArray(items, 9);
+      const totalPages = pages.length;
+      const page1Items = pages[0];
+
       // Lấy chế độ hiển thị từ configHelper ('text' hoặc 'image')
       const displayMode = configHelper.getDisplayMode();
       const emoji = getCustomEmoji(itemQuery);
@@ -51,14 +57,18 @@ module.exports = {
       if (displayMode === 'image') {
         let imageBuffer = null;
         let lastError = null;
+        const page1Title = totalPages > 1
+          ? `DANH SÁCH AH: ${itemQuery.toUpperCase()} (TRANG 1/${totalPages})`
+          : `DANH SÁCH AH: ${itemQuery.toUpperCase()}`;
 
         for (let attempt = 1; attempt <= 2; attempt++) {
           try {
             imageBuffer = await renderTableImage(
-              `DANH SÁCH AH: ${itemQuery.toUpperCase()}`,
+              page1Title,
               itemQuery,
-              items,
-              'ah'
+              page1Items,
+              'ah',
+              1
             );
             if (imageBuffer) break;
           } catch (renderErr) {
@@ -68,13 +78,32 @@ module.exports = {
         }
 
         if (imageBuffer) {
-          const attachment = new AttachmentBuilder(imageBuffer, { name: 'ah_table.png' });
+          const attachment = new AttachmentBuilder(imageBuffer, { name: 'ah_table_p1.png' });
 
           const embed = new EmbedBuilder()
-            .setImage('attachment://ah_table.png')
+            .setImage('attachment://ah_table_p1.png')
             .setColor('#2b2d31')
             .setTimestamp()
-            .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
+            .setFooter({
+              text: totalPages > 1
+                ? `KingMC.vn Stats Bot • Trang 1/${totalPages} • Thiết kế bởi BinhLH`
+                : 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH'
+            });
+
+          // Nếu có từ 2 trang trở lên, tạo session phân trang (20s TTL) và gắn nút
+          if (totalPages > 1) {
+            const sessionId = createPaginationSession({
+              interaction,
+              type: 'ah',
+              itemQuery,
+              pages,
+              displayMode: 'image',
+              initialImageBuffer: imageBuffer
+            });
+
+            const row = buildPaginationRow(sessionId, 1, totalPages);
+            return await interaction.editReply({ embeds: [embed], files: [attachment], components: [row] });
+          }
 
           return await interaction.editReply({ embeds: [embed], files: [attachment] });
         }
@@ -82,29 +111,36 @@ module.exports = {
       }
 
       // CHẾ ĐỘ VĂN BẢN (Text Mode)
+      const textTitle = totalPages > 1
+        ? `📦 Danh sách AH: **${itemQuery.toUpperCase()}** ${emoji} (Trang 1/${totalPages})`
+        : `📦 Danh sách AH: **${itemQuery.toUpperCase()}** ${emoji}`;
+
       const embed = new EmbedBuilder()
-        .setTitle(`📦 Danh sách AH: **${itemQuery.toUpperCase()}** ${emoji}`)
+        .setTitle(textTitle)
         .setColor('#2b2d31')
         .setTimestamp()
-        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
+        .setFooter({
+          text: totalPages > 1
+            ? `KingMC.vn Stats Bot • Trang 1/${totalPages} • Thiết kế bởi BinhLH`
+            : 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH'
+        });
 
-      const formattedLines = items.map((item, index) => {
-        const priceText = item.price || 'N/A';
-        const cleanDisplay = (item.displayName || '').replace(/§[0-9a-fk-or]/gi, '').trim();
-        const rawName = item.itemName || item.name;
-        const nameToShow = (cleanDisplay && cleanDisplay !== 'Item' && !cleanDisplay.toLowerCase().includes('đơn hàng'))
-          ? cleanDisplay
-          : formatItemDisplayName(rawName || itemQuery);
-        return `📦 **#${index + 1}** **${nameToShow}** | Giá: **${priceText}**`;
-      });
-
-      let descriptionText = formattedLines.join('\n');
-
-      if (descriptionText.length > 4096) {
-        descriptionText = descriptionText.substring(0, 4080) + '...';
-      }
-
+      const descriptionText = formatAhTextPage(page1Items, itemQuery, 1, 9);
       embed.setDescription(descriptionText);
+
+      // Nếu có từ 2 trang trở lên, tạo session phân trang (20s TTL) và gắn nút
+      if (totalPages > 1) {
+        const sessionId = createPaginationSession({
+          interaction,
+          type: 'ah',
+          itemQuery,
+          pages,
+          displayMode: 'text'
+        });
+
+        const row = buildPaginationRow(sessionId, 1, totalPages);
+        return await interaction.editReply({ embeds: [embed], components: [row] });
+      }
 
       await interaction.editReply({ embeds: [embed] });
 
