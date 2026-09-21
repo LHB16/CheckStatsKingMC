@@ -51,17 +51,13 @@ async function handleTrackerButtons(interaction) {
           `👉 Bạn có thể bấm nút **📈 Xem biểu đồ** bên dưới bất kỳ lúc nào để nhận ảnh biểu đồ biến động!`
         )
         .setTimestamp()
-        .setFooter({ text: 'KingMC.vn Balance Tracker • Thiết kế bởi BinhLH' });
+        .setFooter({ text: 'KingMc Stats Bot' });
 
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId(`track_bal_${playerName}`)
           .setLabel('📈 Xem biểu đồ biến động')
-          .setStyle(ButtonStyle.Success),
-        new ButtonBuilder()
-          .setCustomId(`untrack_bal_${playerName}`)
-          .setLabel('Hủy theo dõi')
-          .setStyle(ButtonStyle.Secondary)
+          .setStyle(ButtonStyle.Success)
       );
 
       await interaction.followUp({ embeds: [successEmbed], components: [row] });
@@ -105,11 +101,7 @@ async function handleTrackerButtons(interaction) {
         new ButtonBuilder()
           .setCustomId(`refresh_chart_${playerName}`)
           .setLabel('🔄 Làm mới biểu đồ')
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId(`untrack_bal_${playerName}`)
-          .setLabel('Hủy theo dõi')
-          .setStyle(ButtonStyle.Danger)
+          .setStyle(ButtonStyle.Primary)
       );
 
       await interaction.editReply({ embeds: [chartEmbed], files: [attachment], components: [row] });
@@ -158,11 +150,7 @@ async function handleTrackerButtons(interaction) {
         new ButtonBuilder()
           .setCustomId(`refresh_chart_${playerName}`)
           .setLabel('🔄 Làm mới biểu đồ')
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId(`untrack_bal_${playerName}`)
-          .setLabel('Hủy theo dõi')
-          .setStyle(ButtonStyle.Danger)
+          .setStyle(ButtonStyle.Primary)
       );
 
       await interaction.editReply({ embeds: [chartEmbed], files: [attachment], components: [row] });
@@ -173,21 +161,13 @@ async function handleTrackerButtons(interaction) {
     }
   }
 
-  // 3. Nút Hủy theo dõi
+  // 3. Nút Hủy theo dõi (Đã vô hiệu hóa để tránh người dùng tùy tiện hủy)
   if (customId.startsWith('untrack_bal_')) {
     const playerName = customId.replace('untrack_bal_', '').trim();
-    await interaction.deferUpdate();
-
-    await trackerHelper.setTracking(playerName, false);
-
-    const stopEmbed = new EmbedBuilder()
-      .setTitle(`🛑 Đã Hủy Theo Dõi: **${playerName}**`)
-      .setDescription(`Hệ thống đã dừng theo dõi số dư định kỳ cho người chơi **${playerName}**.\n\nBạn có thể bấm lệnh \`/bal ${playerName}\` để bật lại theo dõi bất kỳ lúc nào!`)
-      .setColor('#6b7280')
-      .setTimestamp()
-      .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
-
-    await interaction.followUp({ embeds: [stopEmbed] });
+    await interaction.reply({
+      content: `⚠️ Tính năng hủy theo dõi qua nút bấm đã bị vô hiệu hóa để tránh việc bất kỳ ai cũng có thể tự ý hủy theo dõi người chơi **${playerName}**.\nChỉ Admin mới có thể quản lý qua lệnh \`!tracker untrack <player>\`.`,
+      ephemeral: true
+    });
     return true;
   }
 

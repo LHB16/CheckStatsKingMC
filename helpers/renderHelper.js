@@ -825,8 +825,8 @@ async function renderBalanceChart(playerName, historyPayload) {
       <svg class="chart-svg" viewBox="0 0 ${svgWidth} ${svgHeight}">
         <defs>
           <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#10b981" stop-opacity="0.38" />
-            <stop offset="85%" stop-color="#10b981" stop-opacity="0.04" />
+            <stop offset="0%" stop-color="#10b981" stop-opacity="0.22" />
+            <stop offset="85%" stop-color="#10b981" stop-opacity="0.03" />
             <stop offset="100%" stop-color="#10b981" stop-opacity="0.0" />
           </linearGradient>
         </defs>

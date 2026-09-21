@@ -11,19 +11,18 @@
     }
 
     body {
-      background-color: #111214;
+      background-color: #0f1012;
       color: #dbdee1;
       padding: 16px;
       display: inline-block;
     }
 
     .chart-container {
-      background-color: #1e1f22;
-      border: 1px solid #2b2d31;
-      border-radius: 16px;
-      padding: 24px 28px;
-      width: 760px;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
+      background-color: #1a1b1e;
+      border: 1px solid #28292d;
+      border-radius: 12px;
+      padding: 20px 24px;
+      width: 720px;
     }
 
     /* HEADER */
@@ -31,173 +30,144 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 20px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid #2e3035;
+      margin-bottom: 14px;
     }
 
     .player-profile {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
     }
 
     .avatar-wrapper {
-      position: relative;
-      width: 52px;
-      height: 52px;
+      width: 42px;
+      height: 42px;
       background: #111214;
-      border: 2px solid #10b981;
-      border-radius: 12px;
+      border: 1px solid #2e3035;
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
     }
 
     .avatar-wrapper img {
-      width: 44px;
-      height: 44px;
+      width: 36px;
+      height: 36px;
       image-rendering: pixelated;
     }
 
-    .title-box {
+    .player-meta {
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 2px;
     }
 
-    .title {
-      font-size: 19px;
-      font-weight: 800;
-      color: #f3f4f6;
-      letter-spacing: 0.4px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .title .highlight {
-      color: #10b981;
-    }
-
-    .subtitle {
-      font-size: 12px;
-      color: #949ba4;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .status-badge {
-      background: rgba(16, 185, 129, 0.12);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      color: #10b981;
-      font-size: 11px;
+    .player-name {
+      font-size: 17px;
       font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 20px;
-      display: inline-flex;
+      color: #f3f4f6;
+    }
+
+    .server-label {
+      font-size: 12px;
+      color: #8a909a;
+    }
+
+    .balance-summary {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+
+    .balance-val {
+      font-size: 22px;
+      font-weight: 800;
+      color: #10b981;
+      line-height: 1.2;
+    }
+
+    .balance-change {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 6px;
+      display: inline-block;
+    }
+
+    .balance-change.positive {
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.12);
+    }
+
+    .balance-change.negative {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.12);
+    }
+
+    /* INLINE STATS BAR (TỐI GIẢN) */
+    .stats-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #141517;
+      border: 1px solid #242529;
+      border-radius: 8px;
+      padding: 8px 16px;
+      margin-bottom: 14px;
+      font-size: 12px;
+      color: #8a909a;
+    }
+
+    .stat-item {
+      display: flex;
       align-items: center;
       gap: 6px;
     }
 
-    .status-badge .dot {
-      width: 6px;
-      height: 6px;
-      background-color: #10b981;
-      border-radius: 50%;
-      box-shadow: 0 0 8px #10b981;
-    }
-
-    /* STATS SUMMARY CARDS */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-bottom: 22px;
-    }
-
-    .stat-card {
-      background-color: #2b2d31;
-      border: 1px solid #35373c;
-      border-radius: 12px;
-      padding: 12px 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .stat-label {
-      font-size: 11px;
+    .stat-item strong {
+      color: #d1d5db;
       font-weight: 600;
-      color: #949ba4;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
 
-    .stat-value {
-      font-size: 16px;
-      font-weight: 800;
-      color: #f3f4f6;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    .stat-sep {
+      color: #383a40;
     }
 
-    .stat-value.current {
-      color: #10b981;
-    }
-
-    .stat-value.positive {
-      color: #10b981;
-    }
-
-    .stat-value.negative {
-      color: #ef4444;
-    }
-
-    .stat-sub {
-      font-size: 11px;
-      color: #949ba4;
-    }
-
-    /* CHART SVG CONTAINER */
+    /* CHART AREA */
     .chart-area {
       background-color: #141517;
-      border: 1px solid #2b2d31;
-      border-radius: 14px;
-      padding: 16px 16px 12px 16px;
-      position: relative;
+      border: 1px solid #242529;
+      border-radius: 8px;
+      padding: 12px 12px 8px 12px;
     }
 
     svg.chart-svg {
       width: 100%;
-      height: 250px;
+      height: 220px;
       overflow: visible;
     }
 
     .grid-line {
-      stroke: #26282c;
+      stroke: #222428;
       stroke-width: 1;
       stroke-dasharray: 4, 4;
     }
 
     .axis-text {
       font-size: 11px;
-      fill: #80848e;
-      font-weight: 600;
+      fill: #6b7280;
+      font-weight: 500;
     }
 
     .line-path {
       fill: none;
       stroke: #10b981;
-      stroke-width: 3.5;
+      stroke-width: 2.5;
       stroke-linecap: round;
       stroke-linejoin: round;
-      filter: drop-shadow(0 4px 10px rgba(16, 185, 129, 0.4));
     }
 
     .area-path {
@@ -207,28 +177,26 @@
     .data-point {
       fill: #10b981;
       stroke: #141517;
-      stroke-width: 2.5;
-      cursor: pointer;
+      stroke-width: 2;
     }
 
     .data-point.peak {
       fill: #f59e0b;
-      stroke: #ffffff;
-      stroke-width: 3;
+      stroke: #141517;
+      stroke-width: 2;
     }
 
     .data-point.valley {
       fill: #ef4444;
-      stroke: #ffffff;
-      stroke-width: 3;
+      stroke: #141517;
+      stroke-width: 2;
     }
 
     .point-label {
       font-size: 10px;
-      font-weight: 700;
-      fill: #f3f4f6;
+      font-weight: 600;
+      fill: #9ca3af;
       text-anchor: middle;
-      background: #2b2d31;
     }
 
     /* SINGLE POINT NOTICE */
@@ -237,19 +205,19 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 220px;
-      gap: 12px;
+      height: 180px;
+      gap: 10px;
       text-align: center;
     }
 
     .single-point-icon {
-      font-size: 38px;
+      font-size: 32px;
     }
 
     .single-point-text {
-      font-size: 14px;
-      color: #949ba4;
-      max-width: 480px;
+      font-size: 13px;
+      color: #8a909a;
+      max-width: 440px;
       line-height: 1.5;
     }
 
@@ -262,9 +230,9 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 14px;
-      padding-top: 12px;
-      border-top: 1px solid #26282c;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #242529;
       font-size: 11px;
       color: #6b7280;
     }
@@ -277,7 +245,7 @@
 
     .footer-right {
       font-weight: 600;
-      color: #80848e;
+      color: #8a909a;
     }
   </style>
 </head>
@@ -290,48 +258,34 @@
         <div class="avatar-wrapper">
           <img src="{{AVATAR_URL}}" alt="{{PLAYER_NAME}}" onerror="this.src='https://mc-heads.net/avatar/MHF_Steve/44';">
         </div>
-        <div class="title-box">
-          <div class="title">
-            BIẾN ĐỘNG SỐ DƯ: <span class="highlight">{{PLAYER_NAME}}</span>
-          </div>
-          <div class="subtitle">
-            <span>Server: KingMC.vn</span>
-            <span>•</span>
-            <span>Tự động theo dõi mỗi 1 giờ</span>
-          </div>
+        <div class="player-meta">
+          <div class="player-name">{{PLAYER_NAME}}</div>
+          <div class="server-label">KingMC.vn • Lịch sử biến động 3 ngày</div>
         </div>
       </div>
 
-      <div class="status-badge">
-        <span class="dot"></span>
-        <span>ĐANG THEO DÕI</span>
+      <div class="balance-summary">
+        <div class="balance-val">{{CURRENT_BALANCE}}</div>
+        <div class="balance-change {{CHANGE_CLASS}}">{{CHANGE_VALUE}} ({{CHANGE_PERCENT}})</div>
       </div>
     </div>
 
-    <!-- STATS SUMMARY GRID -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">Số dư hiện tại</div>
-        <div class="stat-value current">{{CURRENT_BALANCE}}</div>
-        <div class="stat-sub">Cập nhật: {{LATEST_TIME}}</div>
+    <!-- STATS BAR (TỐI GIẢN) -->
+    <div class="stats-bar">
+      <div class="stat-item">
+        <span>Đỉnh:</span> <strong>{{MAX_BALANCE}}</strong>
       </div>
-
-      <div class="stat-card">
-        <div class="stat-label">Mức biến động</div>
-        <div class="stat-value {{CHANGE_CLASS}}">{{CHANGE_VALUE}}</div>
-        <div class="stat-sub">{{CHANGE_PERCENT}} so với ban đầu</div>
+      <span class="stat-sep">•</span>
+      <div class="stat-item">
+        <span>Đáy:</span> <strong>{{MIN_BALANCE}}</strong>
       </div>
-
-      <div class="stat-card">
-        <div class="stat-label">Đỉnh cao nhất</div>
-        <div class="stat-value">{{MAX_BALANCE}}</div>
-        <div class="stat-sub">Mốc cao nhất 3 ngày</div>
+      <span class="stat-sep">•</span>
+      <div class="stat-item">
+        <span>Số mốc đo:</span> <strong>{{TOTAL_POINTS}}</strong>
       </div>
-
-      <div class="stat-card">
-        <div class="stat-label">Đáy thấp nhất</div>
-        <div class="stat-value">{{MIN_BALANCE}}</div>
-        <div class="stat-sub">Mốc thấp nhất 3 ngày</div>
+      <span class="stat-sep">•</span>
+      <div class="stat-item">
+        <span>Cập nhật:</span> <strong>{{LATEST_TIME}}</strong>
       </div>
     </div>
 
@@ -343,12 +297,10 @@
     <!-- FOOTER -->
     <div class="footer">
       <div class="footer-left">
-        <span>📊 Tổng cộng: <strong>{{TOTAL_POINTS}}</strong> mốc đo</span>
-        <span>•</span>
-        <span>Lưu trữ tối đa: <strong>3 ngày (72h)</strong></span>
+        <span>Tự động theo dõi mỗi 1 giờ</span>
       </div>
       <div class="footer-right">
-        KingMC Stats Bot • Thiết kế bởi BinhLH
+        KingMc Stats Bot
       </div>
     </div>
   </div>

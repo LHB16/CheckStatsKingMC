@@ -5,6 +5,7 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { getCustomEmoji, getStatsLabel, isDecorationItem, cleanMinecraftText } = require('../helpers/utils');
 const { recordError } = require('../helpers/reportHelper');
+const trackerHelper = require('../helpers/trackerHelper');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -74,7 +75,26 @@ module.exports = {
         embed.setDescription(descriptionText);
       }
 
-      await interaction.editReply({ embeds: [embed] });
+      // Kiểm tra trạng thái theo dõi số dư của người chơi và thêm nút tương tác
+      const isTracking = await trackerHelper.isTracking(targetPlayer);
+      const row = new ActionRowBuilder();
+      if (!isTracking) {
+        row.addComponents(
+          new ButtonBuilder()
+            .setCustomId(`track_bal_${targetPlayer}`)
+            .setLabel('🔔 Theo dõi số dư')
+            .setStyle(ButtonStyle.Primary)
+        );
+      } else {
+        row.addComponents(
+          new ButtonBuilder()
+            .setCustomId(`track_bal_${targetPlayer}`)
+            .setLabel('📈 Xem biểu đồ biến động')
+            .setStyle(ButtonStyle.Success)
+        );
+      }
+
+      await interaction.editReply({ embeds: [embed], components: [row] });
 
     } catch (error) {
       console.error(`[Discord-Bot] Lỗi khi xử lý lệnh stats cho ${targetPlayer}:`, error.message);

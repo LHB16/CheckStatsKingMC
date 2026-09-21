@@ -64,11 +64,7 @@ module.exports = {
           new ButtonBuilder()
             .setCustomId(`track_bal_${targetPlayer}`)
             .setLabel('📈 Xem biểu đồ biến động')
-            .setStyle(ButtonStyle.Success),
-          new ButtonBuilder()
-            .setCustomId(`untrack_bal_${targetPlayer}`)
-            .setLabel('Hủy theo dõi')
-            .setStyle(ButtonStyle.Secondary)
+            .setStyle(ButtonStyle.Success)
         );
       }
 
