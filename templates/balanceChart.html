@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #111214;
+      color: #dbdee1;
+      padding: 16px;
+      display: inline-block;
+    }
+
+    .chart-container {
+      background-color: #1e1f22;
+      border: 1px solid #2b2d31;
+      border-radius: 16px;
+      padding: 24px 28px;
+      width: 760px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
+    }
+
+    /* HEADER */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #2e3035;
+    }
+
+    .player-profile {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .avatar-wrapper {
+      position: relative;
+      width: 52px;
+      height: 52px;
+      background: #111214;
+      border: 2px solid #10b981;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+
+    .avatar-wrapper img {
+      width: 44px;
+      height: 44px;
+      image-rendering: pixelated;
+    }
+
+    .title-box {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .title {
+      font-size: 19px;
+      font-weight: 800;
+      color: #f3f4f6;
+      letter-spacing: 0.4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .title .highlight {
+      color: #10b981;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: #949ba4;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-badge {
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #10b981;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-badge .dot {
+      width: 6px;
+      height: 6px;
+      background-color: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    /* STATS SUMMARY CARDS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .stat-card {
+      background-color: #2b2d31;
+      border: 1px solid #35373c;
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #949ba4;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      font-size: 16px;
+      font-weight: 800;
+      color: #f3f4f6;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .stat-value.current {
+      color: #10b981;
+    }
+
+    .stat-value.positive {
+      color: #10b981;
+    }
+
+    .stat-value.negative {
+      color: #ef4444;
+    }
+
+    .stat-sub {
+      font-size: 11px;
+      color: #949ba4;
+    }
+
+    /* CHART SVG CONTAINER */
+    .chart-area {
+      background-color: #141517;
+      border: 1px solid #2b2d31;
+      border-radius: 14px;
+      padding: 16px 16px 12px 16px;
+      position: relative;
+    }
+
+    svg.chart-svg {
+      width: 100%;
+      height: 250px;
+      overflow: visible;
+    }
+
+    .grid-line {
+      stroke: #26282c;
+      stroke-width: 1;
+      stroke-dasharray: 4, 4;
+    }
+
+    .axis-text {
+      font-size: 11px;
+      fill: #80848e;
+      font-weight: 600;
+    }
+
+    .line-path {
+      fill: none;
+      stroke: #10b981;
+      stroke-width: 3.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 4px 10px rgba(16, 185, 129, 0.4));
+    }
+
+    .area-path {
+      fill: url(#chartGradient);
+    }
+
+    .data-point {
+      fill: #10b981;
+      stroke: #141517;
+      stroke-width: 2.5;
+      cursor: pointer;
+    }
+
+    .data-point.peak {
+      fill: #f59e0b;
+      stroke: #ffffff;
+      stroke-width: 3;
+    }
+
+    .data-point.valley {
+      fill: #ef4444;
+      stroke: #ffffff;
+      stroke-width: 3;
+    }
+
+    .point-label {
+      font-size: 10px;
+      font-weight: 700;
+      fill: #f3f4f6;
+      text-anchor: middle;
+      background: #2b2d31;
+    }
+
+    /* SINGLE POINT NOTICE */
+    .single-point-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 220px;
+      gap: 12px;
+      text-align: center;
+    }
+
+    .single-point-icon {
+      font-size: 38px;
+    }
+
+    .single-point-text {
+      font-size: 14px;
+      color: #949ba4;
+      max-width: 480px;
+      line-height: 1.5;
+    }
+
+    .single-point-text strong {
+      color: #10b981;
+    }
+
+    /* FOOTER */
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid #26282c;
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .footer-right {
+      font-weight: 600;
+      color: #80848e;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="chart-container">
+    <!-- HEADER -->
+    <div class="header">
+      <div class="player-profile">
+        <div class="avatar-wrapper">
+          <img src="{{AVATAR_URL}}" alt="{{PLAYER_NAME}}" onerror="this.src='https://mc-heads.net/avatar/MHF_Steve/44';">
+        </div>
+        <div class="title-box">
+          <div class="title">
+            BIẾN ĐỘNG SỐ DƯ: <span class="highlight">{{PLAYER_NAME}}</span>
+          </div>
+          <div class="subtitle">
+            <span>Server: KingMC.vn</span>
+            <span>•</span>
+            <span>Tự động theo dõi mỗi 1 giờ</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="status-badge">
+        <span class="dot"></span>
+        <span>ĐANG THEO DÕI</span>
+      </div>
+    </div>
+
+    <!-- STATS SUMMARY GRID -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Số dư hiện tại</div>
+        <div class="stat-value current">{{CURRENT_BALANCE}}</div>
+        <div class="stat-sub">Cập nhật: {{LATEST_TIME}}</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Mức biến động</div>
+        <div class="stat-value {{CHANGE_CLASS}}">{{CHANGE_VALUE}}</div>
+        <div class="stat-sub">{{CHANGE_PERCENT}} so với ban đầu</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Đỉnh cao nhất</div>
+        <div class="stat-value">{{MAX_BALANCE}}</div>
+        <div class="stat-sub">Mốc cao nhất 3 ngày</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Đáy thấp nhất</div>
+        <div class="stat-value">{{MIN_BALANCE}}</div>
+        <div class="stat-sub">Mốc thấp nhất 3 ngày</div>
+      </div>
+    </div>
+
+    <!-- CHART AREA -->
+    <div class="chart-area">
+      {{CHART_CONTENT}}
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <div class="footer-left">
+        <span>📊 Tổng cộng: <strong>{{TOTAL_POINTS}}</strong> mốc đo</span>
+        <span>•</span>
+        <span>Lưu trữ tối đa: <strong>3 ngày (72h)</strong></span>
+      </div>
+      <div class="footer-right">
+        KingMC Stats Bot • Thiết kế bởi BinhLH
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

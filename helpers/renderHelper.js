@@ -615,8 +615,296 @@ async function renderTableImage(title, itemQuery, items, type = 'order') {
   }
 }
 
+/**
+ * Format số tiền dạng tiền tệ KingMC (VD: 1500000 -> "$1,500,000")
+ */
+function formatCurrency(num) {
+  if (num === null || num === undefined || isNaN(num)) return '$0';
+  return '$' + Math.round(num).toLocaleString('en-US');
+}
+
+/**
+ * Format số tiền rút gọn cho trục biểu đồ (VD: 1500000 -> "$1.5M", 50000 -> "$50K")
+ */
+function formatShortMoney(num) {
+  if (num === 0) return '$0';
+  const abs = Math.abs(num);
+  const sign = num < 0 ? '-' : '';
+  if (abs >= 1e9) return sign + '$' + (abs / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
+  if (abs >= 1e6) return sign + '$' + (abs / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (abs >= 1e3) return sign + '$' + (abs / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
+  return sign + '$' + Math.round(abs);
+}
+
+/**
+ * Format thời gian ngắn gọn (VD: "15:30 20/09")
+ */
+function formatShortTime(timestamp) {
+  const d = new Date(timestamp);
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  return `${hours}:${minutes} ${day}/${month}`;
+}
+
+const CHART_TEMPLATE_PATH = path.join(__dirname, '../templates/balanceChart.html');
+
+/**
+ * Render Biểu đồ Biến động Số dư của Người chơi ra ảnh PNG bằng Puppeteer
+ * @param {string} playerName - Tên người chơi
+ * @param {object} historyPayload - Dữ liệu trả về từ trackerHelper.getPlayerHistory()
+ * @returns {Promise<Buffer>}
+ */
+async function renderBalanceChart(playerName, historyPayload) {
+  let templateContent = '';
+  try {
+    templateContent = fs.readFileSync(CHART_TEMPLATE_PATH, 'utf8');
+  } catch (err) {
+    console.error('[RenderHelper] Không thể đọc file templates/balanceChart.html:', err.message);
+    throw err;
+  }
+
+  const history = (historyPayload && historyPayload.history) ? historyPayload.history : [];
+  const stats = (historyPayload && historyPayload.stats) ? historyPayload.stats : {
+    count: history.length,
+    startBalance: 0,
+    currentBalance: 0,
+    minBalance: 0,
+    maxBalance: 0,
+    balanceChange: 0,
+    changePercent: 0
+  };
+
+  const totalPoints = history.length;
+  const currentBal = stats.currentBalance || 0;
+  const minBal = stats.minBalance || 0;
+  const maxBal = stats.maxBalance || 0;
+  const changeVal = stats.balanceChange || 0;
+  const changePct = stats.changePercent || 0;
+
+  const isPositive = changeVal >= 0;
+  const changeClass = isPositive ? 'positive' : 'negative';
+  const changeFormatted = (isPositive ? '+' : '-') + formatCurrency(Math.abs(changeVal));
+  const changePctFormatted = (isPositive ? '+' : '') + changePct + '%';
+
+  const latestTimeStr = totalPoints > 0
+    ? formatShortTime(history[totalPoints - 1].timestamp)
+    : 'Vừa xong';
+
+  let chartContentHtml = '';
+
+  // Trường hợp chỉ có 0 hoặc 1 điểm dữ liệu
+  if (totalPoints <= 1) {
+    const singleBalFormatted = totalPoints === 1 ? formatCurrency(history[0].balance) : formatCurrency(currentBal);
+    chartContentHtml = `
+      <div class="single-point-box">
+        <div class="single-point-icon">⏱️</div>
+        <div class="single-point-text">
+          Đã ghi nhận mốc số dư đầu tiên: <strong>${singleBalFormatted}</strong>.<br>
+          Hệ thống đang theo dõi định kỳ <strong>1 giờ / lần</strong>.<br>
+          Đường biểu đồ biến động sẽ tự động hiển thị đầy đủ từ các lần kiểm tra tiếp theo!
+        </div>
+      </div>
+    `;
+  } else {
+    // Vẽ SVG biểu đồ đường (Line Chart)
+    const svgWidth = 704;
+    const svgHeight = 250;
+    const padLeft = 68;
+    const padRight = 36;
+    const padTop = 28;
+    const padBottom = 38;
+
+    const plotWidth = svgWidth - padLeft - padRight;
+    const plotHeight = svgHeight - padTop - padBottom;
+
+    // Tính range giá trị Y
+    let yMin = minBal;
+    let yMax = maxBal;
+    if (yMin === yMax) {
+      yMin = Math.max(0, yMin - 1000);
+      yMax = yMax + 1000;
+    }
+    const yMargin = (yMax - yMin) * 0.12;
+    const effectiveYMin = Math.max(0, yMin - yMargin);
+    const effectiveYMax = yMax + yMargin;
+    const yRange = (effectiveYMax - effectiveYMin) || 1;
+
+    // 4 Đường lưới ngang và mốc tiền tệ
+    const gridLinesCount = 4;
+    let gridLinesSvg = '';
+    for (let i = 0; i <= gridLinesCount; i++) {
+      const ratio = i / gridLinesCount;
+      const yVal = effectiveYMin + (1 - ratio) * yRange;
+      const yPos = padTop + ratio * plotHeight;
+
+      gridLinesSvg += `
+        <line class="grid-line" x1="${padLeft}" y1="${yPos}" x2="${svgWidth - padRight}" y2="${yPos}" />
+        <text class="axis-text" x="${padLeft - 10}" y="${yPos + 4}" text-anchor="end">${formatShortMoney(yVal)}</text>
+      `;
+    }
+
+    // Tọa độ các điểm (X, Y)
+    const points = history.map((item, index) => {
+      const xRatio = totalPoints > 1 ? index / (totalPoints - 1) : 0.5;
+      const x = padLeft + xRatio * plotWidth;
+      const yRatio = (item.balance - effectiveYMin) / yRange;
+      const y = padTop + (1 - yRatio) * plotHeight;
+      return { x, y, balance: item.balance, timestamp: item.timestamp };
+    });
+
+    // Tạo đường gấp khúc / Path
+    let pathD = `M ${points[0].x} ${points[0].y}`;
+    for (let i = 1; i < points.length; i++) {
+      pathD += ` L ${points[i].x} ${points[i].y}`;
+    }
+
+    // Vùng tô gradient bên dưới đường
+    const areaD = `${pathD} L ${points[points.length - 1].x} ${padTop + plotHeight} L ${points[0].x} ${padTop + plotHeight} Z`;
+
+    // Vẽ các điểm tròn dữ liệu
+    let pointsSvg = '';
+    const peakIndex = points.reduce((maxIdx, p, idx, arr) => p.balance > arr[maxIdx].balance ? idx : maxIdx, 0);
+    const valleyIndex = points.reduce((minIdx, p, idx, arr) => p.balance < arr[minIdx].balance ? idx : minIdx, 0);
+
+    // Giới hạn hiển thị chấm tròn nếu quá nhiều điểm (tránh rối)
+    const showAllPoints = points.length <= 36;
+    const step = showAllPoints ? 1 : Math.ceil(points.length / 30);
+
+    points.forEach((p, idx) => {
+      const isPeak = idx === peakIndex && minBal !== maxBal;
+      const isValley = idx === valleyIndex && minBal !== maxBal && idx !== peakIndex;
+      const isLast = idx === points.length - 1;
+
+      if (showAllPoints || isPeak || isValley || isLast || idx % step === 0) {
+        let pointClass = 'data-point';
+        let r = 4;
+        if (isPeak) {
+          pointClass += ' peak';
+          r = 6;
+        } else if (isValley) {
+          pointClass += ' valley';
+          r = 6;
+        } else if (isLast) {
+          r = 5.5;
+        }
+
+        pointsSvg += `<circle class="${pointClass}" cx="${p.x}" cy="${p.y}" r="${r}" />`;
+
+        // Gắn nhãn Đỉnh / Đáy
+        if (isPeak) {
+          pointsSvg += `<text class="point-label" x="${p.x}" y="${Math.max(16, p.y - 10)}">Đỉnh: ${formatShortMoney(p.balance)}</text>`;
+        } else if (isValley) {
+          pointsSvg += `<text class="point-label" x="${p.x}" y="${Math.min(svgHeight - 15, p.y + 16)}">Đáy: ${formatShortMoney(p.balance)}</text>`;
+        }
+      }
+    });
+
+    // Nhãn thời gian trục X (chọn 4 đến 5 mốc phân bố đều)
+    let timeLabelsSvg = '';
+    const labelIndices = [0];
+    if (totalPoints >= 4) {
+      labelIndices.push(Math.floor(totalPoints * 0.33));
+      labelIndices.push(Math.floor(totalPoints * 0.66));
+    } else if (totalPoints === 3) {
+      labelIndices.push(1);
+    }
+    labelIndices.push(totalPoints - 1);
+
+    const uniqueIndices = [...new Set(labelIndices)];
+    uniqueIndices.forEach(idx => {
+      const p = points[idx];
+      const timeStr = formatShortTime(p.timestamp);
+      timeLabelsSvg += `
+        <text class="axis-text" x="${p.x}" y="${padTop + plotHeight + 22}" text-anchor="middle">${timeStr}</text>
+      `;
+    });
+
+    chartContentHtml = `
+      <svg class="chart-svg" viewBox="0 0 ${svgWidth} ${svgHeight}">
+        <defs>
+          <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#10b981" stop-opacity="0.38" />
+            <stop offset="85%" stop-color="#10b981" stop-opacity="0.04" />
+            <stop offset="100%" stop-color="#10b981" stop-opacity="0.0" />
+          </linearGradient>
+        </defs>
+
+        <!-- ĐƯỜNG LƯỚI NGANG VÀ MỐC TIỀN -->
+        ${gridLinesSvg}
+
+        <!-- VÙNG TÔ GRADIENT -->
+        <path class="area-path" d="${areaD}" />
+
+        <!-- ĐƯỜNG BIỂU ĐỒ -->
+        <path class="line-path" d="${pathD}" />
+
+        <!-- CÁC ĐIỂM DỮ LIỆU -->
+        ${pointsSvg}
+
+        <!-- NHÃN THỜI GIAN TRỤC X -->
+        ${timeLabelsSvg}
+      </svg>
+    `;
+  }
+
+  const avatarUrl = `https://mc-heads.net/head/${encodeURIComponent(playerName)}/64`;
+
+  const compiledHtml = templateContent
+    .replace(/\{\{PLAYER_NAME\}\}/g, escapeHtml(playerName))
+    .replace(/\{\{AVATAR_URL\}\}/g, avatarUrl)
+    .replace('{{CURRENT_BALANCE}}', formatCurrency(currentBal))
+    .replace('{{LATEST_TIME}}', latestTimeStr)
+    .replace('{{CHANGE_CLASS}}', changeClass)
+    .replace('{{CHANGE_VALUE}}', changeFormatted)
+    .replace('{{CHANGE_PERCENT}}', changePctFormatted)
+    .replace('{{MAX_BALANCE}}', formatCurrency(maxBal))
+    .replace('{{MIN_BALANCE}}', formatCurrency(minBal))
+    .replace('{{TOTAL_POINTS}}', String(totalPoints))
+    .replace('{{CHART_CONTENT}}', chartContentHtml);
+
+  const browser = await getBrowser();
+  const page = await browser.newPage();
+
+  try {
+    await page.setViewport({ width: 800, height: 500, deviceScaleFactor: 2 });
+    await page.setContent(compiledHtml, { waitUntil: 'domcontentloaded', timeout: 15000 });
+
+    // Đợi avatar tải xong (tối đa 1.5s, không làm treo nếu mạng chậm)
+    await page.evaluate(async () => {
+      const img = document.querySelector('.avatar-wrapper img');
+      if (img && !img.complete) {
+        await new Promise(resolve => {
+          img.onload = resolve;
+          img.onerror = resolve;
+          setTimeout(resolve, 1500);
+        });
+      }
+    });
+
+    // Đợi render ổn định SVG
+    await new Promise(r => setTimeout(r, 200));
+
+    const elementHandle = await page.$('.chart-container');
+    if (!elementHandle) {
+      throw new Error('Không tìm thấy container .chart-container trong HTML');
+    }
+
+    const imageBuffer = await elementHandle.screenshot({
+      type: 'png',
+      omitBackground: true
+    });
+
+    return imageBuffer;
+  } finally {
+    await page.close();
+  }
+}
+
 module.exports = {
   renderTableImage,
+  renderBalanceChart,
   formatItemDisplayName,
   getItemIconUrl,
   formatMinecraftTextToHtml

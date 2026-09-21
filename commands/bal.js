@@ -5,6 +5,7 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { getCustomEmoji } = require('../helpers/utils');
 const { recordError } = require('../helpers/reportHelper');
+const trackerHelper = require('../helpers/trackerHelper');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -32,6 +33,14 @@ module.exports = {
         const dollarIndex = cleanVal.indexOf('$');
         cleanVal = cleanVal.substring(dollarIndex).replace(/balance/gi, '').trim();
       }
+
+      // Kiểm tra trạng thái theo dõi hiện tại của người chơi
+      const isTracking = await trackerHelper.isTracking(targetPlayer);
+
+      // Nếu đang được theo dõi, cập nhật luôn điểm số dư này vào lịch sử
+      if (isTracking) {
+        await trackerHelper.addBalanceRecord(targetPlayer, cleanVal);
+      }
       
       const embed = new EmbedBuilder()
         .setTitle(`${emeraldEmoji} Số dư người chơi: **${targetPlayer}**`)
@@ -41,7 +50,29 @@ module.exports = {
         .setTimestamp()
         .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
 
-      await interaction.editReply({ embeds: [embed] });
+      // Tạo nút bấm tương tác theo dõi số dư
+      const row = new ActionRowBuilder();
+      if (!isTracking) {
+        row.addComponents(
+          new ButtonBuilder()
+            .setCustomId(`track_bal_${targetPlayer}`)
+            .setLabel('🔔 Theo dõi số dư')
+            .setStyle(ButtonStyle.Primary)
+        );
+      } else {
+        row.addComponents(
+          new ButtonBuilder()
+            .setCustomId(`track_bal_${targetPlayer}`)
+            .setLabel('📈 Xem biểu đồ biến động')
+            .setStyle(ButtonStyle.Success),
+          new ButtonBuilder()
+            .setCustomId(`untrack_bal_${targetPlayer}`)
+            .setLabel('Hủy theo dõi')
+            .setStyle(ButtonStyle.Secondary)
+        );
+      }
+
+      await interaction.editReply({ embeds: [embed], components: [row] });
     } catch (error) {
       console.error(`[Discord-Bot] Lỗi khi xử lý lệnh bal cho ${targetPlayer}:`, error.message);
       recordError('bal', targetPlayer, error);

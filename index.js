@@ -15,6 +15,8 @@ const CommandHandler = require('./handlers/commandHandler');
 const { handleReportButtons, sendBanAlert } = require('./helpers/reportHelper');
 const configHelper = require('./helpers/configHelper');
 const { handleAiChatMessage } = require('./handlers/aiChatHandler');
+const trackerHelper = require('./helpers/trackerHelper');
+const { handleTrackerButtons } = require('./handlers/trackerButtonHandler');
 
 
 // Cấu hình từ .env
@@ -36,8 +38,8 @@ const MC_SERVER_HOSTS = (process.env.MC_SERVER_HOSTS || 'sgp.kingmc.vn,kingmc.vn
 // Global Variables
 global.isBotMaintenance = false;
 global.maintenanceMessage = '';
-global.isAiChatEnabled = true;
-global.aiDisableReason = '';
+global.isAiChatEnabled = false; // Mặc định TẮT tính năng AI Chat
+global.aiDisableReason = 'Tính năng trò chuyện AI hiện đang tạm tắt bởi Admin.';
 global.globalDiscordClient = null;
 
 
@@ -294,6 +296,65 @@ server.listen(PORT, () => {
   console.log(`[HTTP-Server] Đang lắng nghe trên cổng ${PORT} (${BOT_ROLE.toUpperCase()}).`);
 });
 
+/**
+ * Tiến trình kiểm tra định kỳ số dư toàn bộ người chơi đang được theo dõi
+ * Chạy mỗi 1 giờ trên Master Node
+ */
+function startTrackerScheduler(queueDispatcher) {
+  const ONE_HOUR_MS = 60 * 60 * 1000;
+  const intervalMs = parseInt(process.env.TRACKER_INTERVAL_MS) || ONE_HOUR_MS;
+
+  console.log(`[TrackerScheduler] ⏱️ Đã kích hoạt tiến trình theo dõi số dư (Chu kỳ: ${intervalMs / 1000}s/lần)...`);
+
+  async function runCheckCycle() {
+    try {
+      const trackedPlayers = await trackerHelper.getAllTrackedPlayers();
+      if (!trackedPlayers || trackedPlayers.length === 0) {
+        return;
+      }
+
+      console.log(`[TrackerScheduler] 🔄 Bắt đầu chu kỳ kiểm tra số dư định kỳ cho ${trackedPlayers.length} người chơi: [${trackedPlayers.join(', ')}]`);
+
+      // Lần lượt phân phối kiểm tra từng người chơi qua QueueDispatcher (chờ bot rảnh)
+      for (const player of trackedPlayers) {
+        const isStillTracking = await trackerHelper.isTracking(player);
+        if (!isStillTracking) continue;
+
+        try {
+          console.log(`[TrackerScheduler] ⏳ Đang đưa yêu cầu check bal cho "${player}" vào Queue...`);
+          const BOT_CHECK_TIMEOUT = parseInt(process.env.BOT_CHECK_TIMEOUT) || 20000;
+          const rawBal = await queueDispatcher.enqueueTask('bal', player, BOT_CHECK_TIMEOUT);
+
+          let cleanVal = rawBal;
+          if (cleanVal && cleanVal.includes('$')) {
+            const dollarIndex = cleanVal.indexOf('$');
+            cleanVal = cleanVal.substring(dollarIndex).replace(/balance/gi, '').trim();
+          }
+
+          if (cleanVal) {
+            await trackerHelper.addBalanceRecord(player, cleanVal);
+            console.log(`[TrackerScheduler] ✅ Đã lưu số dư mới cho "${player}": ${cleanVal}`);
+          }
+        } catch (err) {
+          console.warn(`[TrackerScheduler] ⚠️ Không thể check bal định kỳ cho "${player}": ${err.message}`);
+        }
+
+        // Tạm nghỉ 5 giây giữa các người chơi để Worker không bị dồn dập
+        await new Promise(r => setTimeout(r, 5000));
+      }
+
+      console.log(`[TrackerScheduler] 🏁 Hoàn thành chu kỳ kiểm tra số dư định kỳ.`);
+    } catch (cycleErr) {
+      console.error('[TrackerScheduler] Lỗi trong chu kỳ kiểm tra:', cycleErr.message);
+    }
+  }
+
+  // Khởi chạy vòng lặp setInterval
+  const timer = setInterval(runCheckCycle, intervalMs);
+
+  return { runCheckCycle, timer };
+}
+
 // 3. Khởi tạo Discord Client & Queue Dispatcher (Nếu ở chế độ 'master' hoặc 'standalone')
 if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   const queueDispatcher = new QueueDispatcher();
@@ -339,6 +400,12 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   client.once('clientReady', async () => {
     console.log(`[Discord-Bot] Bot đã trực tuyến với tên: ${client.user.tag}`);
     await commandHandler.registerSlashCommands(DISCORD_TOKEN, CLIENT_ID, GUILD_ID);
+
+    // Khởi tạo hệ thống lưu trữ theo dõi số dư (MongoDB / JSON)
+    await trackerHelper.initTracker();
+
+    // Khởi chạy tiến trình kiểm tra số dư định kỳ 1 giờ / lần
+    global.trackerSchedulerInstance = startTrackerScheduler(queueDispatcher);
   });
 
   client.on('interactionCreate', async (interaction) => {
@@ -352,6 +419,10 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     // Xử lý nút báo lỗi Admin
     const isReportHandled = await handleReportButtons(interaction, client);
     if (isReportHandled) return;
+
+    // Xử lý nút Theo dõi & Xuất biểu đồ số dư
+    const isTrackerHandled = await handleTrackerButtons(interaction);
+    if (isTrackerHandled) return;
 
     // Xử lý Slash Commands
     await commandHandler.handleInteraction(interaction);
@@ -453,7 +524,41 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
 
     try {
       if (command === 'help') {
-         await message.channel.send('**Danh sách lệnh Admin:**\n- `!status` hoặc `!workers`: Xem danh sách và trạng thái toàn bộ Workers (Local & Remote)\n- `!restart`: Random tên mới và khởi động lại bot ngay lập tức\n- `!mode` hoặc `!render`: Chuyển đổi chế độ hiển thị danh sách (Text / Image)\n- `!toggle off/on [lời nhắn]`: Bật/tắt việc nhận Slash Commands từ user khác.\n- `!ai off/on [lời nhắn]`: Bật/tắt tính năng trò chuyện AI với người dùng.');
+         await message.channel.send('**Danh sách lệnh Admin:**\n- `!status` hoặc `!workers`: Xem danh sách và trạng thái toàn bộ Workers (Local & Remote)\n- `!restart`: Random tên mới và khởi động lại bot ngay lập tức\n- `!mode` hoặc `!render`: Chuyển đổi chế độ hiển thị danh sách (Text / Image)\n- `!toggle off/on [lời nhắn]`: Bật/tắt việc nhận Slash Commands từ user khác.\n- `!ai off/on [lời nhắn]`: Bật/tắt tính năng trò chuyện AI với người dùng.\n- `!tracker`: Xem danh sách và trạng thái theo dõi số dư định kỳ\n- `!tracker check`: Kích hoạt vòng lặp check bal cho các người chơi ngay lập tức\n- `!tracker untrack <tên>`: Hủy theo dõi một người chơi.');
+      } else if (command === 'tracker' || command === 'theodoi') {
+         const sub = args.shift()?.toLowerCase();
+         if (sub === 'untrack' || sub === 'remove' || sub === 'xoa') {
+           const target = args.join(' ').trim();
+           if (!target) {
+             return await message.channel.send('⚠️ Cú pháp: `!tracker untrack <tên_người_chơi>`');
+           }
+           await trackerHelper.setTracking(target, false);
+           await message.channel.send(`✅ Đã hủy theo dõi số dư của người chơi: **${target}**`);
+         } else if (sub === 'check' || sub === 'run') {
+           await message.channel.send('🔄 **Bắt đầu chu kỳ kiểm tra số dư định kỳ cho các người chơi ngay lập tức...**');
+           if (global.trackerSchedulerInstance) {
+             global.trackerSchedulerInstance.runCheckCycle();
+           }
+         } else {
+           const overview = await trackerHelper.getTrackerOverview();
+           let msg = `📊 **HỆ THỐNG THEO DÕI SỐ DƯ (BALANCE TRACKER):**\n`;
+           msg += `• Kết nối MongoDB Atlas: ${overview.isMongoConnected ? '🟢 **Đã kết nối đám mây**' : '🟡 **Dự phòng file JSON**'}\n`;
+           msg += `• Tổng số người chơi đang theo dõi: **${overview.totalTracked}**\n\n`;
+
+           if (overview.players.length === 0) {
+             msg += `_Hiện chưa có người chơi nào được theo dõi. Người dùng có thể dùng \`/bal <player>\` rồi bấm nút **Theo dõi** để thêm!_`;
+           } else {
+             overview.players.forEach((p, idx) => {
+               const timeStr = p.lastChecked ? p.lastChecked.toLocaleString('vi-VN') : 'Chưa đo';
+               msg += `**${idx + 1}. ${p.name}**\n`;
+               msg += `   - Số dư mới nhất: \`${p.latestBalance}\`\n`;
+               msg += `   - Mốc đo ghi nhận: **${p.pointsCount}** lần đo (tối đa 3 ngày)\n`;
+               msg += `   - Lần đo gần nhất: \`${timeStr}\`\n`;
+             });
+             msg += `\n_Lệnh Admin: \`!tracker check\` (kiểm tra ngay) • \`!tracker untrack <tên>\` (xóa)_`;
+           }
+           await message.channel.send(msg);
+         }
       } else if (command === 'ai') {
          const sub = args.shift()?.toLowerCase();
          if (sub === 'off') {
