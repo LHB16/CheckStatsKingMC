@@ -8,6 +8,20 @@ const { renderBalanceChart } = require('../helpers/renderHelper');
 const { getCustomEmoji } = require('../helpers/utils');
 const skinHelper = require('../helpers/skinHelper');
 
+// Bộ nhớ tạm lưu lại view ban đầu (embeds) của tin nhắn check bal / stats để phục vụ nút "Quay lại"
+// Map<messageId, { embeds: any[], playerName: string, timestamp: number }>
+const originalViewCache = new Map();
+
+// Tự động dọn dẹp cache sau mỗi 30 phút để giải phóng bộ nhớ
+setInterval(() => {
+  const now = Date.now();
+  for (const [msgId, data] of originalViewCache.entries()) {
+    if (now - data.timestamp > 60 * 60 * 1000) {
+      originalViewCache.delete(msgId);
+    }
+  }
+}, 30 * 60 * 1000).unref();
+
 /**
  * Xử lý các tương tác nút bấm liên quan đến Balance Tracker
  * @param {import('discord.js').ButtonInteraction} interaction 
@@ -25,10 +39,8 @@ async function handleTrackerButtons(interaction) {
 
     const isTracking = await trackerHelper.isTracking(playerName);
 
-    // TRƯỜNG HỢP 1: Chưa theo dõi -> BẬT THEO DÕI
+    // TRƯỜNG HỢP 1: Chưa theo dõi -> BẬT THEO DÕI (Cập nhật trực tiếp nút bấm trên tin nhắn hiện tại)
     if (!isTracking) {
-      await interaction.deferUpdate();
-
       // Cố gắng trích xuất số dư hiện tại từ Embed tin nhắn (nếu có)
       let currentBal = null;
       if (interaction.message && interaction.message.embeds && interaction.message.embeds.length > 0) {
@@ -41,19 +53,6 @@ async function handleTrackerButtons(interaction) {
 
       await trackerHelper.setTracking(playerName, true, currentBal);
 
-      const successEmbed = new EmbedBuilder()
-        .setTitle(`🔔 Đã Bật Theo Dõi: **${playerName}**`)
-        .setColor('#10b981')
-        .setThumbnail(skinHelper.getAvatarUrl(playerName, 64, true))
-        .setDescription(
-          `✅ Hệ thống đã bắt đầu theo dõi số dư của người chơi **${playerName}**.\n\n` +
-          `⏰ **Chu kỳ:** Tự động kiểm tra định kỳ **1 giờ / lần** khi có Worker rảnh.\n` +
-          `☁️ **Lưu trữ:** Dữ liệu biến động được lưu trữ an toàn trong vòng **3 ngày (72h)**.\n\n` +
-          `👉 Bạn có thể bấm nút **📈 Xem biểu đồ** bên dưới bất kỳ lúc nào để nhận ảnh biểu đồ biến động!`
-        )
-        .setTimestamp()
-        .setFooter({ text: 'KingMc Stats Bot' });
-
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId(`track_bal_${playerName}`)
@@ -61,19 +60,42 @@ async function handleTrackerButtons(interaction) {
           .setStyle(ButtonStyle.Success)
       );
 
-      await interaction.followUp({ embeds: [successEmbed], components: [row] });
+      // Chỉnh sửa trực tiếp nút bấm trên tin nhắn ban đầu
+      await interaction.update({ components: [row] });
+
+      // Gửi phản hồi thông báo nhẹ chỉ cho người bấm (ephemeral)
+      try {
+        await interaction.followUp({
+          content: `🔔 Đã bật theo dõi số dư cho người chơi **${playerName}** thành công!\n⏰ Tự động kiểm tra định kỳ 1 giờ / lần. Dữ liệu lưu trữ trong 3 ngày.`,
+          ephemeral: true
+        });
+      } catch (e) {}
+
       return true;
     }
 
-    // TRƯỜNG HỢP 2: Đã theo dõi -> XUẤT BIỂU ĐỒ BIẾN ĐỘNG 3 NGÀY
-    await interaction.deferReply();
+    // TRƯỜNG HỢP 2: Đã theo dõi -> XUẤT BIỂU ĐỒ BIẾN ĐỘNG 3 NGÀY (Sửa trực tiếp tin nhắn hiện tại)
+    // Lưu lại Embeds ban đầu của tin nhắn check bal / stats để phục vụ nút "Quay lại"
+    if (interaction.message && interaction.message.embeds && interaction.message.embeds.length > 0) {
+      if (!originalViewCache.has(interaction.message.id)) {
+        originalViewCache.set(interaction.message.id, {
+          embeds: interaction.message.embeds.map(e => EmbedBuilder.from(e)),
+          playerName,
+          timestamp: Date.now()
+        });
+      }
+    }
+
+    await interaction.deferUpdate();
 
     try {
       const historyData = await trackerHelper.getPlayerHistory(playerName);
       if (!historyData) {
-        return await interaction.editReply({
-          content: `⚠️ Không tìm thấy dữ liệu theo dõi cho người chơi **${playerName}**.`
+        await interaction.followUp({
+          content: `⚠️ Không tìm thấy dữ liệu theo dõi cho người chơi **${playerName}**.`,
+          ephemeral: true
         });
+        return true;
       }
 
       const chartBuffer = await renderBalanceChart(playerName, historyData);
@@ -102,15 +124,20 @@ async function handleTrackerButtons(interaction) {
         new ButtonBuilder()
           .setCustomId(`refresh_chart_${playerName}`)
           .setLabel('🔄 Làm mới biểu đồ')
-          .setStyle(ButtonStyle.Primary)
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setCustomId(`back_to_info_${playerName}`)
+          .setLabel('🔙 Quay lại')
+          .setStyle(ButtonStyle.Secondary)
       );
 
       await interaction.editReply({ embeds: [chartEmbed], files: [attachment], components: [row] });
       return true;
     } catch (err) {
       console.error(`[TrackerButton] Lỗi vẽ biểu đồ cho ${playerName}:`, err.message);
-      await interaction.editReply({
-        content: `❌ Không thể tạo biểu đồ biến động lúc này: ${err.message}`
+      await interaction.followUp({
+        content: `❌ Không thể tạo biểu đồ biến động lúc này: ${err.message}`,
+        ephemeral: true
       });
       return true;
     }
@@ -151,7 +178,11 @@ async function handleTrackerButtons(interaction) {
         new ButtonBuilder()
           .setCustomId(`refresh_chart_${playerName}`)
           .setLabel('🔄 Làm mới biểu đồ')
-          .setStyle(ButtonStyle.Primary)
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setCustomId(`back_to_info_${playerName}`)
+          .setLabel('🔙 Quay lại')
+          .setStyle(ButtonStyle.Secondary)
       );
 
       await interaction.editReply({ embeds: [chartEmbed], files: [attachment], components: [row] });
@@ -162,7 +193,56 @@ async function handleTrackerButtons(interaction) {
     }
   }
 
-  // 3. Nút Hủy theo dõi (Đã vô hiệu hóa để tránh người dùng tùy tiện hủy)
+  // 3. Nút Quay lại thông tin check bal / stats ban đầu
+  if (customId.startsWith('back_to_info_')) {
+    const playerName = customId.replace('back_to_info_', '').trim();
+    await interaction.deferUpdate();
+
+    try {
+      const cached = originalViewCache.get(interaction.message.id);
+      let restoredEmbeds = [];
+
+      if (cached && cached.embeds && cached.embeds.length > 0) {
+        restoredEmbeds = cached.embeds;
+      } else {
+        // Fallback tái tạo Embed số dư nếu cache bị xóa
+        const historyData = await trackerHelper.getPlayerHistory(playerName);
+        const emeraldEmoji = getCustomEmoji('emerald');
+        const latestBal = (historyData && historyData.stats && historyData.stats.currentBalance != null)
+          ? `$${Number(historyData.stats.currentBalance).toLocaleString('en-US')}`
+          : 'N/A';
+
+        const fallbackEmbed = new EmbedBuilder()
+          .setTitle(`${emeraldEmoji} Số dư người chơi: **${playerName}**`)
+          .setColor('#2b2d31')
+          .setThumbnail(skinHelper.getAvatarUrl(playerName, 64, true))
+          .setDescription(`${emeraldEmoji} **SỐ DƯ:** \`${latestBal}\`\n\n\u200B`)
+          .setTimestamp()
+          .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
+        restoredEmbeds = [fallbackEmbed];
+      }
+
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`track_bal_${playerName}`)
+          .setLabel('📈 Xem biểu đồ biến động')
+          .setStyle(ButtonStyle.Success)
+      );
+
+      // Cập nhật lại tin nhắn: xóa bỏ attachments biểu đồ, khôi phục embed và nút xem biểu đồ
+      await interaction.editReply({
+        embeds: restoredEmbeds,
+        attachments: [],
+        components: [row]
+      });
+      return true;
+    } catch (err) {
+      console.error(`[TrackerButton] Lỗi khi quay lại thông tin cho ${playerName}:`, err.message);
+      return true;
+    }
+  }
+
+  // 4. Nút Hủy theo dõi (Đã vô hiệu hóa để tránh người dùng tùy tiện hủy)
   if (customId.startsWith('untrack_bal_')) {
     const playerName = customId.replace('untrack_bal_', '').trim();
     await interaction.reply({
@@ -172,7 +252,7 @@ async function handleTrackerButtons(interaction) {
     return true;
   }
 
-  // 4. Nút Phân trang danh sách Tracker Overview
+  // 5. Nút Phân trang danh sách Tracker Overview
   if (customId.startsWith('tracker_page_')) {
     const pageStr = customId.replace('tracker_page_', '');
     const pageNum = parseInt(pageStr) || 1;
@@ -188,7 +268,7 @@ async function handleTrackerButtons(interaction) {
     return true;
   }
 
-  // 5. Nút Kích hoạt chu kỳ kiểm tra ngay lập tức (Admin)
+  // 6. Nút Kích hoạt chu kỳ kiểm tra ngay lập tức (Admin)
   if (customId === 'tracker_run_check') {
     const ADMIN_ID = (process.env.ADMIN_ID || '').trim();
     if (ADMIN_ID && interaction.user.id !== ADMIN_ID) {
