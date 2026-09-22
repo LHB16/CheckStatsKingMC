@@ -158,6 +158,13 @@ async function initSkinHelper() {
     setupMongoModel();
     await syncFromMongo();
   });
+
+  // Tự động đồng bộ định kỳ từ MongoDB mỗi 30 phút để nạp các skin mới do Baltop Crawler quét được
+  setInterval(() => {
+    if (isMongoConnected) {
+      syncFromMongo().catch(e => console.warn('[SkinHelper] Lỗi đồng bộ MongoDB định kỳ:', e.message));
+    }
+  }, 30 * 60 * 1000);
 }
 
 /**

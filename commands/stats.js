@@ -29,8 +29,12 @@ module.exports = {
       const result = await queueDispatcher.enqueueTask('stats', targetPlayer, BOT_CHECK_TIMEOUT);
 
       // Lưu cache skin vào Master Node nếu kết quả có chứa skin
-      if (result && result.skin && result.skin.url) {
-        skinHelper.saveSkin(targetPlayer, result.skin.url, result.skin.model);
+      if (result && result.skin) {
+        const skinData = result.skin;
+        const skinUrlOrId = skinData.skinUrl || skinData.url || skinData.textureId;
+        if (skinUrlOrId) {
+          await skinHelper.saveSkin(targetPlayer, skinUrlOrId, skinData.model);
+        }
       }
 
       // Trang trí giao diện hiển thị Embed

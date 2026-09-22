@@ -882,7 +882,7 @@ class PersistentBot extends EventEmitter {
     }
   }
 
-  async ensurePlayerSkin(playerName, timeoutMs = 1500) {
+  async ensurePlayerSkin(playerName, timeoutMs = 2500) {
     if (!playerName) return null;
     const cleanName = String(playerName).trim();
     if (!cleanName) return null;
@@ -908,9 +908,11 @@ class PersistentBot extends EventEmitter {
     return new Promise((resolve) => {
       let resolved = false;
       let timer = null;
+      let retryTimer = null;
 
       const cleanup = () => {
         if (timer) clearTimeout(timer);
+        if (retryTimer) clearTimeout(retryTimer);
         this.bot.removeListener('windowOpen', onWindow);
         this.bot.removeListener('messagestr', onMsg);
       };
@@ -919,7 +921,8 @@ class PersistentBot extends EventEmitter {
         if (resolved) return;
         resolved = true;
         cleanup();
-        resolve(res);
+        // Cho một khoảng delay nhỏ 150ms để server Minecraft xử lý đóng window trước khi chat lệnh tiếp theo
+        setTimeout(() => resolve(res), 150);
       };
 
       timer = setTimeout(() => {
@@ -928,44 +931,54 @@ class PersistentBot extends EventEmitter {
 
       const onMsg = (message) => {
         const cleanMsg = cleanMinecraftText(message).toLowerCase();
-        if (cleanMsg.includes('offline') || cleanMsg.includes('nhập sai tên') || cleanMsg.includes('nhap sai ten')) {
+        if (cleanMsg.includes('offline') || cleanMsg.includes('nhập sai tên') || cleanMsg.includes('nhap sai ten') || cleanMsg.includes('không thể')) {
           finish(null);
         }
       };
 
       const onWindow = (win) => {
-        try {
-          const maxSlots = Math.min(win.inventoryStart || 45, win.slots.length);
-          let foundSkin = null;
+        const scan = () => {
+          try {
+            const maxSlots = Math.min(win.inventoryStart || 45, win.slots.length);
+            let foundSkin = null;
 
-          for (let i = 0; i < maxSlots; i++) {
-            const item = win.slots[i];
-            if (!item || !item.nbt) continue;
+            for (let i = 0; i < maxSlots; i++) {
+              const item = win.slots[i];
+              if (!item || !item.nbt) continue;
 
-            const skin = skinHelper.extractSkinDataFromNbt(item.nbt);
-            if (skin && skin.url) {
-              foundSkin = skin;
-              break;
+              const skin = skinHelper.extractSkinDataFromNbt(item.nbt);
+              if (skin && skin.url) {
+                foundSkin = skin;
+                break;
+              }
             }
-          }
 
-          if (foundSkin && foundSkin.url) {
-            console.log(`[MC-Bot] 🎭 Auto-fetch Skin qua /tpa thành công cho [${cleanName}]: ${foundSkin.url}`);
-            skinHelper.saveSkin(cleanName, foundSkin.url, foundSkin.model);
-            if (this.bot && this.isBotOnline) {
-              try { this.bot.closeWindow(win); } catch(e) {}
+            if (foundSkin && foundSkin.url) {
+              console.log(`[MC-Bot] 🎭 Auto-fetch Skin qua /tpa thành công cho [${cleanName}]: ${foundSkin.url}`);
+              skinHelper.saveSkin(cleanName, foundSkin.url, foundSkin.model);
+              if (this.bot && this.isBotOnline) {
+                try { this.bot.closeWindow(win); } catch(e) {}
+              }
+              finish(foundSkin);
+              return true;
             }
-            finish(foundSkin);
-            return;
+          } catch (e) {
+            // ignore
           }
+          return false;
+        };
 
+        // Quét lần 1 ngay khi mở GUI
+        if (scan()) return;
+
+        // Nếu packet window_items đang tới trễ, đợi thêm 250ms để nạp đầy đủ NBT slot rồi quét lại
+        retryTimer = setTimeout(() => {
+          if (scan()) return;
           if (this.bot && this.isBotOnline) {
             try { this.bot.closeWindow(win); } catch(e) {}
           }
-        } catch (e) {
-          // ignore
-        }
-        finish(null);
+          finish(null);
+        }, 250);
       };
 
       this.bot.once('windowOpen', onWindow);

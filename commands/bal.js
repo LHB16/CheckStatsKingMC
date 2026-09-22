@@ -30,8 +30,12 @@ module.exports = {
       const emeraldEmoji = getCustomEmoji('emerald');
 
       // Lưu cache skin vào Master Node nếu kết quả có chứa skin
-      if (result && typeof result === 'object' && result.skin && result.skin.url) {
-        skinHelper.saveSkin(targetPlayer, result.skin.url, result.skin.model);
+      if (result && typeof result === 'object' && result.skin) {
+        const skinData = result.skin;
+        const skinUrlOrId = skinData.skinUrl || skinData.url || skinData.textureId;
+        if (skinUrlOrId) {
+          await skinHelper.saveSkin(targetPlayer, skinUrlOrId, skinData.model);
+        }
       }
 
       const balanceText = (typeof result === 'object' && result.balance) ? result.balance : String(result || '');
