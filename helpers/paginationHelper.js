@@ -4,7 +4,7 @@
  */
 
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
-const { renderTableImage, formatItemDisplayName } = require('./renderHelper');
+const { renderTableImage, formatItemDisplayName, normalizeSmallCaps, cleanBuyerName } = require('./renderHelper');
 const { getCustomEmoji } = require('./utils');
 
 // Bộ nhớ đệm lưu trữ các phiên phân trang đang hoạt động
@@ -65,7 +65,12 @@ function formatAhTextPage(items, itemQuery, pageIndex, pageSize = 9) {
     const priceText = item.price || 'N/A';
     const cleanDisplay = (item.displayName || '').replace(/§[0-9a-fk-or]/gi, '').trim();
     const rawName = item.itemName || item.name;
-    const nameToShow = (cleanDisplay && cleanDisplay !== 'Item' && !cleanDisplay.toLowerCase().includes('đơn hàng'))
+    const normalizedDisplay = normalizeSmallCaps(cleanDisplay);
+    const isOrderTitle = /^(?:don\s*hang|order)/i.test(normalizedDisplay)
+      || normalizedDisplay.includes('don hang')
+      || cleanDisplay.toLowerCase().includes('đơn hàng');
+
+    const nameToShow = (cleanDisplay && cleanDisplay !== 'Item' && !isOrderTitle)
       ? cleanDisplay
       : formatItemDisplayName(rawName || itemQuery);
     return `📦 **#${startIndex + idx + 1}** **${nameToShow}** | Giá: **${priceText}**`;
@@ -87,7 +92,10 @@ function formatOrderTextPage(orders, itemQuery, pageIndex, pageSize = 9) {
     const priceText = order.price || 'N/A';
     const cleanDisplay = (order.displayName || '').replace(/§[0-9a-fk-or]/gi, '').trim();
     const rawName = order.itemName || order.name;
-    const isOrderTitle = /^(?:đơn\s*hàng|don\s*hang|order)/iu.test(cleanDisplay);
+    const normalizedDisplay = normalizeSmallCaps(cleanDisplay);
+    const isOrderTitle = /^(?:don\s*hang|order)/i.test(normalizedDisplay)
+      || normalizedDisplay.includes('don hang')
+      || cleanDisplay.toLowerCase().includes('đơn hàng');
 
     let itemQueryId = (rawName && rawName !== 'player_head' && rawName !== 'skull' && rawName !== 'air')
       ? rawName
@@ -95,11 +103,11 @@ function formatOrderTextPage(orders, itemQuery, pageIndex, pageSize = 9) {
 
     const nameToShow = (cleanDisplay && !isOrderTitle && cleanDisplay !== 'Item' && cleanDisplay !== 'Vật phẩm')
       ? cleanDisplay
-      : formatItemDisplayName(itemQueryId);
+      : formatItemDisplayName(itemQueryId || rawName || itemQuery);
 
     let buyerName = order.buyer;
-    if (!buyerName || buyerName === 'Ẩn danh' || /^(?:đơn\s*hàng|don\s*hang|order)/iu.test(buyerName)) {
-      buyerName = cleanDisplay.replace(/^(?:đơn\s*hàng|don\s*hang|order)?(?:\s*của|\s*cua|:|\s)*\s*/iu, '').trim();
+    if (!buyerName || buyerName === 'Ẩn danh' || /^(?:don\s*hang|order)/i.test(normalizeSmallCaps(buyerName))) {
+      buyerName = cleanBuyerName(order.displayName || cleanDisplay);
     }
 
     const buyerText = (buyerName && buyerName !== 'Ẩn danh') ? ` (Người mua: **${buyerName}**)` : '';

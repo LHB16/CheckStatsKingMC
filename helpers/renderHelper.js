@@ -1028,6 +1028,9 @@ module.exports = {
   renderBalanceChart,
   formatItemDisplayName,
   getItemIconUrl,
-  formatMinecraftTextToHtml
+  formatMinecraftTextToHtml,
+  normalizeSmallCaps,
+  cleanBuyerName,
+  cleanMinecraftText
 };
 
