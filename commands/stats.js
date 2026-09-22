@@ -28,6 +28,11 @@ module.exports = {
       // Gửi tác vụ vào Queue Dispatcher
       const result = await queueDispatcher.enqueueTask('stats', targetPlayer, BOT_CHECK_TIMEOUT);
 
+      // Lưu cache skin vào Master Node nếu kết quả có chứa skin
+      if (result && result.skin && result.skin.url) {
+        skinHelper.saveSkin(targetPlayer, result.skin.url, result.skin.model);
+      }
+
       // Trang trí giao diện hiển thị Embed
       const embed = new EmbedBuilder()
         .setTitle(`✨ Thống kê người chơi: **${targetPlayer}** ✨`)

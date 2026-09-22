@@ -26,9 +26,15 @@ module.exports = {
 
     try {
       // Gửi tác vụ vào Queue Dispatcher
-      const balanceText = await queueDispatcher.enqueueTask('bal', targetPlayer, BOT_CHECK_TIMEOUT);
+      const result = await queueDispatcher.enqueueTask('bal', targetPlayer, BOT_CHECK_TIMEOUT);
       const emeraldEmoji = getCustomEmoji('emerald');
 
+      // Lưu cache skin vào Master Node nếu kết quả có chứa skin
+      if (result && typeof result === 'object' && result.skin && result.skin.url) {
+        skinHelper.saveSkin(targetPlayer, result.skin.url, result.skin.model);
+      }
+
+      const balanceText = (typeof result === 'object' && result.balance) ? result.balance : String(result || '');
       let cleanVal = balanceText;
       if (cleanVal.includes('$')) {
         const dollarIndex = cleanVal.indexOf('$');

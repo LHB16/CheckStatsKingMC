@@ -26,6 +26,11 @@ module.exports = {
       // Gửi tác vụ vào Queue Dispatcher
       const result = await queueDispatcher.enqueueTask('online', targetPlayer, BOT_CHECK_TIMEOUT);
 
+      // Lưu cache skin vào Master Node nếu kết quả có chứa skin
+      if (result && result.skin && result.skin.url) {
+        skinHelper.saveSkin(targetPlayer, result.skin.url, result.skin.model);
+      }
+
       if (result.online) {
         // Người chơi đang ONLINE (bỏ thanh màu bên trái theo yêu cầu)
         const embed = new EmbedBuilder()

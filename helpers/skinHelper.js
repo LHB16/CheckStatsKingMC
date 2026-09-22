@@ -91,24 +91,31 @@ function loadLocalDatabase() {
 }
 
 /**
- * Lưu RAM cache xuống file JSON cục bộ (Debounced 2s)
+ * Ghi RAM cache xuống file JSON cục bộ ngay lập tức
+ */
+function flushLocalDatabase() {
+  try {
+    const dataDir = path.dirname(CACHE_FILE_PATH);
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+
+    const list = Array.from(ramSkinCache.values());
+    fs.writeFileSync(CACHE_FILE_PATH, JSON.stringify(list, null, 2), 'utf-8');
+  } catch (err) {
+    console.error(`[SkinHelper] Lỗi khi ghi file cache skin: ${err.message}`);
+  }
+}
+
+/**
+ * Lưu RAM cache xuống file JSON cục bộ (Debounced 500ms)
  */
 function scheduleSaveLocalDatabase() {
   if (saveFileTimeout) clearTimeout(saveFileTimeout);
 
   saveFileTimeout = setTimeout(() => {
-    try {
-      const dataDir = path.dirname(CACHE_FILE_PATH);
-      if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
-      }
-
-      const list = Array.from(ramSkinCache.values());
-      fs.writeFileSync(CACHE_FILE_PATH, JSON.stringify(list, null, 2), 'utf-8');
-    } catch (err) {
-      console.error(`[SkinHelper] Lỗi khi ghi file cache skin: ${err.message}`);
-    }
-  }, 2000);
+    flushLocalDatabase();
+  }, 500);
 }
 
 /**
@@ -204,7 +211,7 @@ async function saveSkin(playerName, textureUrlOrId, model = 'classic') {
 
   // Cập nhật RAM Cache tức thì
   ramSkinCache.set(playerKey, record);
-  scheduleSaveLocalDatabase();
+  flushLocalDatabase(); // Ghi file ngay lập tức để không bị mất dữ liệu
 
   // Cập nhật MongoDB ngầm (asynchronous)
   if (isMongoConnected && PlayerSkinModel) {
@@ -236,6 +243,33 @@ function getSkin(playerName) {
   if (!playerName) return null;
   const playerKey = String(playerName).trim().toLowerCase();
   return ramSkinCache.get(playerKey) || null;
+}
+
+/**
+ * Tìm kiếm skin của người chơi trong bot.players (Tablist) không phân biệt chữ hoa/thường
+ * @param {object} bot Mineflayer bot instance
+ * @param {string} playerName Tên người chơi
+ * @returns {{url: string, model: string, textureId: string}|null}
+ */
+function findSkinInTablist(bot, playerName) {
+  if (!bot || !bot.players || !playerName) return null;
+  const lower = String(playerName).trim().toLowerCase();
+
+  for (const [uname, p] of Object.entries(bot.players)) {
+    if (uname.toLowerCase() === lower || (p.username && p.username.toLowerCase() === lower)) {
+      if (p.skinData && p.skinData.url) {
+        const textureId = extractTextureId(p.skinData.url);
+        if (textureId) {
+          return {
+            url: p.skinData.url,
+            model: p.skinData.model || 'classic',
+            textureId
+          };
+        }
+      }
+    }
+  }
+  return null;
 }
 
 /**
@@ -272,14 +306,17 @@ function getAvatarUrl(playerName, size = 64, is3D = true) {
 }
 
 /**
- * Giải mã chuỗi Base64 Skin Texture của Mojang
+ * Giải mã chuỗi Base64 Skin Texture của Mojang / SkinsRestorer
  * @param {string} base64Str
  * @returns {{url: string, model: string}|null}
  */
 function parseSkinBase64(base64Str) {
   if (!base64Str || typeof base64Str !== 'string') return null;
+  const trimmed = base64Str.trim();
+  if (trimmed.length < 20) return null;
+
   try {
-    const jsonStr = Buffer.from(base64Str, 'base64').toString('utf8');
+    const jsonStr = Buffer.from(trimmed, 'base64').toString('utf8');
     if (!jsonStr.includes('textures') && !jsonStr.includes('SKIN')) return null;
     const parsed = JSON.parse(jsonStr);
     const skinObj = parsed?.textures?.SKIN;
@@ -294,12 +331,12 @@ function parseSkinBase64(base64Str) {
 }
 
 /**
- * Quét đệ quy tìm chuỗi Base64 skin bên trong object bất kỳ
+ * Quét đệ quy tìm chuỗi Base64 skin bên trong object bất kỳ (hỗ trợ độ sâu tới 20 cấp)
  */
 function scanForSkinBase64(obj, depth = 0) {
-  if (!obj || depth > 8) return null;
+  if (!obj || depth > 20) return null;
   if (typeof obj === 'string') {
-    if (obj.length > 30 && (obj.startsWith('eyJ') || obj.includes('eyJ0ZXh0') || obj.includes('eyJ0aW1l'))) {
+    if (obj.length > 30) {
       const skin = parseSkinBase64(obj);
       if (skin) return skin;
     }
@@ -322,7 +359,16 @@ function scanForSkinBase64(obj, depth = 0) {
 function extractSkinDataFromNbt(nbt) {
   if (!nbt) return null;
 
-  // Cách 1: Duyệt cây cấu trúc NBT chuẩn của SkullOwner
+  // Cách 1: Quét đệ quy toàn bộ cây NBT tìm chuỗi Base64 Skin (nhanh, chính xác 100% cho mọi định dạng)
+  const scanned = scanForSkinBase64(nbt);
+  if (scanned && scanned.url) {
+    const textureId = extractTextureId(scanned.url);
+    if (textureId) {
+      return { ...scanned, textureId };
+    }
+  }
+
+  // Cách 2: Duyệt cây cấu trúc NBT chuẩn của SkullOwner hoặc minecraft:profile
   try {
     const root = nbt.value || nbt;
     const skullOwner = root.SkullOwner || root.skullOwner || root['minecraft:profile'] || root.profile;
@@ -331,6 +377,8 @@ function extractSkinDataFromNbt(nbt) {
       const properties = ownerVal.Properties || ownerVal.properties;
       if (properties) {
         const propsVal = properties.value || properties;
+
+        // Định dạng 1: Object chứa textures (Spigot / Paper cũ)
         const textures = propsVal.textures || propsVal.Textures;
         if (textures) {
           const texVal = textures.value || textures;
@@ -347,16 +395,27 @@ function extractSkinDataFromNbt(nbt) {
             }
           }
         }
+
+        // Định dạng 2: Array các properties [{ name: 'textures', value: '...' }] (1.20.5+ / 1.21)
+        if (Array.isArray(propsVal)) {
+          for (const prop of propsVal) {
+            const propObj = prop.value || prop;
+            const propName = propObj.name ? (propObj.name.value || propObj.name) : '';
+            if (propName === 'textures') {
+              const base64Str = propObj.value ? (propObj.value.value || propObj.value) : '';
+              if (typeof base64Str === 'string' && base64Str.length > 20) {
+                const parsed = parseSkinBase64(base64Str);
+                if (parsed && parsed.url) {
+                  const textureId = extractTextureId(parsed.url);
+                  return { ...parsed, textureId };
+                }
+              }
+            }
+          }
+        }
       }
     }
   } catch (e) {}
-
-  // Cách 2: Quét đệ quy tìm chuỗi Base64
-  const fallback = scanForSkinBase64(nbt);
-  if (fallback && fallback.url) {
-    const textureId = extractTextureId(fallback.url);
-    return { ...fallback, textureId };
-  }
 
   return null;
 }
@@ -368,5 +427,7 @@ module.exports = {
   getAvatarUrl,
   extractTextureId,
   extractSkinDataFromNbt,
-  parseSkinBase64
+  parseSkinBase64,
+  findSkinInTablist,
+  flushLocalDatabase
 };

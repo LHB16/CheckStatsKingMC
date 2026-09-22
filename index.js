@@ -373,10 +373,10 @@ function startTrackerScheduler(queueDispatcher) {
 
         try {
           console.log(`[TrackerScheduler] ⏳ Đang đưa yêu cầu check bal cho "${player}" vào Queue...`);
-          const BOT_CHECK_TIMEOUT = parseInt(process.env.BOT_CHECK_TIMEOUT) || 20000;
           const rawBal = await queueDispatcher.enqueueTask('bal', player, BOT_CHECK_TIMEOUT);
 
-          let cleanVal = rawBal;
+          const balStr = (rawBal && typeof rawBal === 'object' && rawBal.balance) ? rawBal.balance : String(rawBal || '');
+          let cleanVal = balStr;
           if (cleanVal && cleanVal.includes('$')) {
             const dollarIndex = cleanVal.indexOf('$');
             cleanVal = cleanVal.substring(dollarIndex).replace(/balance/gi, '').trim();

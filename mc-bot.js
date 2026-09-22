@@ -507,6 +507,7 @@ class PersistentBot extends EventEmitter {
 
       if (this.currentAction === 'online') {
         let foundHeadItem = null;
+        let extractedSkin = null;
         const maxSlots = Math.min(window.inventoryStart || 45, window.slots.length);
 
         for (let i = 0; i < maxSlots; i++) {
@@ -520,6 +521,7 @@ class PersistentBot extends EventEmitter {
               if (skinData && skinData.url) {
                 console.log(`[MC-Bot] 🎭 Đã bóc tách thành công Skin từ GUI TPA cho [${this.targetPlayer}]: ${skinData.url}`);
                 skinHelper.saveSkin(this.targetPlayer, skinData.url, skinData.model);
+                extractedSkin = skinData;
               }
             } catch (err) {
               console.warn(`[MC-Bot] Lỗi khi bóc tách Skin NBT: ${err.message}`);
@@ -643,11 +645,17 @@ class PersistentBot extends EventEmitter {
         }
 
         if (this.statsPromiseResolve) {
+          const finalSkin = extractedSkin || skinHelper.getSkin(playerName) || skinHelper.findSkinInTablist(this.bot, playerName);
+          if (finalSkin && finalSkin.url) {
+            skinHelper.saveSkin(playerName, finalSkin.url, finalSkin.model);
+          }
+
           this.statsPromiseResolve({
             online: true,
             player: playerName,
             ping: ping,
-            world: world
+            world: world,
+            skin: finalSkin || null
           });
 
           if (this.bot && this.isBotOnline) {
@@ -781,11 +789,13 @@ class PersistentBot extends EventEmitter {
       }
 
       if (statsItems.length > 0 && this.statsPromiseResolve) {
+        const playerSkin = skinHelper.getSkin(this.targetPlayer) || skinHelper.findSkinInTablist(this.bot, this.targetPlayer);
         this.statsPromiseResolve({
           success: true,
           serverUsed: `${this.hosts[this.currentHostIndex]}:${this.port}`,
           title: title,
-          items: statsItems
+          items: statsItems,
+          skin: playerSkin || null
         });
         
         if (this.bot && this.isBotOnline) {
@@ -842,6 +852,7 @@ class PersistentBot extends EventEmitter {
 
         const delay3 = setTimeout(() => {
           if (!this.afkRoutineRunning || !this.bot || !this.isBotOnline) return;
+          this.scanTablistSkins();
           this.performRtp();
         }, 6000);
         this.afkTimers.push(delay3);
@@ -851,6 +862,117 @@ class PersistentBot extends EventEmitter {
 
     }, 6000);
     this.afkTimers.push(delay1);
+  }
+
+  scanTablistSkins() {
+    try {
+      if (!this.bot || !this.bot.players) return;
+      let count = 0;
+      for (const [uname, p] of Object.entries(this.bot.players)) {
+        if (p && p.username && p.skinData && p.skinData.url) {
+          skinHelper.saveSkin(p.username, p.skinData.url, p.skinData.model);
+          count++;
+        }
+      }
+      if (count > 0) {
+        console.log(`[MC-Bot] 🎭 Đã quét và nạp ${count} skin từ Tablist của server hiện tại.`);
+      }
+    } catch (err) {
+      console.warn(`[MC-Bot] Lỗi khi quét Tablist: ${err.message}`);
+    }
+  }
+
+  async ensurePlayerSkin(playerName, timeoutMs = 1500) {
+    if (!playerName) return null;
+    const cleanName = String(playerName).trim();
+    if (!cleanName) return null;
+
+    // 1. Kiểm tra RAM cache trước
+    const existing = skinHelper.getSkin(cleanName);
+    if (existing && existing.textureId) {
+      return existing;
+    }
+
+    // 2. Tìm kiếm trong Tablist hiện tại (0ms)
+    const tabSkin = skinHelper.findSkinInTablist(this.bot, cleanName);
+    if (tabSkin && tabSkin.url) {
+      console.log(`[MC-Bot] 🎭 Tự động lấy Skin từ Tablist cho [${cleanName}]: ${tabSkin.url}`);
+      return await skinHelper.saveSkin(cleanName, tabSkin.url, tabSkin.model);
+    }
+
+    // 3. Nếu chưa có và bot đang rảnh + online -> Mở ngầm /tpa để lấy skin từ GUI
+    if (!this.bot || !this.isBotOnline || !this.isReady || this.targetPlayer) {
+      return null;
+    }
+
+    return new Promise((resolve) => {
+      let resolved = false;
+      let timer = null;
+
+      const cleanup = () => {
+        if (timer) clearTimeout(timer);
+        this.bot.removeListener('windowOpen', onWindow);
+        this.bot.removeListener('messagestr', onMsg);
+      };
+
+      const finish = (res) => {
+        if (resolved) return;
+        resolved = true;
+        cleanup();
+        resolve(res);
+      };
+
+      timer = setTimeout(() => {
+        finish(null);
+      }, timeoutMs);
+
+      const onMsg = (message) => {
+        const cleanMsg = cleanMinecraftText(message).toLowerCase();
+        if (cleanMsg.includes('offline') || cleanMsg.includes('nhập sai tên') || cleanMsg.includes('nhap sai ten')) {
+          finish(null);
+        }
+      };
+
+      const onWindow = (win) => {
+        try {
+          const maxSlots = Math.min(win.inventoryStart || 45, win.slots.length);
+          let foundSkin = null;
+
+          for (let i = 0; i < maxSlots; i++) {
+            const item = win.slots[i];
+            if (!item || !item.nbt) continue;
+
+            const skin = skinHelper.extractSkinDataFromNbt(item.nbt);
+            if (skin && skin.url) {
+              foundSkin = skin;
+              break;
+            }
+          }
+
+          if (foundSkin && foundSkin.url) {
+            console.log(`[MC-Bot] 🎭 Auto-fetch Skin qua /tpa thành công cho [${cleanName}]: ${foundSkin.url}`);
+            skinHelper.saveSkin(cleanName, foundSkin.url, foundSkin.model);
+            if (this.bot && this.isBotOnline) {
+              try { this.bot.closeWindow(win); } catch(e) {}
+            }
+            finish(foundSkin);
+            return;
+          }
+
+          if (this.bot && this.isBotOnline) {
+            try { this.bot.closeWindow(win); } catch(e) {}
+          }
+        } catch (e) {
+          // ignore
+        }
+        finish(null);
+      };
+
+      this.bot.once('windowOpen', onWindow);
+      this.bot.once('messagestr', onMsg);
+      console.log(`[MC-Bot] 🔍 Auto-fetch Skin ngầm qua /tpa ${cleanName}...`);
+      this.bot.chat(`/tpa ${cleanName}`);
+    });
   }
 
   performRtp() {
@@ -873,6 +995,7 @@ class PersistentBot extends EventEmitter {
       }
       
       this.isReady = true;
+      this.scanTablistSkins();
       this.emit('notifyAdmin', `🟢 **Worker [\`${this.credentials.username}\`]** đã READY và rảnh rỗi chờ lệnh.`);
       console.log(`[MC-Bot] ✅ Đã hoàn tất /rtp và sẵn sàng nhận lệnh từ Discord. Sẽ lặp lại sau 1 giờ.`);
       
@@ -888,12 +1011,15 @@ class PersistentBot extends EventEmitter {
     this.afkTimers.push(rtpDelay);
   }
 
-  getBalance(player, timeoutMs = 15000) {
-    return new Promise((resolve, reject) => {
-      if (!this.isBotOnline || !this.isReady) {
-        return reject(new Error("Bot Minecraft đang trong quá trình đăng nhập hoặc khởi chạy AFK, chưa sẵn sàng nhận lệnh."));
-      }
+  async getBalance(player, timeoutMs = 15000) {
+    if (!this.isBotOnline || !this.isReady) {
+      throw new Error("Bot Minecraft đang trong quá trình đăng nhập hoặc khởi chạy AFK, chưa sẵn sàng nhận lệnh.");
+    }
 
+    // Tự động kiểm tra và lấy Skin ngầm nếu chưa có trong cache
+    await this.ensurePlayerSkin(player, 1200).catch(() => {});
+
+    return new Promise((resolve, reject) => {
       this.currentAction = 'bal';
       console.log(`[MC-Bot] Yêu cầu lấy balance: ${player}`);
       this.bot.chat(`/balance ${player}`);
@@ -912,12 +1038,20 @@ class PersistentBot extends EventEmitter {
           clearTimeout(timeoutId);
           this.bot.removeListener('messagestr', onMessage);
           this.cleanupStatsState();
-          resolve(message.trim());
+          const skin = skinHelper.getSkin(player);
+          resolve({
+            balance: message.trim(),
+            skin: skin || null
+          });
         } else if ((message.includes('không tìm thấy') || message.includes('not found')) && message.includes(player)) {
           clearTimeout(timeoutId);
           this.bot.removeListener('messagestr', onMessage);
           this.cleanupStatsState();
-          resolve(`Không tìm thấy người chơi **${player}** hoặc người chơi chưa từng đăng nhập.`);
+          const skin = skinHelper.getSkin(player);
+          resolve({
+            balance: `Không tìm thấy người chơi **${player}** hoặc người chơi chưa từng đăng nhập.`,
+            skin: skin || null
+          });
         }
       };
 
@@ -925,16 +1059,19 @@ class PersistentBot extends EventEmitter {
     });
   }
 
-  getStats(player, timeoutMs = 15000) {
+  async getStats(player, timeoutMs = 15000) {
+    if (!this.bot || !this.isBotOnline || !this.isReady) {
+      throw new Error('Bot Minecraft hiện đang đăng nhập hoặc khởi chạy AFK, chưa sẵn sàng nhận lệnh. Vui lòng thử lại sau.');
+    }
+
+    if (this.targetPlayer) {
+      throw new Error('Bot đang trong quá trình xử lý một yêu cầu khác.');
+    }
+
+    // Tự động kiểm tra và lấy Skin ngầm nếu chưa có trong cache
+    await this.ensurePlayerSkin(player, 1200).catch(() => {});
+
     return new Promise((resolve, reject) => {
-      if (!this.bot || !this.isBotOnline || !this.isReady) {
-        return reject(new Error('Bot Minecraft hiện đang đăng nhập hoặc khởi chạy AFK, chưa sẵn sàng nhận lệnh. Vui lòng thử lại sau.'));
-      }
-
-      if (this.targetPlayer) {
-        return reject(new Error('Bot đang trong quá trình xử lý một yêu cầu khác.'));
-      }
-
       this.targetPlayer = player;
       this.currentAction = 'stats';
       this.statsPromiseResolve = resolve;
