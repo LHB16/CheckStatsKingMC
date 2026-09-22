@@ -68,6 +68,43 @@ function cleanMinecraftText(text) {
     .trim();
 }
 
+// Chuẩn hóa phông chữ Small Caps độc lạ của Server Minecraft (ví dụ: ᴛᴏᴘ ᴍᴏɴᴇʏ -> top money)
+function normalizeSmallCaps(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .replace(/ᴀ/g, 'a')
+    .replace(/ʙ/g, 'b')
+    .replace(/ᴄ/g, 'c')
+    .replace(/ᴅ/g, 'd')
+    .replace(/ᴇ/g, 'e')
+    .replace(/ғ/g, 'f')
+    .replace(/ɢ/g, 'g')
+    .replace(/ʜ/g, 'h')
+    .replace(/ɪ/g, 'i')
+    .replace(/ᴊ/g, 'j')
+    .replace(/ᴋ/g, 'k')
+    .replace(/ʟ/g, 'l')
+    .replace(/ᴍ/g, 'm')
+    .replace(/ɴ/g, 'n')
+    .replace(/ᴏ/g, 'o')
+    .replace(/ᴘ/g, 'p')
+    .replace(/ǫ/g, 'q')
+    .replace(/ʀ/g, 'r')
+    .replace(/ꜱ/g, 's')
+    .replace(/ᴛ/g, 't')
+    .replace(/ᴜ/g, 'u')
+    .replace(/ᴠ/g, 'v')
+    .replace(/ᴡ/g, 'w')
+    .replace(/x/g, 'x')
+    .replace(/ʏ/g, 'y')
+    .replace(/ᴢ/g, 'z')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
 // Helper parse JSON Text Component của Minecraft
 function parseMinecraftJSON(input) {
   if (!input) return '';
@@ -181,10 +218,11 @@ async function runScanner() {
   bot.on('windowOpen', async (win) => {
     const rawTitle = parseMinecraftJSON(win.title || '');
     const cleanTitle = cleanMinecraftText(rawTitle);
-    console.log(`[GUI Mở] Tiêu đề: "${cleanTitle}" (Số slots: ${win.slots.length})`);
+    const normTitle = normalizeSmallCaps(cleanTitle);
+    console.log(`[GUI Mở] Tiêu đề: "${cleanTitle}" [${normTitle}] (Số slots: ${win.slots.length})`);
 
     // A. Nếu đang ở sảnh và GUI là /menu -> click slot 24 để vào cụm Survival
-    if (!isInSurvival && (cleanTitle.toLowerCase().includes('chọn máy chủ') || cleanTitle.toLowerCase().includes('menu') || cleanTitle.toLowerCase().includes('sảnh'))) {
+    if (!isInSurvival && (normTitle.includes('chon may chu') || normTitle.includes('menu') || normTitle.includes('sanh'))) {
       console.log('[Bot] ⏳ Đợi 2s rồi click slot 24 (Cụm Survival)...');
       setTimeout(() => {
         try {
@@ -204,7 +242,7 @@ async function runScanner() {
     }
 
     // B. Nếu GUI là TOP MONEY (/baltop) -> Bắt đầu quá trình quét
-    if (cleanTitle.toLowerCase().includes('top money') || cleanTitle.toLowerCase().includes('baltop')) {
+    if (normTitle.includes('top money') || normTitle.includes('baltop')) {
       if (isScanning) return; // Tránh chạy song song nhiều tiến trình quét
       isScanning = true;
       console.log('[4/4] 🚀 BẮT ĐẦU QUÉT BALTOP GUI...\n');
@@ -314,8 +352,8 @@ async function startBaltopExtraction(bot, initialWindow) {
     console.log(`⏳ Đợi ${delayBetweenPages}ms rồi click slot 53 sang trang kế tiếp...`);
     await sleep(delayBetweenPages);
 
-    // Lưu lại tiêu đề trước khi click
-    lastTitle = currentTitle;
+    // Lưu lại tiêu đề đã chuẩn hóa trước khi click
+    lastTitle = normalizeSmallCaps(currentTitle);
 
     // Click slot 53 (mũi tên trang tiếp theo)
     try {
@@ -325,8 +363,8 @@ async function startBaltopExtraction(bot, initialWindow) {
       break;
     }
 
-    // Đợi 1.2s để server nạp trang mới
-    await sleep(1200);
+    // Đợi 1.5s để server nạp trang mới
+    await sleep(1500);
 
     const newWindow = bot.currentWindow;
     if (!newWindow) {
@@ -336,9 +374,10 @@ async function startBaltopExtraction(bot, initialWindow) {
 
     currentWindow = newWindow;
     const newTitle = cleanMinecraftText(parseMinecraftJSON(currentWindow.title || ''));
+    const newNormTitle = normalizeSmallCaps(newTitle);
 
     // QUY TẮC CỦA NGƯỜI DÙNG: Kiểm tra nếu tiêu đề GUI không đổi 5 lần liên tiếp -> Trang cuối cùng!
-    if (newTitle === lastTitle) {
+    if (newNormTitle === lastTitle) {
       sameTitleCount++;
       console.log(`⚠️ [Phát hiện trang cuối] Tiêu đề không đổi: "${newTitle}" (Lần ${sameTitleCount}/5)`);
       if (sameTitleCount >= 5) {
