@@ -1029,10 +1029,12 @@ class PersistentBot extends EventEmitter {
       throw new Error("Bot Minecraft đang trong quá trình đăng nhập hoặc khởi chạy AFK, chưa sẵn sàng nhận lệnh.");
     }
 
-    // Tự động kiểm tra và lấy Skin ngầm nếu chưa có trong cache
-    await this.ensurePlayerSkin(player, 1200).catch(() => {});
+    if (this.targetPlayer) {
+      throw new Error("Bot đang trong quá trình xử lý một yêu cầu khác.");
+    }
 
     return new Promise((resolve, reject) => {
+      this.targetPlayer = player;
       this.currentAction = 'bal';
       console.log(`[MC-Bot] Yêu cầu lấy balance: ${player}`);
       this.bot.chat(`/balance ${player}`);

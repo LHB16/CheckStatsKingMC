@@ -31,6 +31,7 @@ const ADMIN_ID = (process.env.ADMIN_ID || '').trim(); // Dùng để cấu hình
 
 const MC_AUTH_TYPE = process.env.MC_AUTH_TYPE || 'offline';
 const MC_SERVER_PORT = parseInt(process.env.MC_SERVER_PORT) || 25565;
+const BOT_CHECK_TIMEOUT = parseInt(process.env.BOT_CHECK_TIMEOUT) || 15000;
 
 const MC_SERVER_HOSTS = (process.env.MC_SERVER_HOSTS || 'sgp.kingmc.vn,kingmc.vn')
   .split(',')
@@ -235,6 +236,39 @@ const server = http.createServer((req, res) => {
     }));
   }
 
+  // Endpoint API nhận thông báo (từ Worker gửi về Master)
+  if (url.pathname === '/api/notify' && req.method === 'POST') {
+    if (WORKER_SECRET) {
+      const authHeader = req.headers['x-worker-secret'];
+      if (authHeader !== WORKER_SECRET) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ success: false, error: 'Unauthorized: Sai WORKER_SECRET' }));
+      }
+    }
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body);
+        const { message } = payload;
+        if (global.globalDiscordClient && ADMIN_ID && message) {
+          try {
+            const adminUser = await global.globalDiscordClient.users.fetch(ADMIN_ID);
+            if (adminUser) adminUser.send(message);
+          } catch(e) {
+            console.error('Không thể gửi DM notify:', e.message);
+          }
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
   // Endpoint API thực thi lệnh dành cho Worker Node
   if (url.pathname === '/api/execute' && req.method === 'POST') {
     if (WORKER_SECRET) {
@@ -243,39 +277,6 @@ const server = http.createServer((req, res) => {
         res.writeHead(401, { 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({ success: false, error: 'Unauthorized: Sai WORKER_SECRET' }));
       }
-    }
-    
-    // Endpoint API nhận thông báo (từ Worker gửi về Master)
-    if (url.pathname === '/api/notify' && req.method === 'POST') {
-      if (WORKER_SECRET) {
-        const authHeader = req.headers['x-worker-secret'];
-        if (authHeader !== WORKER_SECRET) {
-          res.writeHead(401, { 'Content-Type': 'application/json' });
-          return res.end(JSON.stringify({ success: false, error: 'Unauthorized: Sai WORKER_SECRET' }));
-        }
-      }
-      let body = '';
-      req.on('data', chunk => body += chunk);
-      req.on('end', async () => {
-        try {
-          const payload = JSON.parse(body);
-          const { message } = payload;
-          if (global.globalDiscordClient && ADMIN_ID && message) {
-            try {
-              const adminUser = await global.globalDiscordClient.users.fetch(ADMIN_ID);
-              if (adminUser) adminUser.send(message);
-            } catch(e) {
-              console.error('Không thể gửi DM notify:', e.message);
-            }
-          }
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: true }));
-        } catch (err) {
-          res.writeHead(500, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: false, error: err.message }));
-        }
-      });
-      return;
     }
 
     let body = '';
@@ -366,15 +367,10 @@ function startTrackerScheduler(queueDispatcher) {
 
       console.log(`[TrackerScheduler] 🔄 Bắt đầu chu kỳ kiểm tra số dư định kỳ cho ${trackedPlayers.length} người chơi: [${trackedPlayers.join(', ')}]`);
 
-      // Lần lượt phân phối kiểm tra từng người chơi qua QueueDispatcher (chờ bot rảnh)
-      for (const player of trackedPlayers) {
-        const isStillTracking = await trackerHelper.isTracking(player);
-        if (!isStillTracking) continue;
-
-        try {
-          console.log(`[TrackerScheduler] ⏳ Đang đưa yêu cầu check bal cho "${player}" vào Queue...`);
-          const rawBal = await queueDispatcher.enqueueTask('bal', player, BOT_CHECK_TIMEOUT);
-
+      // Callback lưu số dư ngay khi 1 player hoàn thành
+      const handlePlayerRecord = async (record) => {
+        if (record.success && record.result) {
+          const rawBal = record.result;
           const balStr = (rawBal && typeof rawBal === 'object' && rawBal.balance) ? rawBal.balance : String(rawBal || '');
           let cleanVal = balStr;
           if (cleanVal && cleanVal.includes('$')) {
@@ -383,24 +379,27 @@ function startTrackerScheduler(queueDispatcher) {
           }
 
           if (cleanVal) {
-            await trackerHelper.addBalanceRecord(player, cleanVal);
-            console.log(`[TrackerScheduler] ✅ Đã lưu số dư mới cho "${player}": ${cleanVal}`);
-            successCount++;
-          } else {
-            failCount++;
+            await trackerHelper.addBalanceRecord(record.player, cleanVal);
+            console.log(`[TrackerScheduler] ✅ [${record.worker}] Đã lưu số dư mới cho "${record.player}": ${cleanVal}`);
           }
-        } catch (err) {
-          console.warn(`[TrackerScheduler] ⚠️ Không thể check bal định kỳ cho "${player}": ${err.message}`);
-          failCount++;
         }
+      };
 
-        // Tạm nghỉ 5 giây giữa các người chơi để Worker không bị dồn dập
-        await new Promise(r => setTimeout(r, 5000));
-      }
+      // Phân bổ trải đều người chơi cho các Worker chạy song song
+      const batchResult = await queueDispatcher.dispatchBatchTasks(
+        'bal',
+        trackedPlayers,
+        BOT_CHECK_TIMEOUT,
+        3000, // delay 3 giây an toàn giữa các lệnh trên cùng 1 worker để tránh spam KingMC
+        handlePlayerRecord
+      );
 
-      console.log(`[TrackerScheduler] 🏁 Hoàn thành chu kỳ kiểm tra số dư định kỳ (${successCount} thành công, ${failCount} thất bại).`);
+      successCount = batchResult.successCount;
+      failCount = batchResult.failCount;
+
+      console.log(`[TrackerScheduler] 🏁 Hoàn thành chu kỳ kiểm tra số dư định kỳ (${successCount} thành công, ${failCount} thất bại qua ${batchResult.workerCount} workers).`);
       if (targetChannel) {
-        await safeSend(targetChannel, `🏁 **Đã hoàn thành chu kỳ kiểm tra số dư định kỳ:**\n• Tổng số người chơi: **${trackedPlayers.length}**\n• Thành công: **${successCount}** ✅\n• Thất bại / Timeout: **${failCount}** ⚠️`).catch(() => {});
+        await safeSend(targetChannel, `🏁 **Đã hoàn thành chu kỳ kiểm tra số dư định kỳ:**\n• Tổng số người chơi: **${batchResult.total}**\n• Thành công: **${successCount}** ✅\n• Thất bại / Timeout: **${failCount}** ⚠️\n• Số Worker tham gia: **${batchResult.workerCount}** (${batchResult.workers.join(', ')})`).catch(() => {});
       }
     } catch (cycleErr) {
       console.error('[TrackerScheduler] Lỗi trong chu kỳ kiểm tra:', cycleErr.message);
