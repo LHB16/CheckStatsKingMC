@@ -342,34 +342,125 @@ function startTrackerScheduler(queueDispatcher) {
 
   let isChecking = false;
 
-  async function runCheckCycle(targetChannel = null) {
+  function renderProgressBar(completed, total, barLen = 10) {
+    if (total === 0) return '░'.repeat(barLen);
+    const ratio = Math.min(1, Math.max(0, completed / total));
+    const filled = Math.round(ratio * barLen);
+    const empty = Math.max(0, barLen - filled);
+    return '▓'.repeat(filled) + '░'.repeat(empty);
+  }
+
+  function formatProgressText(completed, total, success, fail, lastRecord = null) {
+    const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+    const bar = renderProgressBar(completed, total, 10);
+    let text = `🔄 **Đang kiểm tra số dư định kỳ cho các tài khoản theo dõi...**\n` +
+      `📊 Tiến độ: \`[ ${bar} ]\` **${completed}/${total}** (${percent}%)\n` +
+      `• Thành công: **${success}** ✅ | Thất bại: **${fail}** ⚠️`;
+    if (lastRecord && lastRecord.player) {
+      const statusIcon = lastRecord.success ? '✅' : '⚠️';
+      text += `\n• Vừa kiểm tra: **${lastRecord.player}** ${statusIcon} *(Worker: ${lastRecord.worker || 'Local'})*`;
+    }
+    return text;
+  }
+
+  async function runCheckCycle(targetContext = null) {
+    let targetChannel = null;
+    let statusMsg = null;
+    let targetInteraction = null;
+
+    if (targetContext) {
+      if (typeof targetContext.send === 'function') {
+        targetChannel = targetContext;
+      } else if (targetContext.isCommand || targetContext.isButton || (targetContext.user && targetContext.editReply)) {
+        targetInteraction = targetContext;
+        targetChannel = targetContext.channel;
+      } else if (typeof targetContext === 'object') {
+        targetChannel = targetContext.channel || null;
+        statusMsg = targetContext.message || null;
+        targetInteraction = targetContext.interaction || null;
+      }
+    }
+
     if (isChecking) {
       const runningMsg = '⚠️ Tiến trình kiểm tra số dư hiện đang chạy, vui lòng đợi hoàn tất chu kỳ này.';
       console.log(`[TrackerScheduler] ${runningMsg}`);
-      if (targetChannel) {
+      if (targetInteraction) {
+        await targetInteraction.editReply({ content: runningMsg }).catch(() => {});
+      } else if (statusMsg) {
+        await statusMsg.edit(runningMsg).catch(() => {});
+      } else if (targetChannel) {
         await safeSend(targetChannel, runningMsg).catch(() => {});
       }
       return;
     }
 
     isChecking = true;
+    const startTime = Date.now();
+    let completedCount = 0;
     let successCount = 0;
     let failCount = 0;
+
+    let lastEditTime = 0;
+    let editTimer = null;
+    let pendingText = null;
+
+    const updateProgress = async (text, force = false) => {
+      pendingText = text;
+      const now = Date.now();
+      if (force || now - lastEditTime >= 1500) {
+        if (editTimer) {
+          clearTimeout(editTimer);
+          editTimer = null;
+        }
+        lastEditTime = now;
+        const content = pendingText;
+        pendingText = null;
+        try {
+          if (statusMsg) {
+            await statusMsg.edit(content).catch(() => {});
+          }
+          if (targetInteraction) {
+            await targetInteraction.editReply({ content }).catch(() => {});
+          }
+        } catch (e) {
+          // ignore
+        }
+      } else if (!editTimer) {
+        editTimer = setTimeout(() => {
+          editTimer = null;
+          updateProgress(pendingText, true);
+        }, 1500 - (now - lastEditTime));
+      }
+    };
 
     try {
       const trackedPlayers = await trackerHelper.getAllTrackedPlayers();
       if (!trackedPlayers || trackedPlayers.length === 0) {
-        if (targetChannel) {
-          await safeSend(targetChannel, 'ℹ️ Hiện chưa có người chơi nào trong danh sách theo dõi.').catch(() => {});
+        const emptyMsg = 'ℹ️ Hiện chưa có người chơi nào trong danh sách theo dõi.';
+        if (targetInteraction) {
+          await targetInteraction.editReply({ content: emptyMsg }).catch(() => {});
+        } else if (statusMsg) {
+          await statusMsg.edit(emptyMsg).catch(() => {});
+        } else if (targetChannel) {
+          await safeSend(targetChannel, emptyMsg).catch(() => {});
         }
         return;
       }
 
       console.log(`[TrackerScheduler] 🔄 Bắt đầu chu kỳ kiểm tra số dư định kỳ cho ${trackedPlayers.length} người chơi: [${trackedPlayers.join(', ')}]`);
 
-      // Callback lưu số dư ngay khi 1 player hoàn thành
+      // Gửi tin nhắn khởi tạo nếu chưa có
+      if (!statusMsg && !targetInteraction && targetChannel) {
+        statusMsg = await safeSend(targetChannel, formatProgressText(0, trackedPlayers.length, 0, 0)).catch(() => null);
+      } else {
+        await updateProgress(formatProgressText(0, trackedPlayers.length, 0, 0), true);
+      }
+
+      // Callback lưu số dư và cập nhật tiến trình ngay khi 1 player hoàn thành
       const handlePlayerRecord = async (record) => {
+        completedCount++;
         if (record.success && record.result) {
+          successCount++;
           const rawBal = record.result;
           const balStr = (rawBal && typeof rawBal === 'object' && rawBal.balance) ? rawBal.balance : String(rawBal || '');
           let cleanVal = balStr;
@@ -382,7 +473,12 @@ function startTrackerScheduler(queueDispatcher) {
             await trackerHelper.addBalanceRecord(record.player, cleanVal);
             console.log(`[TrackerScheduler] ✅ [${record.worker}] Đã lưu số dư mới cho "${record.player}": ${cleanVal}`);
           }
+        } else {
+          failCount++;
         }
+
+        // Cập nhật tiến trình thời gian thực
+        updateProgress(formatProgressText(completedCount, trackedPlayers.length, successCount, failCount, record));
       };
 
       // Phân bổ trải đều người chơi cho các Worker chạy song song
@@ -394,19 +490,34 @@ function startTrackerScheduler(queueDispatcher) {
         handlePlayerRecord
       );
 
-      successCount = batchResult.successCount;
-      failCount = batchResult.failCount;
-
+      const durationSec = Math.round((Date.now() - startTime) / 1000);
       console.log(`[TrackerScheduler] 🏁 Hoàn thành chu kỳ kiểm tra số dư định kỳ (${successCount} thành công, ${failCount} thất bại qua ${batchResult.workerCount} workers).`);
-      if (targetChannel) {
-        await safeSend(targetChannel, `🏁 **Đã hoàn thành chu kỳ kiểm tra số dư định kỳ:**\n• Tổng số người chơi: **${batchResult.total}**\n• Thành công: **${successCount}** ✅\n• Thất bại / Timeout: **${failCount}** ⚠️\n• Số Worker tham gia: **${batchResult.workerCount}** (${batchResult.workers.join(', ')})`).catch(() => {});
+
+      const summaryText = `🏁 **Đã hoàn thành chu kỳ kiểm tra số dư định kỳ:**\n` +
+        `• Tổng số người chơi: **${batchResult.total}**\n` +
+        `• Thành công: **${successCount}** ✅\n` +
+        `• Thất bại / Timeout: **${failCount}** ⚠️\n` +
+        `• Số Worker tham gia: **${batchResult.workerCount}** (${batchResult.workers.join(', ')})\n` +
+        `• Thời gian thực hiện: **${durationSec}s**`;
+
+      await updateProgress(summaryText, true);
+
+      // Nếu chỉ có targetChannel thuần túy không gửi được statusMsg từ đầu, gửi tin nhắn tổng kết
+      if (!statusMsg && !targetInteraction && targetChannel) {
+        await safeSend(targetChannel, summaryText).catch(() => {});
       }
     } catch (cycleErr) {
       console.error('[TrackerScheduler] Lỗi trong chu kỳ kiểm tra:', cycleErr.message);
-      if (targetChannel) {
-        await safeSend(targetChannel, `❌ Đã xảy ra lỗi trong chu kỳ kiểm tra: \`${cycleErr.message}\``).catch(() => {});
+      const errText = `❌ Đã xảy ra lỗi trong chu kỳ kiểm tra: \`${cycleErr.message}\``;
+      await updateProgress(errText, true);
+      if (!statusMsg && !targetInteraction && targetChannel) {
+        await safeSend(targetChannel, errText).catch(() => {});
       }
     } finally {
+      if (editTimer) {
+        clearTimeout(editTimer);
+        editTimer = null;
+      }
       isChecking = false;
     }
   }
@@ -613,9 +724,12 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
            await trackerHelper.setTracking(target, true);
            await safeSend(message.channel, `✅ Đã thêm người chơi **${target}** vào danh sách theo dõi số dư định kỳ!`);
          } else if (sub === 'check' || sub === 'run') {
-           await safeSend(message.channel, '🔄 **Bắt đầu chu kỳ kiểm tra số dư định kỳ cho các người chơi ngay lập tức...**');
+           const statusMsg = await safeSend(message.channel, '🔄 **Bắt đầu chu kỳ kiểm tra số dư định kỳ cho các người chơi ngay lập tức...**');
            if (global.trackerSchedulerInstance) {
-             global.trackerSchedulerInstance.runCheckCycle(message.channel);
+             global.trackerSchedulerInstance.runCheckCycle({
+               message: statusMsg,
+               channel: message.channel
+             });
            }
          } else {
            const page = parseInt(sub) || 1;

@@ -36,7 +36,7 @@ module.exports = {
       if (items.length === 0) {
         const emptyEmbed = new EmbedBuilder()
           .setTitle(`📦 Đấu Giá (AH): **${itemDisplayName}**`)
-          .setDescription(`⚠️ Không có vật phẩm nào trên AH cho **${itemDisplayName}**.`)
+          .setDescription(`⚠️ Không tìm thấy AH cho món đồ **${itemDisplayName}**.`)
           .setColor('#ef4444')
           .setTimestamp()
           .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });

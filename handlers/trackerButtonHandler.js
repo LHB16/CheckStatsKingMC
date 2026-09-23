@@ -285,7 +285,10 @@ async function handleTrackerButtons(interaction) {
     });
 
     if (global.trackerSchedulerInstance) {
-      global.trackerSchedulerInstance.runCheckCycle(interaction.channel);
+      global.trackerSchedulerInstance.runCheckCycle({
+        interaction,
+        channel: interaction.channel
+      });
     }
     return true;
   }

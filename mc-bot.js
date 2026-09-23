@@ -672,93 +672,109 @@ class PersistentBot extends EventEmitter {
       }
 
       if (this.currentAction === 'ah') {
-        // Trích xuất vật phẩm đấu giá từ GUI 6x9 (Chỉ lấy trong phạm vi top 5x9: slot 0 tới 44)
-        const ahItems = [];
-        const maxAhSlots = Math.min(45, window.inventoryStart || 45);
+        // Trích xuất vật phẩm đấu giá từ GUI 6x9 (Chỉ quét 45 ô đầu: hàng 1 đến 5, bỏ qua hàng 6 chức năng)
+        const scanAh = () => {
+          const items = [];
+          const maxAhSlots = Math.min(45, window.inventoryStart || 45);
 
-        for (let i = 0; i < maxAhSlots; i++) {
-          const item = window.slots[i];
-          if (!item) continue;
+          for (let i = 0; i < maxAhSlots; i++) {
+            const item = window.slots[i];
+            if (!item) continue;
 
-          let displayName = item.displayName || '';
-          if (item.customName) displayName = item.customName;
-          displayName = parseMinecraftJSON(displayName);
+            let displayName = item.displayName || '';
+            if (item.customName) displayName = item.customName;
+            displayName = parseMinecraftJSON(displayName);
 
-          // Bỏ qua item trang trí/kính/barrier/air
-          const nameLower = (item.name || '').toLowerCase();
-          if (nameLower.includes('pane') || nameLower === 'air' || nameLower === 'barrier') continue;
+            // Bỏ qua item trang trí/kính/barrier/air
+            const nameLower = (item.name || '').toLowerCase();
+            if (nameLower.includes('pane') || nameLower === 'air' || nameLower === 'barrier') continue;
 
-          let loreArray = [];
-          if (item.customLore) {
-            loreArray = item.customLore.map(l => parseMinecraftJSON(l));
-          } else {
-            loreArray = extractLoreFromNbt(item.nbt);
-          }
+            let loreArray = [];
+            if (item.customLore) {
+              loreArray = item.customLore.map(l => parseMinecraftJSON(l));
+            } else {
+              loreArray = extractLoreFromNbt(item.nbt);
+            }
 
-          if (loreArray.length === 0) continue;
+            if (loreArray.length === 0) continue;
 
-          let price = '';
-          let seller = '';
-          let expiration = '';
+            let price = '';
+            let seller = '';
+            let expiration = '';
 
-          for (const line of loreArray) {
-            const cleanLine = cleanMinecraftText(line).trim();
-            const lowerLine = cleanLine.toLowerCase();
+            for (const line of loreArray) {
+              const cleanLine = cleanMinecraftText(line).trim();
+              const lowerLine = cleanLine.toLowerCase();
 
-            // Trích xuất Giá mỗi item (Ví dụ: giá: $ 638M)
-            if (!price) {
-              if (lowerLine.includes('giá') || lowerLine.includes('gia') || lowerLine.includes('$')) {
-                if (cleanLine.includes(':')) {
-                  price = cleanLine.split(':').slice(1).join(':').trim();
-                } else if (cleanLine.includes('$')) {
-                  const dollarIndex = cleanLine.indexOf('$');
-                  price = cleanLine.substring(dollarIndex).trim();
+              // Trích xuất Giá mỗi item (Ví dụ: giá: $ 638M)
+              if (!price) {
+                if (lowerLine.includes('giá') || lowerLine.includes('gia') || lowerLine.includes('$')) {
+                  if (cleanLine.includes(':')) {
+                    price = cleanLine.split(':').slice(1).join(':').trim();
+                  } else if (cleanLine.includes('$')) {
+                    const dollarIndex = cleanLine.indexOf('$');
+                    price = cleanLine.substring(dollarIndex).trim();
+                  }
+                }
+              }
+
+              // Trích xuất Người bán (Ví dụ: người bán: KhoaCoCaiNjt)
+              if (!seller) {
+                if (lowerLine.includes('người bán') || lowerLine.includes('nguoi ban') || lowerLine.includes('seller')) {
+                  if (cleanLine.includes(':')) {
+                    seller = cleanLine.split(':').slice(1).join(':').trim();
+                  }
+                }
+              }
+
+              // Trích xuất Thời gian hết hạn (Ví dụ: hết hạn vào: 2 ngày)
+              if (!expiration) {
+                if (lowerLine.includes('hết hạn') || lowerLine.includes('het han') || lowerLine.includes('expire')) {
+                  if (cleanLine.includes(':')) {
+                    expiration = cleanLine.split(':').slice(1).join(':').trim();
+                  }
                 }
               }
             }
 
-            // Trích xuất Người bán (Ví dụ: người bán: KhoaCoCaiNjt)
-            if (!seller) {
-              if (lowerLine.includes('người bán') || lowerLine.includes('nguoi ban') || lowerLine.includes('seller')) {
-                if (cleanLine.includes(':')) {
-                  seller = cleanLine.split(':').slice(1).join(':').trim();
-                }
-              }
-            }
-
-            // Trích xuất Thời gian hết hạn (Ví dụ: hết hạn vào: 2 ngày)
-            if (!expiration) {
-              if (lowerLine.includes('hết hạn') || lowerLine.includes('het han') || lowerLine.includes('expire')) {
-                if (cleanLine.includes(':')) {
-                  expiration = cleanLine.split(':').slice(1).join(':').trim();
-                }
-              }
-            }
+            items.push({
+              slot: i,
+              itemName: item.name,
+              displayName: displayName,
+              price: price || 'N/A',
+              seller: seller || 'Ẩn danh',
+              expiration: expiration || null,
+              lore: loreArray
+            });
           }
+          return items;
+        };
 
-          ahItems.push({
-            slot: i,
-            itemName: item.name,
-            displayName: displayName,
-            price: price || 'N/A',
-            seller: seller || 'Ẩn danh',
-            expiration: expiration || null,
-            lore: loreArray
-          });
-        }
+        const finishAh = (ahItems) => {
+          if (this.statsPromiseResolve) {
+            this.statsPromiseResolve({
+              success: true,
+              serverUsed: `${this.hosts[this.currentHostIndex]}:${this.port}`,
+              title: title,
+              items: ahItems
+            });
 
-        if (this.statsPromiseResolve) {
-          this.statsPromiseResolve({
-            success: true,
-            serverUsed: `${this.hosts[this.currentHostIndex]}:${this.port}`,
-            title: title,
-            items: ahItems
-          });
-
-          if (this.bot && this.isBotOnline) {
-            this.bot.closeWindow(window);
+            if (this.bot && this.isBotOnline) {
+              try { this.bot.closeWindow(window); } catch(e) {}
+            }
+            this.cleanupStatsState();
           }
-          this.cleanupStatsState();
+        };
+
+        const initialItems = scanAh();
+        if (initialItems.length > 0) {
+          finishAh(initialItems);
+        } else {
+          // Nếu packet window_items tới trễ, đợi 250ms để nạp slot rồi quét lại
+          setTimeout(() => {
+            const retryItems = scanAh();
+            finishAh(retryItems);
+          }, 250);
         }
         return;
       }
@@ -1223,25 +1239,38 @@ class PersistentBot extends EventEmitter {
         }
       };
 
-      // Quét toàn bộ 45 slot đầu tiên (5 hàng x 9 slot)
+      // Quét toàn bộ 45 ô đầu tiên (5 hàng x 9 slot, bỏ qua hàng 6 chức năng)
       scanWindow(initialWindow);
 
-      const finalTitle = parseMinecraftJSON(initialWindow.title || '');
+      const finishOrder = () => {
+        const finalTitle = parseMinecraftJSON(initialWindow.title || '');
 
-      if (this.statsPromiseResolve) {
-        this.statsPromiseResolve({
-          success: true,
-          serverUsed: `${this.hosts[this.currentHostIndex]}:${this.port}`,
-          title: finalTitle,
-          orders: orders
-        });
+        if (this.statsPromiseResolve) {
+          this.statsPromiseResolve({
+            success: true,
+            serverUsed: `${this.hosts[this.currentHostIndex]}:${this.port}`,
+            title: finalTitle,
+            orders: orders
+          });
 
-        if (this.bot && this.isBotOnline) {
-          try {
-            this.bot.closeWindow(initialWindow);
-          } catch (e) {}
+          if (this.bot && this.isBotOnline) {
+            try {
+              this.bot.closeWindow(initialWindow);
+            } catch (e) {}
+          }
+          this.cleanupStatsState();
         }
-        this.cleanupStatsState();
+      };
+
+      if (orders.length > 0) {
+        finishOrder();
+      } else {
+        // Nếu packet window_items tới trễ, đợi 250ms để nạp slot rồi quét lại
+        setTimeout(() => {
+          orders.length = 0;
+          scanWindow(initialWindow);
+          finishOrder();
+        }, 250);
       }
     } catch (err) {
       console.error(`[MC-Bot] Lỗi trong quá trình quét Order:`, err);

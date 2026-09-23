@@ -757,15 +757,24 @@ function formatShortMoney(num) {
 }
 
 /**
- * Format thời gian ngắn gọn (VD: "15:30 20/09")
+ * Format thời gian ngắn gọn theo múi giờ Việt Nam UTC+7 (VD: "15:30 20/09")
  */
 function formatShortTime(timestamp) {
   const d = new Date(timestamp);
-  const hours = String(d.getHours()).padStart(2, '0');
-  const minutes = String(d.getMinutes()).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  return `${hours}:${minutes} ${day}/${month}`;
+  const formatter = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+    hour12: false
+  });
+  const parts = formatter.formatToParts(d);
+  const p = {};
+  for (const part of parts) {
+    p[part.type] = part.value;
+  }
+  return `${p.hour}:${p.minute} ${p.day}/${p.month}`;
 }
 
 const CHART_TEMPLATE_PATH = path.join(__dirname, '../templates/balanceChart.html');
