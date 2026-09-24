@@ -232,7 +232,7 @@ async function saveSkin(playerName, textureUrlOrId, model = 'classic') {
         model: model || 'classic',
         lastUpdated: new Date()
       },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     ).catch(err => {
       console.error(`[SkinHelper] Lỗi lưu skin vào MongoDB cho [${cleanName}]: ${err.message}`);
     });

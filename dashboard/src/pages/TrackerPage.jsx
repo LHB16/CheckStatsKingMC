@@ -14,7 +14,11 @@ import {
   Coins, 
   X,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight
 } from 'lucide-react';
 import { api } from '../api';
 
@@ -28,6 +32,10 @@ export default function TrackerPage() {
   const [scanning, setScanning] = useState(false);
   const [selectedPlayerHistory, setSelectedPlayerHistory] = useState(null);
   const [historyLoading, setHistoryLoading] = useState(false);
+
+  // Phân trang: 25 người 1 trang
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 25;
 
   const fetchTrackers = async () => {
     try {
@@ -105,9 +113,19 @@ export default function TrackerPage() {
     }
   };
 
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
   const filteredPlayers = players.filter(p => 
     p.playerName.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const totalPages = Math.ceil(filteredPlayers.length / pageSize) || 1;
+  const validPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (validPage - 1) * pageSize;
+  const paginatedPlayers = filteredPlayers.slice(startIndex, startIndex + pageSize);
 
   return (
     <div className="space-y-6">
@@ -152,13 +170,13 @@ export default function TrackerPage() {
           <input
             type="text"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearchChange}
             placeholder="Tìm kiếm người chơi Minecraft..."
             className="w-full pl-10 pr-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:border-emerald-500 transition-all"
           />
         </div>
         <span className="text-xs text-slate-400 font-mono">
-          Hiển thị: <strong>{filteredPlayers.length}</strong> / {players.length} người chơi
+          Hiển thị: <strong>{filteredPlayers.length}</strong> người chơi (25/trang)
         </span>
       </div>
 
@@ -177,7 +195,7 @@ export default function TrackerPage() {
           </p>
         </div>
       ) : (
-        <div className="bg-slate-900/70 border border-slate-800 rounded-2xl overflow-hidden">
+        <div className="bg-slate-900/70 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-950/80 border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider font-semibold">
@@ -192,7 +210,7 @@ export default function TrackerPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
-                {filteredPlayers.map((player) => {
+                {paginatedPlayers.map((player) => {
                   const isPositive = player.change > 0;
                   const isNegative = player.change < 0;
 
@@ -312,6 +330,55 @@ export default function TrackerPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Thanh phân trang: 25 người / trang */}
+          {filteredPlayers.length > pageSize && (
+            <div className="px-5 py-3.5 border-t border-slate-800 bg-slate-950/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+              <span className="text-slate-400 font-mono">
+                Hiển thị <strong>{startIndex + 1}</strong> - <strong>{Math.min(startIndex + pageSize, filteredPlayers.length)}</strong> trên tổng số <strong>{filteredPlayers.length}</strong> người chơi (25/trang)
+              </span>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setCurrentPage(1)}
+                  disabled={validPage === 1}
+                  title="Trang đầu"
+                  className="p-1.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-300 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                >
+                  <ChevronsLeft className="w-3.5 h-3.5" strokeWidth={1.75} />
+                </button>
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={validPage === 1}
+                  title="Trang trước"
+                  className="p-1.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-300 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" strokeWidth={1.75} />
+                </button>
+
+                <span className="px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 font-mono text-slate-300 text-xs">
+                  Trang <strong className="text-emerald-400">{validPage}</strong> / {totalPages}
+                </span>
+
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={validPage === totalPages}
+                  title="Trang sau"
+                  className="p-1.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-300 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" strokeWidth={1.75} />
+                </button>
+                <button
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={validPage === totalPages}
+                  title="Trang cuối"
+                  className="p-1.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-300 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                >
+                  <ChevronsRight className="w-3.5 h-3.5" strokeWidth={1.75} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

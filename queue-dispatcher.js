@@ -199,7 +199,7 @@ class QueueDispatcher {
   async updateWorker(id, updates) {
     if (isMongoAvailable()) {
       const Worker = getWorkerModel();
-      const updated = await Worker.findByIdAndUpdate(id, updates, { new: true }).lean();
+      const updated = await Worker.findByIdAndUpdate(id, updates, { returnDocument: 'after' }).lean();
       await this.getAllWorkers();
       return updated;
     } else {
