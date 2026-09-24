@@ -1,19 +1,17 @@
 /**
  * queue-dispatcher.js - Quản lý Hàng Đợi (Task Queue) và Điều Phối Công Việc Nhiều Worker
- * @description Hỗ trợ phân phối tải (Round-Robin), tự động thử lại hàng đợi, và chia đều người chơi (Batch Parallel)
+ * @description Hỗ trợ phân phối tải (Round-Robin), thử lại hàng đợi, batch parallel,
+ * và quản lý Worker động lưu trữ trong MongoDB.
  */
 
 const http = require('http');
 const https = require('https');
 const { URL } = require('url');
+const { getWorkerModel, isMongoAvailable } = require('./helpers/mongoHelper');
 
 class QueueDispatcher {
   constructor() {
     this.queue = [];
-    this.workerUrls = (process.env.WORKER_URLS || '')
-      .split(',')
-      .map(u => u.trim())
-      .filter(u => u.length > 0);
     this.workerSecret = process.env.WORKER_SECRET || '';
 
     // Node Worker địa phương (nếu ở chế độ standalone)
@@ -24,10 +22,284 @@ class QueueDispatcher {
     this.lastWorkerIndex = 0;      // Con trỏ Round-Robin
     this.retryTimer = null;       // Timer kiểm tra lại hàng đợi định kỳ
     this.isProcessingQueue = false;
+
+    // Danh sách dự phòng từ file .env (nếu chưa kết nối MongoDB)
+    this.envWorkerUrls = (process.env.WORKER_URLS || '')
+      .split(',')
+      .map(u => u.trim())
+      .filter(u => u.length > 0);
+
+    // Bộ nhớ đệm danh sách Worker
+    this.cachedWorkers = [];
+    this.isInitialized = false;
+
+    // Khởi chạy vòng lặp kiểm tra sức khỏe Worker định kỳ
+    this.healthMonitorTimer = null;
   }
 
   setLocalBot(bot) {
     this.localBot = bot;
+  }
+
+  /**
+   * Khởi tạo danh sách Worker từ MongoDB
+   * Tự động di chuyển (migrate) WORKER_URLS từ .env vào MongoDB nếu DB chưa có
+   */
+  async initWorkers() {
+    try {
+      if (isMongoAvailable()) {
+        const Worker = getWorkerModel();
+        const count = await Worker.countDocuments();
+
+        // Nếu DB chưa có worker nào mà .env có, tự động nạp từ .env vào DB
+        if (count === 0 && this.envWorkerUrls.length > 0) {
+          console.log('[QueueDispatcher] 📦 Đang tự động lưu danh sách Worker từ .env vào MongoDB...');
+          for (let i = 0; i < this.envWorkerUrls.length; i++) {
+            const rawUrl = this.envWorkerUrls[i];
+            try {
+              const parsed = new URL(rawUrl);
+              const cleanUrl = `${parsed.protocol}//${parsed.host}`;
+              await Worker.create({
+                name: `Worker-${i + 1}`,
+                url: cleanUrl,
+                secret: this.workerSecret,
+                isActive: true,
+                status: 'unknown'
+              });
+            } catch (err) {
+              console.warn(`[QueueDispatcher] URL không hợp lệ từ .env: ${rawUrl}`);
+            }
+          }
+        }
+
+        // Tải danh sách từ DB
+        const dbWorkers = await Worker.find().sort({ createdAt: 1 }).lean();
+        this.cachedWorkers = dbWorkers;
+        console.log(`[QueueDispatcher] ✅ Đã nạp ${dbWorkers.length} Worker từ MongoDB.`);
+      } else {
+        // Fallback: Sử dụng danh sách từ .env
+        this.cachedWorkers = this.envWorkerUrls.map((url, idx) => ({
+          _id: `env_${idx}`,
+          name: `Env-Worker-${idx + 1}`,
+          url,
+          secret: this.workerSecret,
+          isActive: true,
+          status: 'unknown',
+          latency: -1,
+          botUsername: 'N/A'
+        }));
+        console.log(`[QueueDispatcher] ℹ️ Sử dụng ${this.cachedWorkers.length} Worker từ biến môi trường .env.`);
+      }
+    } catch (e) {
+      console.warn('[QueueDispatcher] Lỗi khi nạp Worker từ MongoDB:', e.message);
+    } finally {
+      this.isInitialized = true;
+      this.startHealthMonitor();
+    }
+  }
+
+  /**
+   * Khởi động tiến trình kiểm tra ping và sức khỏe Worker định kỳ (30s)
+   */
+  startHealthMonitor() {
+    if (this.healthMonitorTimer) return;
+
+    // Ping kiểm tra ngay lần đầu
+    this.refreshAllWorkersHealth().catch(() => {});
+
+    // Lặp lại mỗi 30 giây
+    this.healthMonitorTimer = setInterval(() => {
+      this.refreshAllWorkersHealth().catch(() => {});
+    }, 30000);
+  }
+
+  /**
+   * Cập nhật trạng thái và độ trễ của tất cả Worker
+   */
+  async refreshAllWorkersHealth() {
+    const workers = await this.getAllWorkers();
+    for (const w of workers) {
+      if (!w.isActive) continue;
+      await this.pingWorker(w._id).catch(() => {});
+    }
+  }
+
+  /**
+   * Lấy danh sách toàn bộ Worker (từ MongoDB hoặc Cache)
+   */
+  async getAllWorkers() {
+    try {
+      if (isMongoAvailable()) {
+        const Worker = getWorkerModel();
+        const dbWorkers = await Worker.find().sort({ createdAt: 1 }).lean();
+        this.cachedWorkers = dbWorkers;
+        return dbWorkers;
+      }
+    } catch (e) {
+      console.warn('[QueueDispatcher] Lỗi đọc Worker từ MongoDB:', e.message);
+    }
+    return this.cachedWorkers;
+  }
+
+  /**
+   * Thêm Worker mới vào MongoDB
+   */
+  async addWorker({ name, url, secret }) {
+    if (!url) throw new Error('Vui lòng nhập URL của Worker.');
+
+    // Chuẩn hóa URL
+    let parsedUrl;
+    try {
+      parsedUrl = new URL(url.trim());
+    } catch (e) {
+      throw new Error('URL không hợp lệ. Vui lòng nhập đúng định dạng (vd: https://kingmc-worker.onrender.com).');
+    }
+    const cleanUrl = `${parsedUrl.protocol}//${parsedUrl.host}`;
+    const cleanName = (name || '').trim() || `Worker-${Date.now().toString().slice(-4)}`;
+    const cleanSecret = (secret || '').trim() || this.workerSecret;
+
+    if (isMongoAvailable()) {
+      const Worker = getWorkerModel();
+      const existing = await Worker.findOne({ url: cleanUrl });
+      if (existing) {
+        throw new Error(`Worker với URL "${cleanUrl}" đã tồn tại trên hệ thống.`);
+      }
+
+      const newWorker = await Worker.create({
+        name: cleanName,
+        url: cleanUrl,
+        secret: cleanSecret,
+        isActive: true,
+        status: 'unknown',
+        latency: -1
+      });
+
+      // Ping ngay lập tức để lấy thông tin ban đầu
+      this.pingWorker(newWorker._id).catch(() => {});
+      await this.getAllWorkers();
+      return newWorker;
+    } else {
+      const newWorker = {
+        _id: `mem_${Date.now()}`,
+        name: cleanName,
+        url: cleanUrl,
+        secret: cleanSecret,
+        isActive: true,
+        status: 'unknown',
+        latency: -1
+      };
+      this.cachedWorkers.push(newWorker);
+      return newWorker;
+    }
+  }
+
+  /**
+   * Cập nhật thông tin Worker
+   */
+  async updateWorker(id, updates) {
+    if (isMongoAvailable()) {
+      const Worker = getWorkerModel();
+      const updated = await Worker.findByIdAndUpdate(id, updates, { new: true }).lean();
+      await this.getAllWorkers();
+      return updated;
+    } else {
+      const idx = this.cachedWorkers.findIndex(w => String(w._id) === String(id));
+      if (idx !== -1) {
+        this.cachedWorkers[idx] = { ...this.cachedWorkers[idx], ...updates };
+        return this.cachedWorkers[idx];
+      }
+      return null;
+    }
+  }
+
+  /**
+   * Bật/Tắt hoạt động của Worker
+   */
+  async toggleWorkerActive(id) {
+    if (isMongoAvailable()) {
+      const Worker = getWorkerModel();
+      const worker = await Worker.findById(id);
+      if (!worker) throw new Error('Không tìm thấy Worker.');
+      worker.isActive = !worker.isActive;
+      await worker.save();
+      await this.getAllWorkers();
+      return worker;
+    } else {
+      const worker = this.cachedWorkers.find(w => String(w._id) === String(id));
+      if (!worker) throw new Error('Không tìm thấy Worker.');
+      worker.isActive = !worker.isActive;
+      return worker;
+    }
+  }
+
+  /**
+   * Xóa Worker khỏi hệ thống
+   */
+  async removeWorker(id) {
+    if (isMongoAvailable()) {
+      const Worker = getWorkerModel();
+      const deleted = await Worker.findByIdAndDelete(id);
+      if (!deleted) throw new Error('Không tìm thấy Worker để xóa.');
+      await this.getAllWorkers();
+      return deleted;
+    } else {
+      const idx = this.cachedWorkers.findIndex(w => String(w._id) === String(id));
+      if (idx === -1) throw new Error('Không tìm thấy Worker để xóa.');
+      const removed = this.cachedWorkers.splice(idx, 1);
+      return removed[0];
+    }
+  }
+
+  /**
+   * Ping và kiểm tra sức khỏe của một Worker cụ thể
+   */
+  async pingWorker(id) {
+    const workers = await this.getAllWorkers();
+    const worker = workers.find(w => String(w._id) === String(id));
+    if (!worker) throw new Error('Không tìm thấy Worker.');
+
+    const startTime = Date.now();
+    try {
+      const health = await this.checkRemoteWorkerHealth(worker.url);
+      const latency = Date.now() - startTime;
+
+      let status = 'offline';
+      let botUsername = '';
+      let lastError = '';
+
+      if (health && health.status === 'OK') {
+        if (health.busy) {
+          status = 'busy';
+        } else if (health.online && health.ready) {
+          status = 'online';
+        } else {
+          status = 'busy';
+        }
+        botUsername = health.username || '';
+      } else {
+        lastError = 'Không phản hồi đúng cấu trúc /health';
+      }
+
+      const updates = {
+        status,
+        latency: status !== 'offline' ? latency : -1,
+        botUsername,
+        lastHeartbeat: new Date(),
+        lastError
+      };
+
+      await this.updateWorker(id, updates);
+      return { success: true, ...updates };
+    } catch (err) {
+      const updates = {
+        status: 'offline',
+        latency: -1,
+        lastHeartbeat: new Date(),
+        lastError: err.message
+      };
+      await this.updateWorker(id, updates);
+      return { success: false, ...updates };
+    }
   }
 
   // Thêm công việc vào hàng đợi
@@ -155,7 +427,8 @@ class QueueDispatcher {
           throw new Error(`Hành động không hợp lệ: ${action}`);
         }
       } else {
-        return await this.executeRemoteWorker(worker.url, action, player, timeoutMs);
+        const secret = worker.secret || this.workerSecret;
+        return await this.executeRemoteWorker(worker.url, action, player, timeoutMs, secret);
       }
     } finally {
       this.busyWorkers.delete(workerKey);
@@ -173,17 +446,26 @@ class QueueDispatcher {
       }
     }
 
-    // 2. Kiểm tra Remote Workers
-    for (const baseUrl of this.workerUrls) {
-      if (this.busyWorkers.has(baseUrl)) continue;
+    // 2. Lấy danh sách Worker đang kích hoạt (isActive === true)
+    const workers = await this.getAllWorkers();
+    const activeWorkers = workers.filter(w => w.isActive !== false);
+
+    for (const w of activeWorkers) {
+      if (this.busyWorkers.has(w.url)) continue;
 
       try {
-        const status = await this.checkRemoteWorkerHealth(baseUrl);
+        const status = await this.checkRemoteWorkerHealth(w.url);
         if (status && status.online && status.ready && !status.busy) {
-          available.push({ type: 'remote', name: baseUrl, url: baseUrl });
+          available.push({ 
+            type: 'remote', 
+            id: w._id,
+            name: w.name || w.url, 
+            url: w.url,
+            secret: w.secret || this.workerSecret 
+          });
         }
       } catch (e) {
-        console.warn(`[QueueDispatcher] Không thể kết nối tới Remote Worker ${baseUrl}: ${e.message}`);
+        console.warn(`[QueueDispatcher] Không thể kết nối tới Remote Worker ${w.url}: ${e.message}`);
       }
     }
 
@@ -201,7 +483,7 @@ class QueueDispatcher {
     return selected;
   }
 
-  // Kiểm tra Health của Remote Worker (Tăng timeout lên 6000ms để ổn định)
+  // Kiểm tra Health của Remote Worker
   checkRemoteWorkerHealth(baseUrl) {
     return new Promise((resolve) => {
       try {
@@ -233,7 +515,7 @@ class QueueDispatcher {
   }
 
   // Gửi lệnh thực thi tới Remote Worker qua HTTP POST /api/execute
-  executeRemoteWorker(baseUrl, action, player, timeoutMs) {
+  executeRemoteWorker(baseUrl, action, player, timeoutMs, secretOverride = null) {
     return new Promise((resolve, reject) => {
       try {
         const url = new URL('/api/execute', baseUrl);
@@ -250,7 +532,7 @@ class QueueDispatcher {
           headers: {
             'Content-Type': 'application/json',
             'Content-Length': Buffer.byteLength(postData),
-            'x-worker-secret': this.workerSecret
+            'x-worker-secret': secretOverride || this.workerSecret
           },
           timeout: timeoutMs + 4000
         };
@@ -288,40 +570,39 @@ class QueueDispatcher {
 
   /**
    * Phân bổ danh sách người chơi (hoặc items) TRẢI ĐỀU cho toàn bộ Workers đang rảnh và sẵn sàng
-   * Chạy song song (Parallel) giữa các worker, mỗi worker có khoảng nghỉ an toàn giữa các lệnh
-   * @param {string} action - 'bal', 'stats', v.v.
-   * @param {Array<string>} players - Danh sách người chơi cần kiểm tra
-   * @param {number} timeoutMs - Timeout cho mỗi lệnh check
-   * @param {number} delayBetweenCommandsMs - Delay an toàn giữa 2 lệnh trên CÙNG 1 worker (tránh spam server KingMC)
-   * @param {Function} onPlayerResult - Callback được gọi ngay khi 1 player hoàn thành
    */
   async dispatchBatchTasks(action, players, timeoutMs = 15000, delayBetweenCommandsMs = 3000, onPlayerResult = null) {
     if (!players || players.length === 0) {
       return { total: 0, successCount: 0, failCount: 0, workerCount: 0, details: [] };
     }
 
-    // Lọc danh sách không trùng lặp
     const uniquePlayers = Array.from(new Set(players.map(p => p.trim()).filter(p => p.length > 0)));
 
     // 1. Quét tìm tất cả các Worker đang Online & Sẵn sàng
     let activeWorkers = await this.getAvailableWorkers();
 
-    // Nếu không có worker nào rảnh ngay lúc này, chờ 2 giây rồi thử quét lại 1 lần nữa
     if (activeWorkers.length === 0) {
       console.log('[QueueDispatcher] ⏳ Chưa có Worker nào rảnh, đang đợi 2 giây để quét lại...');
       await new Promise(r => setTimeout(r, 2000));
       activeWorkers = await this.getAvailableWorkers();
     }
 
-    // Nếu vẫn không có worker nào rảnh:
     if (activeWorkers.length === 0) {
-      // Fallback: nếu có localBot thì dùng localBot, hoặc nếu có cấu hình workerUrls thì thử worker đầu tiên
       if (this.localBot) {
         activeWorkers.push({ type: 'local', name: 'Local-Worker', url: 'local' });
-      } else if (this.workerUrls.length > 0) {
-        activeWorkers.push({ type: 'remote', name: this.workerUrls[0], url: this.workerUrls[0] });
       } else {
-        throw new Error('Không tìm thấy bất kỳ Worker nào đang online hoặc sẵn sàng để kiểm tra.');
+        const workers = await this.getAllWorkers();
+        const firstActive = workers.find(w => w.isActive);
+        if (firstActive) {
+          activeWorkers.push({ 
+            type: 'remote', 
+            name: firstActive.name || firstActive.url, 
+            url: firstActive.url,
+            secret: firstActive.secret || this.workerSecret 
+          });
+        } else {
+          throw new Error('Không tìm thấy bất kỳ Worker nào đang online hoặc sẵn sàng để kiểm tra.');
+        }
       }
     }
 
@@ -336,10 +617,6 @@ class QueueDispatcher {
     uniquePlayers.forEach((player, index) => {
       const bucketIdx = index % buckets.length;
       buckets[bucketIdx].players.push(player);
-    });
-
-    buckets.forEach((b, i) => {
-      console.log(`   └─ Worker #${i + 1} [${b.worker.name}]: Đảm nhận ${b.players.length} người chơi (${b.players.join(', ') || 'trống'})`);
     });
 
     const allResults = [];
@@ -374,14 +651,12 @@ class QueueDispatcher {
           }
         }
 
-        // Nghỉ an toàn giữa các lệnh trên cùng worker (tránh bị KingMC áp dụng spam/cooldown)
         if (i < workerPlayers.length - 1 && delayBetweenCommandsMs > 0) {
           await new Promise(r => setTimeout(r, delayBetweenCommandsMs));
         }
       }
     });
 
-    // Chờ toàn bộ các Worker hoàn thành công việc được giao
     await Promise.allSettled(workerPromises);
 
     return {
@@ -401,61 +676,45 @@ class QueueDispatcher {
     // 1. Quét Local Worker (nếu có)
     if (this.localBot) {
       list.push({
+        id: 'local',
         type: 'local',
         name: 'Local Worker',
+        url: 'local',
         username: this.localBot.credentials?.username || 'N/A',
         online: this.localBot.isBotOnline,
         ready: this.localBot.isReady,
         busy: !this.localBot.isReady || !!this.localBot.targetPlayer || this.busyWorkers.has('local'),
+        isActive: true,
+        latency: 0,
         targetPlayer: this.localBot.targetPlayer || null
       });
     }
 
-    // 2. Quét danh sách Remote Workers qua HTTP /health
-    for (const baseUrl of this.workerUrls) {
-      try {
-        const health = await this.checkRemoteWorkerHealth(baseUrl);
-        if (health) {
-          list.push({
-            type: 'remote',
-            name: baseUrl,
-            username: health.username || 'RemoteBot',
-            online: !!health.online,
-            ready: !!health.ready,
-            busy: !!health.busy || this.busyWorkers.has(baseUrl),
-            targetPlayer: health.targetPlayer || null
-          });
-        } else {
-          list.push({
-            type: 'remote',
-            name: baseUrl,
-            username: 'N/A',
-            online: false,
-            ready: false,
-            busy: false,
-            targetPlayer: null,
-            error: 'Không thể kết nối / Timeout'
-          });
-        }
-      } catch (e) {
-        list.push({
-          type: 'remote',
-          name: baseUrl,
-          username: 'N/A',
-          online: false,
-          ready: false,
-          busy: false,
-          targetPlayer: null,
-          error: e.message
-        });
-      }
+    // 2. Quét Remote Workers từ danh sách đã nạp
+    const workers = await this.getAllWorkers();
+    for (const w of workers) {
+      list.push({
+        id: w._id,
+        type: 'remote',
+        name: w.name || w.url,
+        url: w.url,
+        username: w.botUsername || 'N/A',
+        online: w.status === 'online',
+        ready: w.status === 'online',
+        busy: w.status === 'busy' || this.busyWorkers.has(w.url),
+        status: w.status || 'unknown',
+        isActive: w.isActive !== false,
+        latency: w.latency >= 0 ? w.latency : -1,
+        lastHeartbeat: w.lastHeartbeat,
+        lastError: w.lastError || ''
+      });
     }
 
     return list;
   }
 
   // Gửi lệnh restart tới 1 Remote Worker qua API /api/restart
-  restartRemoteWorker(baseUrl) {
+  restartRemoteWorker(baseUrl, secretOverride = null) {
     return new Promise((resolve, reject) => {
       try {
         const url = new URL('/api/restart', baseUrl);
@@ -465,7 +724,7 @@ class QueueDispatcher {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-worker-secret': this.workerSecret
+            'x-worker-secret': secretOverride || this.workerSecret
           },
           timeout: 6000
         };
@@ -500,46 +759,53 @@ class QueueDispatcher {
     });
   }
 
-  // Gửi lệnh restart tới toàn bộ Workers (Local + Remote)
+  // Restart 1 worker theo ID
+  async restartWorkerById(id) {
+    if (id === 'local' && this.localBot) {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let newName = '';
+      for (let i = 0; i < 10; i++) newName += chars.charAt(Math.floor(Math.random() * chars.length));
+      this.localBot.credentials.username = newName;
+      this.localBot.credentials.password = newName;
+      if (this.localBot.bot) {
+        this.localBot.bot.end('Restart request from Master Dashboard');
+      } else {
+        this.localBot.scheduleReconnect();
+      }
+      return { success: true, username: newName };
+    }
+
+    const workers = await this.getAllWorkers();
+    const worker = workers.find(w => String(w._id) === String(id));
+    if (!worker) throw new Error('Không tìm thấy Worker.');
+
+    const res = await this.restartRemoteWorker(worker.url, worker.secret);
+    if (res && res.username) {
+      await this.updateWorker(worker._id, { botUsername: res.username });
+    }
+    return res;
+  }
+
+  // Gửi lệnh restart tới toàn bộ Workers
   async restartAllWorkers() {
     const results = [];
+    const workers = await this.getAllWorkers();
 
-    // Helper gen chuỗi ngẫu nhiên 10 ký tự
-    const generateRandomStr = (len = 10) => {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      let res = '';
-      for (let i = 0; i < len; i++) {
-        res += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return res;
-    };
-
-    // 1. Restart Local Worker nếu có
     if (this.localBot) {
       try {
-        const newName = generateRandomStr(10);
-        const newPass = generateRandomStr(10);
-        this.localBot.credentials.username = newName;
-        this.localBot.credentials.password = newPass;
-
-        if (this.localBot.bot) {
-          this.localBot.bot.end('Restart request from Master');
-        } else {
-          this.localBot.scheduleReconnect();
-        }
-        results.push({ type: 'local', name: 'Local Worker', success: true, username: newName });
+        const res = await this.restartWorkerById('local');
+        results.push({ type: 'local', name: 'Local Worker', success: true, username: res.username });
       } catch (e) {
         results.push({ type: 'local', name: 'Local Worker', success: false, error: e.message });
       }
     }
 
-    // 2. Restart tất cả Remote Workers
-    for (const baseUrl of this.workerUrls) {
+    for (const w of workers) {
       try {
-        const res = await this.restartRemoteWorker(baseUrl);
-        results.push({ type: 'remote', name: baseUrl, success: true, username: res.username || 'RemoteBot' });
+        const res = await this.restartRemoteWorker(w.url, w.secret);
+        results.push({ type: 'remote', name: w.name || w.url, success: true, username: res.username || 'RemoteBot' });
       } catch (e) {
-        results.push({ type: 'remote', name: baseUrl, success: false, error: e.message });
+        results.push({ type: 'remote', name: w.name || w.url, success: false, error: e.message });
       }
     }
 

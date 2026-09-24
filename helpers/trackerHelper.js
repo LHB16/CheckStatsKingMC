@@ -553,10 +553,125 @@ async function getTrackerOverview() {
   };
 }
 
+/**
+ * Xóa hoàn toàn một người chơi khỏi hệ thống theo dõi
+ */
+async function removePlayer(playerName) {
+  if (!playerName) return false;
+  const key = playerName.toLowerCase().trim();
+
+  localCache.delete(key);
+  saveLocalDatabase();
+
+  if (isMongoConnected && TrackedPlayerModel) {
+    try {
+      await TrackedPlayerModel.deleteOne({ playerKey: key });
+      return true;
+    } catch (e) {
+      console.error('[TrackerHelper] Lỗi khi xóa player khỏi MongoDB:', e.message);
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Bật/tắt trạng thái theo dõi của một người chơi
+ */
+async function togglePlayerTracking(playerName) {
+  if (!playerName) return null;
+  const key = playerName.toLowerCase().trim();
+  let item = localCache.get(key);
+
+  let currentTracking = true;
+  if (item) {
+    currentTracking = !!item.isTracking;
+  } else if (isMongoConnected && TrackedPlayerModel) {
+    const doc = await TrackedPlayerModel.findOne({ playerKey: key });
+    if (doc) currentTracking = doc.isTracking;
+  }
+
+  return await setTracking(playerName, !currentTracking);
+}
+
+/**
+ * Lấy danh sách chi tiết tất cả người chơi cho Dashboard (gồm cả đang theo dõi và đã tạm dừng)
+ */
+async function getAllPlayersDetailed() {
+  const cutoffTime = Date.now() - THREE_DAYS_MS;
+  const list = [];
+
+  if (isMongoConnected && TrackedPlayerModel) {
+    try {
+      const docs = await TrackedPlayerModel.find().sort({ lastChecked: -1 }).lean();
+      for (const doc of docs) {
+        const history = (doc.history || []).filter(h => {
+          const t = h.timestamp ? (h.timestamp instanceof Date ? h.timestamp.getTime() : new Date(h.timestamp).getTime()) : 0;
+          return t >= cutoffTime;
+        });
+        history.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+        const latestPoint = history[history.length - 1];
+        const startPoint = history[0];
+        const currentBalance = latestPoint ? latestPoint.balance : 0;
+        const startBalance = startPoint ? startPoint.balance : 0;
+        const change = currentBalance - startBalance;
+
+        list.push({
+          playerKey: doc.playerKey,
+          playerName: doc.playerName,
+          isTracking: doc.isTracking !== false,
+          trackedAt: doc.trackedAt,
+          lastChecked: doc.lastChecked,
+          currentBalance,
+          formattedBalance: latestPoint ? (latestPoint.formatted || `$${currentBalance.toLocaleString()}`) : 'Chưa có',
+          change,
+          changePercent: startBalance > 0 ? ((change / startBalance) * 100).toFixed(1) : 0,
+          pointsCount: history.length,
+          recentHistory: history.slice(-10)
+        });
+      }
+      return list;
+    } catch (e) {
+      console.error('[TrackerHelper] Lỗi getAllPlayersDetailed từ MongoDB:', e.message);
+    }
+  }
+
+  // Fallback từ RAM Cache
+  for (const [key, val] of localCache.entries()) {
+    const history = (val.history || []).filter(h => h.timestamp >= cutoffTime);
+    history.sort((a, b) => a.timestamp - b.timestamp);
+    const latestPoint = history[history.length - 1];
+    const startPoint = history[0];
+    const currentBalance = latestPoint ? latestPoint.balance : 0;
+    const startBalance = startPoint ? startPoint.balance : 0;
+    const change = currentBalance - startBalance;
+
+    list.push({
+      playerKey: key,
+      playerName: val.playerName,
+      isTracking: val.isTracking !== false,
+      trackedAt: val.trackedAt ? new Date(val.trackedAt) : new Date(),
+      lastChecked: val.lastChecked ? new Date(val.lastChecked) : new Date(),
+      currentBalance,
+      formattedBalance: latestPoint ? (latestPoint.formatted || `$${currentBalance.toLocaleString()}`) : 'Chưa có',
+      change,
+      changePercent: startBalance > 0 ? ((change / startBalance) * 100).toFixed(1) : 0,
+      pointsCount: history.length,
+      recentHistory: history.slice(-10)
+    });
+  }
+
+  return list;
+}
+
 module.exports = {
   initTracker,
   isTracking,
   setTracking,
+  removePlayer,
+  togglePlayerTracking,
+  getAllPlayersDetailed,
   addBalanceRecord,
   getPlayerHistory,
   getAllTrackedPlayers,

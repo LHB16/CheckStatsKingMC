@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "debug": "node debug/debug_bot.js",
-    "postinstall": "npx puppeteer browsers install chrome"
+    "postinstall": "npx puppeteer browsers install chrome",
+    "build:dashboard": "npm run --prefix dashboard build"
   },
   "dependencies": {
     "discord.js": "^14.15.3",

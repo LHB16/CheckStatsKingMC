@@ -19,6 +19,8 @@ const trackerHelper = require('./helpers/trackerHelper');
 const { handleTrackerButtons, buildTrackerOverviewMessage } = require('./handlers/trackerButtonHandler');
 const { handlePaginationButtons } = require('./helpers/paginationHelper');
 const skinHelper = require('./helpers/skinHelper');
+const { connectMongo, isMongoAvailable } = require('./helpers/mongoHelper');
+const { handleDashboardRequest, syncDiscordGuilds } = require('./handlers/dashboardHandler');
 
 
 // Cấu hình từ .env
@@ -44,6 +46,7 @@ global.maintenanceMessage = '';
 global.isAiChatEnabled = false; // Mặc định TẮT tính năng AI Chat
 global.aiDisableReason = 'Tính năng trò chuyện AI hiện đang tạm tắt bởi Admin.';
 global.globalDiscordClient = null;
+global.runTrackerCheckCycle = null;
 
 
 console.log(`==================================================`);
@@ -132,7 +135,25 @@ if (BOT_ROLE === 'worker' || BOT_ROLE === 'standalone') {
   localMcBot.connect();
 }
 
-// 2. Khởi tạo HTTP Server (Health Check cho Render & Worker API endpoints)
+// Khởi tạo Queue Dispatcher sớm cho Master / Standalone
+let queueDispatcher = null;
+if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
+  queueDispatcher = new QueueDispatcher();
+  if (localMcBot) {
+    queueDispatcher.setLocalBot(localMcBot);
+  }
+}
+
+// Kết nối MongoDB tập trung sớm và nạp Worker
+connectMongo().then(async (connected) => {
+  if (connected && queueDispatcher) {
+    await queueDispatcher.initWorkers();
+  }
+}).catch(err => {
+  console.warn('[MongoHelper] Lỗi khởi tạo MongoDB ban đầu:', err.message);
+});
+
+// 2. Khởi tạo HTTP Server (Health Check cho Render & Worker API endpoints & Dashboard Web UI)
 const PORT = process.env.PORT || 3000;
 
 // Bộ nhớ đệm giới hạn IP (Rate Limiter)
@@ -148,7 +169,26 @@ setInterval(() => {
   }
 }, 10000);
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
+  // 1. Phục vụ Web UI Dashboard & Dashboard REST API nếu là Master hoặc Standalone
+  if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
+    try {
+      const handled = await handleDashboardRequest(req, res, {
+        queueDispatcher,
+        discordClient: global.globalDiscordClient,
+        runCheckCycle: () => {
+          if (typeof global.runTrackerCheckCycle === 'function') {
+            return global.runTrackerCheckCycle();
+          }
+          return Promise.reject(new Error('Tiến trình kiểm tra chưa khởi động'));
+        }
+      });
+      if (handled) return;
+    } catch (err) {
+      console.error('[DashboardHandler] Lỗi xử lý request:', err.message);
+    }
+  }
+
   // --- IP Rate Limiting (Chống Spam/DDoS Lớp 7) ---
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
   const authSecret = req.headers['x-worker-secret'];
@@ -182,7 +222,7 @@ const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
 
   // Endpoint kiểm tra Health Check
-  if (url.pathname === '/health' || url.pathname === '/') {
+  if (url.pathname === '/health' || (BOT_ROLE === 'worker' && url.pathname === '/')) {
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     const isOnline = localMcBot ? localMcBot.isBotOnline : true;
     const isReady = localMcBot ? localMcBot.isReady : true;
@@ -524,17 +564,13 @@ function startTrackerScheduler(queueDispatcher) {
 
   // Khởi chạy vòng lặp setInterval
   const timer = setInterval(runCheckCycle, intervalMs);
+  global.runTrackerCheckCycle = runCheckCycle;
 
   return { runCheckCycle, timer };
 }
 
-// 3. Khởi tạo Discord Client & Queue Dispatcher (Nếu ở chế độ 'master' hoặc 'standalone')
+// 3. Khởi tạo Discord Client (Nếu ở chế độ 'master' hoặc 'standalone')
 if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
-  const queueDispatcher = new QueueDispatcher();
-  if (localMcBot) {
-    queueDispatcher.setLocalBot(localMcBot);
-  }
-
   const client = new Client({
     intents: [
       GatewayIntentBits.Guilds,
@@ -574,6 +610,9 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     console.log(`[Discord-Bot] Bot đã trực tuyến với tên: ${client.user.tag}`);
     await commandHandler.registerSlashCommands(DISCORD_TOKEN, CLIENT_ID, GUILD_ID);
 
+    // Đồng bộ danh sách Guild vào MongoDB cho Web UI
+    await syncDiscordGuilds(client).catch(e => console.warn('[Index] Lỗi đồng bộ Guild ban đầu:', e.message));
+
     // Khởi tạo hệ thống lưu trữ theo dõi số dư (MongoDB / JSON)
     await trackerHelper.initTracker();
 
@@ -582,6 +621,15 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
 
     // Khởi chạy tiến trình kiểm tra số dư định kỳ 1 giờ / lần
     global.trackerSchedulerInstance = startTrackerScheduler(queueDispatcher);
+    global.runTrackerCheckCycle = global.trackerSchedulerInstance?.runCheckCycle;
+  });
+
+  // Tự động đồng bộ khi Bot tham gia hoặc rời server Discord
+  client.on('guildCreate', async () => {
+    await syncDiscordGuilds(client).catch(e => console.warn('[Index] Lỗi đồng bộ guildCreate:', e.message));
+  });
+  client.on('guildDelete', async () => {
+    await syncDiscordGuilds(client).catch(e => console.warn('[Index] Lỗi đồng bộ guildDelete:', e.message));
   });
 
   client.on('interactionCreate', async (interaction) => {
