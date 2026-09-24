@@ -672,6 +672,11 @@ class PersistentBot extends EventEmitter {
       }
 
       if (this.currentAction === 'ah') {
+        if (this.onAhMessageListener && this.bot) {
+          this.bot.removeListener('messagestr', this.onAhMessageListener);
+          this.onAhMessageListener = null;
+        }
+
         // Trích xuất vật phẩm đấu giá từ GUI 6x9 (Chỉ quét 45 ô đầu: hàng 1 đến 5, bỏ qua hàng 6 chức năng)
         const scanAh = () => {
           const items = [];
@@ -1323,10 +1328,50 @@ class PersistentBot extends EventEmitter {
       this.statsPromiseResolve = resolve;
       this.statsPromiseReject = reject;
 
+      const onAhMessage = (message) => {
+        const cleanMsg = cleanMinecraftText(message).trim();
+        const lowerMsg = cleanMsg.toLowerCase();
+
+        // Bỏ qua tin nhắn chat của người chơi thường trong server (ví dụ: <Player> chat)
+        if (cleanMsg.includes('<') && cleanMsg.includes('>')) return;
+
+        if (
+          lowerMsg.includes('không tìm thấy vật phẩm nào với từ khóa') ||
+          lowerMsg.includes('khong tim thay vat pham nao voi tu khoa') ||
+          lowerMsg.includes('không tìm thấy vật phẩm nào') ||
+          lowerMsg.includes('khong tim thay vat pham nao') ||
+          lowerMsg.includes('không tìm thấy vật phẩm') ||
+          lowerMsg.includes('khong tim thay vat pham') ||
+          lowerMsg.includes('không có vật phẩm nào') ||
+          lowerMsg.includes('khong co vat pham nao')
+        ) {
+          console.log(`[MC-Bot] ℹ️ Server thông báo không tìm thấy AH cho "${itemQuery}": ${cleanMsg}`);
+          if (this.onAhMessageListener && this.bot) {
+            this.bot.removeListener('messagestr', this.onAhMessageListener);
+            this.onAhMessageListener = null;
+          }
+          this.cleanupStatsState();
+          resolve({
+            success: true,
+            serverUsed: `${this.hosts[this.currentHostIndex]}:${this.port}`,
+            title: 'Chợ Đấu Giá',
+            items: []
+          });
+        }
+      };
+
+      this.onAhMessageListener = onAhMessage;
+      this.bot.on('messagestr', onAhMessage);
+
       console.log(`[MC-Bot] Yêu cầu lấy Chợ Đấu Giá: /ah ${itemQuery}`);
       this.bot.chat(`/ah ${itemQuery}`);
 
       this.statsTimeout = setTimeout(() => {
+        if (this.onAhMessageListener && this.bot) {
+          this.bot.removeListener('messagestr', this.onAhMessageListener);
+          this.onAhMessageListener = null;
+        }
+
         if (this.statsPromiseReject) {
           this.statsPromiseReject(new Error('Timeout! Không mở được bảng Chợ Đấu Giá (AH) sau ' + (timeoutMs/1000) + ' giây.'));
           this.cleanupStatsState();
@@ -1405,6 +1450,10 @@ class PersistentBot extends EventEmitter {
     if (this.onOnlineMessageListener && this.bot) {
       this.bot.removeListener('messagestr', this.onOnlineMessageListener);
       this.onOnlineMessageListener = null;
+    }
+    if (this.onAhMessageListener && this.bot) {
+      this.bot.removeListener('messagestr', this.onAhMessageListener);
+      this.onAhMessageListener = null;
     }
     if (this.statsTimeout) {
       clearTimeout(this.statsTimeout);
