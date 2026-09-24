@@ -5,7 +5,7 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } = require('discord.js');
 const trackerHelper = require('../helpers/trackerHelper');
 const { renderBalanceChart } = require('../helpers/renderHelper');
-const { getCustomEmoji } = require('../helpers/utils');
+const { getCustomEmoji, formatTimeAgo, formatVietnamTime } = require('../helpers/utils');
 const skinHelper = require('../helpers/skinHelper');
 
 // Bộ nhớ tạm lưu lại view ban đầu (embeds) của tin nhắn check bal / stats để phục vụ nút "Quay lại"
@@ -106,11 +106,16 @@ async function handleTrackerButtons(interaction) {
       const changeSign = isPositive ? '+' : '-';
       const changeStr = `${changeSign}$${Math.abs(stats.balanceChange || 0).toLocaleString('en-US')} (${isPositive ? '+' : ''}${stats.changePercent}%)`;
 
+      const history = historyData.history || [];
+      const latestPoint = history[history.length - 1];
+      const latestTimestamp = latestPoint ? latestPoint.timestamp : (historyData.lastChecked || null);
+      const timeAgoStr = latestTimestamp ? ` *(${formatTimeAgo(latestTimestamp)})*` : '';
+
       const chartEmbed = new EmbedBuilder()
         .setTitle(`📈 Biểu Đồ Biến Động Số Dư: **${playerName}**`)
         .setDescription(
           `📊 **Thống kê 3 ngày gần nhất:**\n` +
-          `• Số dư hiện tại: **$${(stats.currentBalance || 0).toLocaleString('en-US')}**\n` +
+          `• Số dư hiện tại: **$${(stats.currentBalance || 0).toLocaleString('en-US')}**${timeAgoStr}\n` +
           `• Biến động: **${changeStr}**\n` +
           `• Đỉnh / Đáy: **$${(stats.maxBalance || 0).toLocaleString('en-US')}** / **$${(stats.minBalance || 0).toLocaleString('en-US')}**\n` +
           `• Tổng số mốc ghi nhận: **${stats.count}** lần đo`
@@ -160,11 +165,16 @@ async function handleTrackerButtons(interaction) {
       const changeSign = isPositive ? '+' : '-';
       const changeStr = `${changeSign}$${Math.abs(stats.balanceChange || 0).toLocaleString('en-US')} (${isPositive ? '+' : ''}${stats.changePercent}%)`;
 
+      const history = historyData.history || [];
+      const latestPoint = history[history.length - 1];
+      const latestTimestamp = latestPoint ? latestPoint.timestamp : (historyData.lastChecked || null);
+      const timeAgoStr = latestTimestamp ? ` *(${formatTimeAgo(latestTimestamp)})*` : '';
+
       const chartEmbed = new EmbedBuilder()
         .setTitle(`📈 Biểu Đồ Biến Động Số Dư: **${playerName}**`)
         .setDescription(
           `📊 **Thống kê 3 ngày gần nhất (Đã làm mới):**\n` +
-          `• Số dư hiện tại: **$${(stats.currentBalance || 0).toLocaleString('en-US')}**\n` +
+          `• Số dư hiện tại: **$${(stats.currentBalance || 0).toLocaleString('en-US')}**${timeAgoStr}\n` +
           `• Biến động: **${changeStr}**\n` +
           `• Đỉnh / Đáy: **$${(stats.maxBalance || 0).toLocaleString('en-US')}** / **$${(stats.minBalance || 0).toLocaleString('en-US')}**\n` +
           `• Tổng số mốc ghi nhận: **${stats.count}** lần đo`
@@ -207,6 +217,10 @@ async function handleTrackerButtons(interaction) {
       } else {
         // Fallback tái tạo Embed số dư nếu cache bị xóa
         const historyData = await trackerHelper.getPlayerHistory(playerName);
+        const history = (historyData && historyData.history) ? historyData.history : [];
+        const latestPoint = history[history.length - 1];
+        const latestTimestamp = latestPoint ? latestPoint.timestamp : (historyData?.lastChecked || null);
+        const timeAgoStr = latestTimestamp ? ` *(${formatTimeAgo(latestTimestamp)})*` : '';
         const emeraldEmoji = getCustomEmoji('emerald');
         const latestBal = (historyData && historyData.stats && historyData.stats.currentBalance != null)
           ? `$${Number(historyData.stats.currentBalance).toLocaleString('en-US')}`
@@ -216,7 +230,7 @@ async function handleTrackerButtons(interaction) {
           .setTitle(`${emeraldEmoji} Số dư người chơi: **${playerName}**`)
           .setColor('#2b2d31')
           .setThumbnail(skinHelper.getAvatarUrl(playerName, 64, true))
-          .setDescription(`${emeraldEmoji} **SỐ DƯ:** \`${latestBal}\`\n\n\u200B`)
+          .setDescription(`${emeraldEmoji} **SỐ DƯ:** \`${latestBal}\`${timeAgoStr}\n\n\u200B`)
           .setTimestamp()
           .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
         restoredEmbeds = [fallbackEmbed];
@@ -327,9 +341,10 @@ function buildTrackerOverviewMessage(overview, page = 1, pageSize = 8) {
     desc += `_Hiện chưa có người chơi nào được theo dõi. Dùng \`!tracker add <tên>\` hoặc nút **Theo dõi** sau khi tra cứu \`/bal <tên>\` để thêm!_`;
   } else {
     currentPlayers.forEach((p, idx) => {
-      const timeStr = p.lastChecked ? p.lastChecked.toLocaleString('vi-VN') : 'Chưa đo';
+      const timeStr = formatVietnamTime(p.lastChecked);
+      const timeAgo = p.lastChecked ? ` (${formatTimeAgo(p.lastChecked)})` : '';
       desc += `**${startIndex + idx + 1}. ${p.name}**\n`;
-      desc += `   └ Số dư: \`${p.latestBalance}\` • Lần đo: **${p.pointsCount}** • Gần nhất: \`${timeStr}\`\n`;
+      desc += `   └ Số dư: \`${p.latestBalance}\`${timeAgo} • Lần đo: **${p.pointsCount}** • Gần nhất: \`${timeStr}\`\n`;
     });
     desc += `\n_Lệnh Admin: \`!tracker check\` (kiểm tra ngay) • \`!tracker add <tên>\` • \`!tracker untrack <tên>\`_`;
   }

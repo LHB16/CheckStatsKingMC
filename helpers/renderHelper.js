@@ -7,6 +7,7 @@ const path = require('path');
 const url = require('url');
 const puppeteer = require('puppeteer');
 const skinHelper = require('./skinHelper');
+const { formatTimeAgo } = require('./utils');
 
 let browserInstance = null;
 
@@ -817,8 +818,11 @@ async function renderBalanceChart(playerName, historyPayload) {
   const changeFormatted = (isPositive ? '+' : '-') + formatCurrency(Math.abs(changeVal));
   const changePctFormatted = (isPositive ? '+' : '') + changePct + '%';
 
-  const latestTimeStr = totalPoints > 0
-    ? formatShortTime(history[totalPoints - 1].timestamp)
+  const latestPoint = totalPoints > 0 ? history[totalPoints - 1] : null;
+  const latestTimestamp = latestPoint ? latestPoint.timestamp : null;
+  const timeAgoStr = latestTimestamp ? formatTimeAgo(latestTimestamp) : 'Vừa xong';
+  const latestTimeStr = latestTimestamp
+    ? formatShortTime(latestTimestamp)
     : 'Vừa xong';
 
   let chartContentHtml = '';
@@ -983,15 +987,16 @@ async function renderBalanceChart(playerName, historyPayload) {
   const compiledHtml = templateContent
     .replace(/\{\{PLAYER_NAME\}\}/g, escapeHtml(playerName))
     .replace(/\{\{AVATAR_URL\}\}/g, avatarUrl)
-    .replace('{{CURRENT_BALANCE}}', formatCurrency(currentBal))
-    .replace('{{LATEST_TIME}}', latestTimeStr)
-    .replace('{{CHANGE_CLASS}}', changeClass)
-    .replace('{{CHANGE_VALUE}}', changeFormatted)
-    .replace('{{CHANGE_PERCENT}}', changePctFormatted)
-    .replace('{{MAX_BALANCE}}', formatCurrency(maxBal))
-    .replace('{{MIN_BALANCE}}', formatCurrency(minBal))
-    .replace('{{TOTAL_POINTS}}', String(totalPoints))
-    .replace('{{CHART_CONTENT}}', chartContentHtml);
+    .replace(/\{\{CURRENT_BALANCE\}\}/g, formatCurrency(currentBal))
+    .replace(/\{\{TIME_AGO\}\}/g, timeAgoStr)
+    .replace(/\{\{LATEST_TIME\}\}/g, latestTimeStr)
+    .replace(/\{\{CHANGE_CLASS\}\}/g, changeClass)
+    .replace(/\{\{CHANGE_VALUE\}\}/g, changeFormatted)
+    .replace(/\{\{CHANGE_PERCENT\}\}/g, changePctFormatted)
+    .replace(/\{\{MAX_BALANCE\}\}/g, formatCurrency(maxBal))
+    .replace(/\{\{MIN_BALANCE\}\}/g, formatCurrency(minBal))
+    .replace(/\{\{TOTAL_POINTS\}\}/g, String(totalPoints))
+    .replace(/\{\{CHART_CONTENT\}\}/g, chartContentHtml);
 
   const browser = await getBrowser();
   const page = await browser.newPage();

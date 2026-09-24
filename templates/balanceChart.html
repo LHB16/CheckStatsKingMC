@@ -87,6 +87,15 @@
       font-weight: 800;
       color: #10b981;
       line-height: 1.2;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .balance-val .time-ago {
+      font-size: 13px;
+      font-weight: 600;
+      color: #8a909a;
     }
 
     .balance-change {
@@ -265,7 +274,7 @@
       </div>
 
       <div class="balance-summary">
-        <div class="balance-val">{{CURRENT_BALANCE}}</div>
+        <div class="balance-val">{{CURRENT_BALANCE}} <span class="time-ago">({{TIME_AGO}})</span></div>
         <div class="balance-change {{CHANGE_CLASS}}">{{CHANGE_VALUE}} ({{CHANGE_PERCENT}})</div>
       </div>
     </div>
@@ -285,7 +294,7 @@
       </div>
       <span class="stat-sep">•</span>
       <div class="stat-item">
-        <span>Cập nhật:</span> <strong>{{LATEST_TIME}}</strong>
+        <span>Cập nhật:</span> <strong>{{LATEST_TIME}} ({{TIME_AGO}})</strong>
       </div>
     </div>
 

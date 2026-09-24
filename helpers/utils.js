@@ -94,11 +94,56 @@ function isDecorationItem(item) {
   return false;
 }
 
+/**
+ * Định dạng khoảng thời gian tương đối (VD: "30s trước", "15m trước", "2h trước", "3d trước")
+ * @param {Date|number|string} timestamp 
+ * @returns {string}
+ */
+function formatTimeAgo(timestamp) {
+  if (!timestamp) return 'Chưa đo';
+  const time = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime();
+  if (isNaN(time)) return 'Chưa đo';
+
+  const diffSec = Math.max(0, Math.floor((Date.now() - time) / 1000));
+  if (diffSec < 60) return `${diffSec}s trước`;
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m trước`;
+  const diffHours = Math.floor(diffMin / 60);
+  if (diffHours < 24) return `${diffHours}h trước`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays}d trước`;
+}
+
+/**
+ * Định dạng ngày giờ theo múi giờ Việt Nam (UTC+7, Asia/Ho_Chi_Minh)
+ * @param {Date|number|string} date 
+ * @param {boolean} includeSeconds 
+ * @returns {string}
+ */
+function formatVietnamTime(date, includeSeconds = true) {
+  if (!date) return 'Chưa đo';
+  const d = date instanceof Date ? date : new Date(date);
+  if (isNaN(d.getTime())) return 'Chưa đo';
+
+  return d.toLocaleString('vi-VN', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    ...(includeSeconds ? { second: '2-digit' } : {}),
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+}
+
 module.exports = {
   CUSTOM_EMOJIS,
   cleanMinecraftText,
   getCustomEmoji,
   formatItemName,
   getStatsLabel,
-  isDecorationItem
+  isDecorationItem,
+  formatTimeAgo,
+  formatVietnamTime
 };
