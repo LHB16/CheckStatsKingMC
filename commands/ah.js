@@ -6,7 +6,7 @@ const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Butt
 const { getCustomEmoji } = require('../helpers/utils');
 const { recordError } = require('../helpers/reportHelper');
 const configHelper = require('../helpers/configHelper');
-const { renderBatchTablePages, formatItemDisplayName } = require('../helpers/renderHelper');
+const { renderBatchTablePages } = require('../helpers/renderHelper');
 const { chunkArray, buildPaginationRow, createPaginationSession, formatAhTextPage } = require('../helpers/paginationHelper');
 
 module.exports = {
@@ -30,13 +30,12 @@ module.exports = {
       const result = await queueDispatcher.enqueueTask('ah', itemQuery, BOT_CHECK_TIMEOUT);
 
       const items = result.items || [];
-      const itemDisplayName = formatItemDisplayName(itemQuery);
 
       // Trường hợp KHÔNG có vật phẩm nào trên AH
       if (items.length === 0) {
         const emptyEmbed = new EmbedBuilder()
-          .setTitle(`📦 Đấu Giá (AH): **${itemDisplayName}**`)
-          .setDescription(`⚠️ Không tìm thấy AH cho món đồ **${itemDisplayName}**.`)
+          .setTitle(`📦 Đấu Giá (AH): **${itemQuery}**`)
+          .setDescription(`⚠️ Không tìm thấy AH cho món đồ **${itemQuery}**.`)
           .setColor('#ef4444')
           .setTimestamp()
           .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
@@ -109,8 +108,8 @@ module.exports = {
 
       // CHẾ ĐỘ VĂN BẢN (Text Mode)
       const textTitle = totalPages > 1
-        ? `${emoji} Danh sách AH: **${itemQuery.toUpperCase()}** (Trang 1/${totalPages})`
-        : `${emoji} Danh sách AH: **${itemQuery.toUpperCase()}**`;
+        ? `${emoji} Danh sách AH: **${itemQuery}** (Trang 1/${totalPages})`
+        : `${emoji} Danh sách AH: **${itemQuery}**`;
 
       const embed = new EmbedBuilder()
         .setTitle(textTitle)

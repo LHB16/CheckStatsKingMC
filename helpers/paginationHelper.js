@@ -72,7 +72,7 @@ function formatAhTextPage(items, itemQuery, pageIndex, pageSize = 9) {
 
     const nameToShow = (cleanDisplay && cleanDisplay !== 'Item' && !isOrderTitle)
       ? cleanDisplay
-      : formatItemDisplayName(rawName || itemQuery);
+      : (rawName ? formatItemDisplayName(rawName) : itemQuery);
 
     // Lấy đúng Emoji 3D cho vật phẩm này
     const itemEmoji = getCustomEmoji(rawName || itemQuery || cleanDisplay);
@@ -102,11 +102,11 @@ function formatOrderTextPage(orders, itemQuery, pageIndex, pageSize = 9) {
 
     let itemQueryId = (rawName && rawName !== 'player_head' && rawName !== 'skull' && rawName !== 'air')
       ? rawName
-      : itemQuery;
+      : null;
 
     const nameToShow = (cleanDisplay && !isOrderTitle && cleanDisplay !== 'Item' && cleanDisplay !== 'Vật phẩm')
       ? cleanDisplay
-      : formatItemDisplayName(itemQueryId || rawName || itemQuery);
+      : (itemQueryId ? formatItemDisplayName(itemQueryId) : itemQuery);
 
     let buyerName = order.buyer;
     if (!buyerName || buyerName === 'Ẩn danh' || /^(?:don\s*hang|order)/i.test(normalizeSmallCaps(buyerName))) {
@@ -262,7 +262,7 @@ async function handlePaginationButtons(interaction) {
       // Nếu trang chưa có trong cache -> Render theo yêu cầu (Lazy Render)
       if (!imageBuffer) {
         const titlePrefix = session.type === 'ah' ? 'DANH SÁCH AH' : 'DANH SÁCH ORDER';
-        const pageTitle = `${titlePrefix}: ${session.itemQuery.toUpperCase()} (TRANG ${newPage}/${session.totalPages})`;
+        const pageTitle = `${titlePrefix}: ${session.itemQuery} (TRANG ${newPage}/${session.totalPages})`;
         
         imageBuffer = await renderTableImage(
           pageTitle,
@@ -298,7 +298,7 @@ async function handlePaginationButtons(interaction) {
     const titlePrefix = session.type === 'ah' ? 'Danh sách AH' : 'Danh sách đơn hàng';
 
     const embed = new EmbedBuilder()
-      .setTitle(`${emoji} ${titlePrefix}: **${session.itemQuery.toUpperCase()}** (Trang ${newPage}/${session.totalPages})`)
+      .setTitle(`${emoji} ${titlePrefix}: **${session.itemQuery}** (Trang ${newPage}/${session.totalPages})`)
       .setColor('#2b2d31')
       .setTimestamp()
       .setFooter({ text: `KingMC.vn Stats Bot • Trang ${newPage}/${session.totalPages} • Thiết kế bởi BinhLH` });

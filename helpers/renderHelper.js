@@ -621,8 +621,8 @@ async function renderBatchTablePages(titlePrefix, itemQuery, pages, type = 'orde
   const containersHtml = pages.map((pageItems, pageIdx) => {
     const pageNum = pageIdx + 1;
     const title = totalPages > 1
-      ? `${titlePrefix}: ${itemQuery.toUpperCase()} (TRANG ${pageNum}/${totalPages})`
-      : `${titlePrefix}: ${itemQuery.toUpperCase()}`;
+      ? `${titlePrefix}: ${itemQuery} (TRANG ${pageNum}/${totalPages})`
+      : `${titlePrefix}: ${itemQuery}`;
     const startIndex = pageIdx * 9 + 1;
     const rowsHtml = generateTableRowsHtml(pageItems, itemQuery, type, startIndex);
     return generateTableContainerHtml(title, rowsHtml);

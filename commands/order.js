@@ -6,7 +6,7 @@ const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Butt
 const { getCustomEmoji } = require('../helpers/utils');
 const { recordError } = require('../helpers/reportHelper');
 const configHelper = require('../helpers/configHelper');
-const { renderBatchTablePages, formatItemDisplayName } = require('../helpers/renderHelper');
+const { renderBatchTablePages } = require('../helpers/renderHelper');
 const { chunkArray, buildPaginationRow, createPaginationSession, formatOrderTextPage } = require('../helpers/paginationHelper');
 
 module.exports = {
@@ -30,13 +30,12 @@ module.exports = {
       const result = await queueDispatcher.enqueueTask('order', itemQuery, BOT_CHECK_TIMEOUT);
 
       const orders = result.orders || [];
-      const itemDisplayName = formatItemDisplayName(itemQuery);
 
       // Trường hợp KHÔNG có đơn hàng nào
       if (orders.length === 0) {
         const emptyEmbed = new EmbedBuilder()
-          .setTitle(`📦 Đơn hàng: **${itemDisplayName}**`)
-          .setDescription(`⚠️ Không tìm thấy Order cho món đồ **${itemDisplayName}**.`)
+          .setTitle(`📦 Đơn hàng: **${itemQuery}**`)
+          .setDescription(`⚠️ Không tìm thấy Order cho món đồ **${itemQuery}**.`)
           .setColor('#ef4444')
           .setTimestamp()
           .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
@@ -109,8 +108,8 @@ module.exports = {
 
       // CHẾ ĐỘ VĂN BẢN (Text Mode)
       const textTitle = totalPages > 1
-        ? `${emoji} Danh sách đơn hàng: **${itemQuery.toUpperCase()}** (Trang 1/${totalPages})`
-        : `${emoji} Danh sách đơn hàng: **${itemQuery.toUpperCase()}**`;
+        ? `${emoji} Danh sách đơn hàng: **${itemQuery}** (Trang 1/${totalPages})`
+        : `${emoji} Danh sách đơn hàng: **${itemQuery}**`;
 
       const embed = new EmbedBuilder()
         .setTitle(textTitle)
