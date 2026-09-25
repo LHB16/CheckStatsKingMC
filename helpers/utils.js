@@ -121,6 +121,27 @@ function cleanMinecraftText(text) {
     .trim();
 }
 
+/**
+ * Chuyển đổi phông chữ Small Caps từ GUI Minecraft sang chữ in hoa tiêu chuẩn ASCII (Kiểu 1)
+ * Ví dụ: ᴍᴏɴᴇʏ -> MONEY, ꜱʜᴀƦᴅꜱ -> SHARDS, ᴋꞮʟʟꜱ -> KILLS, ᴀɴꞮᴍᴀʟꜱ ʙƦᴇᴇᴅ -> ANIMALS BREED
+ * @param {string} str 
+ * @returns {string}
+ */
+function smallCapsToStandardUpper(str) {
+  if (!str) return '';
+  const map = {
+    'ᴀ': 'A', 'ʙ': 'B', 'ᴄ': 'C', 'ᴅ': 'D', 'ᴇ': 'E', 'ғ': 'F', 'ɢ': 'G', 'ʜ': 'H',
+    'ɪ': 'I', 'Ɪ': 'I', 'ᴊ': 'J', 'ᴋ': 'K', 'ʟ': 'L', 'ᴍ': 'M', 'ɴ': 'N', 'ᴏ': 'O',
+    'ᴘ': 'P', 'ǫ': 'Q', 'ʀ': 'R', 'Ʀ': 'R', 'ꜱ': 'S', 'ᴛ': 'T', 'ᴜ': 'U', 'ᴠ': 'V',
+    'ᴡ': 'W', 'x': 'X', 'ʏ': 'Y', 'ᴢ': 'Z',
+    'đ': 'D', 'Đ': 'D'
+  };
+  return String(str)
+    .replace(/[ᴀʙᴄᴅᴇғɢʜɪꞮᴊᴋʟᴍɴᴏᴘǫʀƦꜱᴛᴜᴠᴡxʏᴢđĐ]/gu, m => map[m] || m)
+    .toUpperCase()
+    .trim();
+}
+
 // Hàm phân loại tên để lấy tiêu đề nhãn
 function getStatsLabel(item) {
   const nameLower = (item.name || '').toLowerCase();
@@ -202,6 +223,7 @@ module.exports = {
   CUSTOM_EMOJIS,
   loadDynamicEmojis,
   cleanMinecraftText,
+  smallCapsToStandardUpper,
   getCustomEmoji,
   formatItemName,
   getStatsLabel,

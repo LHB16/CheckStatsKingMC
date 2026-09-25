@@ -3,7 +3,7 @@
  */
 
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { getCustomEmoji, getStatsLabel, isDecorationItem, cleanMinecraftText } = require('../helpers/utils');
+const { getCustomEmoji, getStatsLabel, isDecorationItem, cleanMinecraftText, smallCapsToStandardUpper } = require('../helpers/utils');
 const { recordError } = require('../helpers/reportHelper');
 const trackerHelper = require('../helpers/trackerHelper');
 const skinHelper = require('../helpers/skinHelper');
@@ -55,9 +55,13 @@ module.exports = {
         
         validItems.forEach(item => {
           const rawCleanDisplay = cleanMinecraftText(item.displayName);
+          // Chuyển đổi phông chữ Small Caps độc lạ sang chữ in hoa tiêu chuẩn (Kiểu 1: MONEY, SHARDS, KILLS...)
+          const convertedTitle = smallCapsToStandardUpper(rawCleanDisplay);
           const label = getStatsLabel(item);
-          const displayTitle = (rawCleanDisplay || label).trim();
-          const emoji = getCustomEmoji(item.name);
+          const displayTitle = (convertedTitle || label).trim();
+
+          // Lấy đúng Emoji 3D từ item.name của Minecraft GUI (emerald, amethyst_shard, netherite_sword...)
+          const emoji = getCustomEmoji(item.name || rawCleanDisplay);
           
           const cleanLoreLines = (item.lore || [])
             .map(line => cleanMinecraftText(line))
