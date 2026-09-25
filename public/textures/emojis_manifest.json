@@ -1,0 +1,6618 @@
+{
+  "abandoned_campsite_map": {
+    "file": "ABANDONED_CAMPSITE_MAP.png",
+    "emojiName": "abandoned_campsite_map"
+  },
+  "acacia_boat": {
+    "file": "ACACIA_BOAT.png",
+    "emojiName": "acacia_boat"
+  },
+  "acacia_button": {
+    "file": "ACACIA_BUTTON.png",
+    "emojiName": "acacia_button"
+  },
+  "acacia_chest_boat": {
+    "file": "ACACIA_CHEST_BOAT.png",
+    "emojiName": "acacia_chest_boat"
+  },
+  "acacia_door": {
+    "file": "ACACIA_DOOR.png",
+    "emojiName": "acacia_door"
+  },
+  "acacia_fence": {
+    "file": "ACACIA_FENCE.png",
+    "emojiName": "acacia_fence"
+  },
+  "acacia_fence_gate": {
+    "file": "ACACIA_FENCE_GATE.png",
+    "emojiName": "acacia_fence_gate"
+  },
+  "acacia_hanging_sign": {
+    "file": "ACACIA_HANGING_SIGN.png",
+    "emojiName": "acacia_hanging_sign"
+  },
+  "acacia_leaves": {
+    "file": "ACACIA_LEAVES.png",
+    "emojiName": "acacia_leaves"
+  },
+  "acacia_log": {
+    "file": "ACACIA_LOG.png",
+    "emojiName": "acacia_log"
+  },
+  "acacia_planks": {
+    "file": "ACACIA_PLANKS.png",
+    "emojiName": "acacia_planks"
+  },
+  "acacia_pressure_plate": {
+    "file": "ACACIA_PRESSURE_PLATE.png",
+    "emojiName": "acacia_pressure_plate"
+  },
+  "acacia_sapling": {
+    "file": "ACACIA_SAPLING.png",
+    "emojiName": "acacia_sapling"
+  },
+  "acacia_shelf": {
+    "file": "ACACIA_SHELF.png",
+    "emojiName": "acacia_shelf"
+  },
+  "acacia_sign": {
+    "file": "ACACIA_SIGN.png",
+    "emojiName": "acacia_sign"
+  },
+  "acacia_slab": {
+    "file": "ACACIA_SLAB.png",
+    "emojiName": "acacia_slab"
+  },
+  "acacia_stairs": {
+    "file": "ACACIA_STAIRS.png",
+    "emojiName": "acacia_stairs"
+  },
+  "acacia_trapdoor": {
+    "file": "ACACIA_TRAPDOOR.png",
+    "emojiName": "acacia_trapdoor"
+  },
+  "acacia_wood": {
+    "file": "ACACIA_WOOD.png",
+    "emojiName": "acacia_wood"
+  },
+  "activator_rail": {
+    "file": "ACTIVATOR_RAIL.png",
+    "emojiName": "activator_rail"
+  },
+  "air": {
+    "file": "AIR.png",
+    "emojiName": "air"
+  },
+  "allay_spawn_egg": {
+    "file": "ALLAY_SPAWN_EGG.png",
+    "emojiName": "allay_spawn_egg"
+  },
+  "allium": {
+    "file": "ALLIUM.png",
+    "emojiName": "allium"
+  },
+  "amethyst_block": {
+    "file": "AMETHYST_BLOCK.png",
+    "emojiName": "amethyst_block"
+  },
+  "amethyst_cluster": {
+    "file": "AMETHYST_CLUSTER.png",
+    "emojiName": "amethyst_cluster"
+  },
+  "amethyst_shard": {
+    "file": "AMETHYST_SHARD.png",
+    "emojiName": "amethyst_shard"
+  },
+  "ancient_city_map": {
+    "file": "ANCIENT_CITY_MAP.png",
+    "emojiName": "ancient_city_map"
+  },
+  "ancient_debris": {
+    "file": "ANCIENT_DEBRIS.png",
+    "emojiName": "ancient_debris"
+  },
+  "andesite": {
+    "file": "ANDESITE.png",
+    "emojiName": "andesite"
+  },
+  "andesite_slab": {
+    "file": "ANDESITE_SLAB.png",
+    "emojiName": "andesite_slab"
+  },
+  "andesite_stairs": {
+    "file": "ANDESITE_STAIRS.png",
+    "emojiName": "andesite_stairs"
+  },
+  "andesite_wall": {
+    "file": "ANDESITE_WALL.png",
+    "emojiName": "andesite_wall"
+  },
+  "angler_pottery_sherd": {
+    "file": "ANGLER_POTTERY_SHERD.png",
+    "emojiName": "angler_pottery_sherd"
+  },
+  "anvil": {
+    "file": "ANVIL.png",
+    "emojiName": "anvil"
+  },
+  "apple": {
+    "file": "APPLE.png",
+    "emojiName": "apple"
+  },
+  "archer_pottery_sherd": {
+    "file": "ARCHER_POTTERY_SHERD.png",
+    "emojiName": "archer_pottery_sherd"
+  },
+  "armadillo_scute": {
+    "file": "ARMADILLO_SCUTE.png",
+    "emojiName": "armadillo_scute"
+  },
+  "armadillo_spawn_egg": {
+    "file": "ARMADILLO_SPAWN_EGG.png",
+    "emojiName": "armadillo_spawn_egg"
+  },
+  "armor_stand": {
+    "file": "ARMOR_STAND.png",
+    "emojiName": "armor_stand"
+  },
+  "arms_up_pottery_sherd": {
+    "file": "ARMS_UP_POTTERY_SHERD.png",
+    "emojiName": "arms_up_pottery_sherd"
+  },
+  "arrow": {
+    "file": "ARROW.png",
+    "emojiName": "arrow"
+  },
+  "axolotl_bucket": {
+    "file": "AXOLOTL_BUCKET.png",
+    "emojiName": "axolotl_bucket"
+  },
+  "axolotl_spawn_egg": {
+    "file": "AXOLOTL_SPAWN_EGG.png",
+    "emojiName": "axolotl_spawn_egg"
+  },
+  "azalea": {
+    "file": "AZALEA.png",
+    "emojiName": "azalea"
+  },
+  "azalea_leaves": {
+    "file": "AZALEA_LEAVES.png",
+    "emojiName": "azalea_leaves"
+  },
+  "azure_bluet": {
+    "file": "AZURE_BLUET.png",
+    "emojiName": "azure_bluet"
+  },
+  "baked_potato": {
+    "file": "BAKED_POTATO.png",
+    "emojiName": "baked_potato"
+  },
+  "bamboo": {
+    "file": "BAMBOO.png",
+    "emojiName": "bamboo"
+  },
+  "bamboo_block": {
+    "file": "BAMBOO_BLOCK.png",
+    "emojiName": "bamboo_block"
+  },
+  "bamboo_button": {
+    "file": "BAMBOO_BUTTON.png",
+    "emojiName": "bamboo_button"
+  },
+  "bamboo_chest_raft": {
+    "file": "BAMBOO_CHEST_RAFT.png",
+    "emojiName": "bamboo_chest_raft"
+  },
+  "bamboo_door": {
+    "file": "BAMBOO_DOOR.png",
+    "emojiName": "bamboo_door"
+  },
+  "bamboo_fence": {
+    "file": "BAMBOO_FENCE.png",
+    "emojiName": "bamboo_fence"
+  },
+  "bamboo_fence_gate": {
+    "file": "BAMBOO_FENCE_GATE.png",
+    "emojiName": "bamboo_fence_gate"
+  },
+  "bamboo_hanging_sign": {
+    "file": "BAMBOO_HANGING_SIGN.png",
+    "emojiName": "bamboo_hanging_sign"
+  },
+  "bamboo_mosaic": {
+    "file": "BAMBOO_MOSAIC.png",
+    "emojiName": "bamboo_mosaic"
+  },
+  "bamboo_mosaic_slab": {
+    "file": "BAMBOO_MOSAIC_SLAB.png",
+    "emojiName": "bamboo_mosaic_slab"
+  },
+  "bamboo_mosaic_stairs": {
+    "file": "BAMBOO_MOSAIC_STAIRS.png",
+    "emojiName": "bamboo_mosaic_stairs"
+  },
+  "bamboo_planks": {
+    "file": "BAMBOO_PLANKS.png",
+    "emojiName": "bamboo_planks"
+  },
+  "bamboo_pressure_plate": {
+    "file": "BAMBOO_PRESSURE_PLATE.png",
+    "emojiName": "bamboo_pressure_plate"
+  },
+  "bamboo_raft": {
+    "file": "BAMBOO_RAFT.png",
+    "emojiName": "bamboo_raft"
+  },
+  "bamboo_shelf": {
+    "file": "BAMBOO_SHELF.png",
+    "emojiName": "bamboo_shelf"
+  },
+  "bamboo_sign": {
+    "file": "BAMBOO_SIGN.png",
+    "emojiName": "bamboo_sign"
+  },
+  "bamboo_slab": {
+    "file": "BAMBOO_SLAB.png",
+    "emojiName": "bamboo_slab"
+  },
+  "bamboo_stairs": {
+    "file": "BAMBOO_STAIRS.png",
+    "emojiName": "bamboo_stairs"
+  },
+  "bamboo_trapdoor": {
+    "file": "BAMBOO_TRAPDOOR.png",
+    "emojiName": "bamboo_trapdoor"
+  },
+  "barrel": {
+    "file": "BARREL.png",
+    "emojiName": "barrel"
+  },
+  "barrier": {
+    "file": "BARRIER.png",
+    "emojiName": "barrier"
+  },
+  "basalt": {
+    "file": "BASALT.png",
+    "emojiName": "basalt"
+  },
+  "bat_spawn_egg": {
+    "file": "BAT_SPAWN_EGG.png",
+    "emojiName": "bat_spawn_egg"
+  },
+  "beacon": {
+    "file": "BEACON.png",
+    "emojiName": "beacon"
+  },
+  "bedrock": {
+    "file": "BEDROCK.png",
+    "emojiName": "bedrock"
+  },
+  "beef": {
+    "file": "BEEF.png",
+    "emojiName": "beef"
+  },
+  "beehive": {
+    "file": "BEEHIVE.png",
+    "emojiName": "beehive"
+  },
+  "beetroot": {
+    "file": "BEETROOT.png",
+    "emojiName": "beetroot"
+  },
+  "beetroot_seeds": {
+    "file": "BEETROOT_SEEDS.png",
+    "emojiName": "beetroot_seeds"
+  },
+  "beetroot_soup": {
+    "file": "BEETROOT_SOUP.png",
+    "emojiName": "beetroot_soup"
+  },
+  "bee_nest": {
+    "file": "BEE_NEST.png",
+    "emojiName": "bee_nest"
+  },
+  "bee_spawn_egg": {
+    "file": "BEE_SPAWN_EGG.png",
+    "emojiName": "bee_spawn_egg"
+  },
+  "bell": {
+    "file": "BELL.png",
+    "emojiName": "bell"
+  },
+  "big_dripleaf": {
+    "file": "BIG_DRIPLEAF.png",
+    "emojiName": "big_dripleaf"
+  },
+  "birch_boat": {
+    "file": "BIRCH_BOAT.png",
+    "emojiName": "birch_boat"
+  },
+  "birch_button": {
+    "file": "BIRCH_BUTTON.png",
+    "emojiName": "birch_button"
+  },
+  "birch_chest_boat": {
+    "file": "BIRCH_CHEST_BOAT.png",
+    "emojiName": "birch_chest_boat"
+  },
+  "birch_door": {
+    "file": "BIRCH_DOOR.png",
+    "emojiName": "birch_door"
+  },
+  "birch_fence": {
+    "file": "BIRCH_FENCE.png",
+    "emojiName": "birch_fence"
+  },
+  "birch_fence_gate": {
+    "file": "BIRCH_FENCE_GATE.png",
+    "emojiName": "birch_fence_gate"
+  },
+  "birch_hanging_sign": {
+    "file": "BIRCH_HANGING_SIGN.png",
+    "emojiName": "birch_hanging_sign"
+  },
+  "birch_leaves": {
+    "file": "BIRCH_LEAVES.png",
+    "emojiName": "birch_leaves"
+  },
+  "birch_log": {
+    "file": "BIRCH_LOG.png",
+    "emojiName": "birch_log"
+  },
+  "birch_planks": {
+    "file": "BIRCH_PLANKS.png",
+    "emojiName": "birch_planks"
+  },
+  "birch_pressure_plate": {
+    "file": "BIRCH_PRESSURE_PLATE.png",
+    "emojiName": "birch_pressure_plate"
+  },
+  "birch_sapling": {
+    "file": "BIRCH_SAPLING.png",
+    "emojiName": "birch_sapling"
+  },
+  "birch_shelf": {
+    "file": "BIRCH_SHELF.png",
+    "emojiName": "birch_shelf"
+  },
+  "birch_sign": {
+    "file": "BIRCH_SIGN.png",
+    "emojiName": "birch_sign"
+  },
+  "birch_slab": {
+    "file": "BIRCH_SLAB.png",
+    "emojiName": "birch_slab"
+  },
+  "birch_stairs": {
+    "file": "BIRCH_STAIRS.png",
+    "emojiName": "birch_stairs"
+  },
+  "birch_trapdoor": {
+    "file": "BIRCH_TRAPDOOR.png",
+    "emojiName": "birch_trapdoor"
+  },
+  "birch_wood": {
+    "file": "BIRCH_WOOD.png",
+    "emojiName": "birch_wood"
+  },
+  "blackstone": {
+    "file": "BLACKSTONE.png",
+    "emojiName": "blackstone"
+  },
+  "blackstone_slab": {
+    "file": "BLACKSTONE_SLAB.png",
+    "emojiName": "blackstone_slab"
+  },
+  "blackstone_stairs": {
+    "file": "BLACKSTONE_STAIRS.png",
+    "emojiName": "blackstone_stairs"
+  },
+  "blackstone_wall": {
+    "file": "BLACKSTONE_WALL.png",
+    "emojiName": "blackstone_wall"
+  },
+  "black_banner": {
+    "file": "BLACK_BANNER.png",
+    "emojiName": "black_banner"
+  },
+  "black_bed": {
+    "file": "BLACK_BED.png",
+    "emojiName": "black_bed"
+  },
+  "black_bundle": {
+    "file": "BLACK_BUNDLE.png",
+    "emojiName": "black_bundle"
+  },
+  "black_candle": {
+    "file": "BLACK_CANDLE.png",
+    "emojiName": "black_candle"
+  },
+  "black_carpet": {
+    "file": "BLACK_CARPET.png",
+    "emojiName": "black_carpet"
+  },
+  "black_concrete": {
+    "file": "BLACK_CONCRETE.png",
+    "emojiName": "black_concrete"
+  },
+  "black_concrete_powder": {
+    "file": "BLACK_CONCRETE_POWDER.png",
+    "emojiName": "black_concrete_powder"
+  },
+  "black_concrete_slab": {
+    "file": "BLACK_CONCRETE_SLAB.png",
+    "emojiName": "black_concrete_slab"
+  },
+  "black_concrete_stairs": {
+    "file": "BLACK_CONCRETE_STAIRS.png",
+    "emojiName": "black_concrete_stairs"
+  },
+  "black_cushion": {
+    "file": "BLACK_CUSHION.png",
+    "emojiName": "black_cushion"
+  },
+  "black_dye": {
+    "file": "BLACK_DYE.png",
+    "emojiName": "black_dye"
+  },
+  "black_glazed_terracotta": {
+    "file": "BLACK_GLAZED_TERRACOTTA.png",
+    "emojiName": "black_glazed_terracotta"
+  },
+  "black_harness": {
+    "file": "BLACK_HARNESS.png",
+    "emojiName": "black_harness"
+  },
+  "black_shulker_box": {
+    "file": "BLACK_SHULKER_BOX.png",
+    "emojiName": "black_shulker_box"
+  },
+  "black_stained_glass": {
+    "file": "BLACK_STAINED_GLASS.png",
+    "emojiName": "black_stained_glass"
+  },
+  "black_stained_glass_pane": {
+    "file": "BLACK_STAINED_GLASS_PANE.png",
+    "emojiName": "black_stained_glass_pane"
+  },
+  "black_terracotta": {
+    "file": "BLACK_TERRACOTTA.png",
+    "emojiName": "black_terracotta"
+  },
+  "black_wool": {
+    "file": "BLACK_WOOL.png",
+    "emojiName": "black_wool"
+  },
+  "black_wool_slab": {
+    "file": "BLACK_WOOL_SLAB.png",
+    "emojiName": "black_wool_slab"
+  },
+  "black_wool_stairs": {
+    "file": "BLACK_WOOL_STAIRS.png",
+    "emojiName": "black_wool_stairs"
+  },
+  "blade_pottery_sherd": {
+    "file": "BLADE_POTTERY_SHERD.png",
+    "emojiName": "blade_pottery_sherd"
+  },
+  "blast_furnace": {
+    "file": "BLAST_FURNACE.png",
+    "emojiName": "blast_furnace"
+  },
+  "blaze_powder": {
+    "file": "BLAZE_POWDER.png",
+    "emojiName": "blaze_powder"
+  },
+  "blaze_rod": {
+    "file": "BLAZE_ROD.png",
+    "emojiName": "blaze_rod"
+  },
+  "blaze_spawn_egg": {
+    "file": "BLAZE_SPAWN_EGG.png",
+    "emojiName": "blaze_spawn_egg"
+  },
+  "blue_banner": {
+    "file": "BLUE_BANNER.png",
+    "emojiName": "blue_banner"
+  },
+  "blue_bed": {
+    "file": "BLUE_BED.png",
+    "emojiName": "blue_bed"
+  },
+  "blue_bundle": {
+    "file": "BLUE_BUNDLE.png",
+    "emojiName": "blue_bundle"
+  },
+  "blue_candle": {
+    "file": "BLUE_CANDLE.png",
+    "emojiName": "blue_candle"
+  },
+  "blue_carpet": {
+    "file": "BLUE_CARPET.png",
+    "emojiName": "blue_carpet"
+  },
+  "blue_concrete": {
+    "file": "BLUE_CONCRETE.png",
+    "emojiName": "blue_concrete"
+  },
+  "blue_concrete_powder": {
+    "file": "BLUE_CONCRETE_POWDER.png",
+    "emojiName": "blue_concrete_powder"
+  },
+  "blue_concrete_slab": {
+    "file": "BLUE_CONCRETE_SLAB.png",
+    "emojiName": "blue_concrete_slab"
+  },
+  "blue_concrete_stairs": {
+    "file": "BLUE_CONCRETE_STAIRS.png",
+    "emojiName": "blue_concrete_stairs"
+  },
+  "blue_cushion": {
+    "file": "BLUE_CUSHION.png",
+    "emojiName": "blue_cushion"
+  },
+  "blue_dye": {
+    "file": "BLUE_DYE.png",
+    "emojiName": "blue_dye"
+  },
+  "blue_egg": {
+    "file": "BLUE_EGG.png",
+    "emojiName": "blue_egg"
+  },
+  "blue_glazed_terracotta": {
+    "file": "BLUE_GLAZED_TERRACOTTA.png",
+    "emojiName": "blue_glazed_terracotta"
+  },
+  "blue_harness": {
+    "file": "BLUE_HARNESS.png",
+    "emojiName": "blue_harness"
+  },
+  "blue_ice": {
+    "file": "BLUE_ICE.png",
+    "emojiName": "blue_ice"
+  },
+  "blue_orchid": {
+    "file": "BLUE_ORCHID.png",
+    "emojiName": "blue_orchid"
+  },
+  "blue_shulker_box": {
+    "file": "BLUE_SHULKER_BOX.png",
+    "emojiName": "blue_shulker_box"
+  },
+  "blue_stained_glass": {
+    "file": "BLUE_STAINED_GLASS.png",
+    "emojiName": "blue_stained_glass"
+  },
+  "blue_stained_glass_pane": {
+    "file": "BLUE_STAINED_GLASS_PANE.png",
+    "emojiName": "blue_stained_glass_pane"
+  },
+  "blue_terracotta": {
+    "file": "BLUE_TERRACOTTA.png",
+    "emojiName": "blue_terracotta"
+  },
+  "blue_wool": {
+    "file": "BLUE_WOOL.png",
+    "emojiName": "blue_wool"
+  },
+  "blue_wool_slab": {
+    "file": "BLUE_WOOL_SLAB.png",
+    "emojiName": "blue_wool_slab"
+  },
+  "blue_wool_stairs": {
+    "file": "BLUE_WOOL_STAIRS.png",
+    "emojiName": "blue_wool_stairs"
+  },
+  "bogged_spawn_egg": {
+    "file": "BOGGED_SPAWN_EGG.png",
+    "emojiName": "bogged_spawn_egg"
+  },
+  "bolt_armor_trim_smithing_template": {
+    "file": "BOLT_ARMOR_TRIM_SMITHING_TEMPLATE.png",
+    "emojiName": "bolt_armor_trim_template"
+  },
+  "bone": {
+    "file": "BONE.png",
+    "emojiName": "bone"
+  },
+  "bone_block": {
+    "file": "BONE_BLOCK.png",
+    "emojiName": "bone_block"
+  },
+  "bone_meal": {
+    "file": "BONE_MEAL.png",
+    "emojiName": "bone_meal"
+  },
+  "book": {
+    "file": "BOOK.png",
+    "emojiName": "book"
+  },
+  "bookshelf": {
+    "file": "BOOKSHELF.png",
+    "emojiName": "bookshelf"
+  },
+  "bow": {
+    "file": "BOW.png",
+    "emojiName": "bow"
+  },
+  "bowl": {
+    "file": "BOWL.png",
+    "emojiName": "bowl"
+  },
+  "brain_coral": {
+    "file": "BRAIN_CORAL.png",
+    "emojiName": "brain_coral"
+  },
+  "brain_coral_block": {
+    "file": "BRAIN_CORAL_BLOCK.png",
+    "emojiName": "brain_coral_block"
+  },
+  "brain_coral_fan": {
+    "file": "BRAIN_CORAL_FAN.png",
+    "emojiName": "brain_coral_fan"
+  },
+  "bread": {
+    "file": "BREAD.png",
+    "emojiName": "bread"
+  },
+  "breeze_rod": {
+    "file": "BREEZE_ROD.png",
+    "emojiName": "breeze_rod"
+  },
+  "breeze_spawn_egg": {
+    "file": "BREEZE_SPAWN_EGG.png",
+    "emojiName": "breeze_spawn_egg"
+  },
+  "brewer_pottery_sherd": {
+    "file": "BREWER_POTTERY_SHERD.png",
+    "emojiName": "brewer_pottery_sherd"
+  },
+  "brewing_stand": {
+    "file": "BREWING_STAND.png",
+    "emojiName": "brewing_stand"
+  },
+  "brick": {
+    "file": "BRICK.png",
+    "emojiName": "brick"
+  },
+  "bricks": {
+    "file": "BRICKS.png",
+    "emojiName": "bricks"
+  },
+  "brick_slab": {
+    "file": "BRICK_SLAB.png",
+    "emojiName": "brick_slab"
+  },
+  "brick_stairs": {
+    "file": "BRICK_STAIRS.png",
+    "emojiName": "brick_stairs"
+  },
+  "brick_wall": {
+    "file": "BRICK_WALL.png",
+    "emojiName": "brick_wall"
+  },
+  "brown_banner": {
+    "file": "BROWN_BANNER.png",
+    "emojiName": "brown_banner"
+  },
+  "brown_bed": {
+    "file": "BROWN_BED.png",
+    "emojiName": "brown_bed"
+  },
+  "brown_bundle": {
+    "file": "BROWN_BUNDLE.png",
+    "emojiName": "brown_bundle"
+  },
+  "brown_candle": {
+    "file": "BROWN_CANDLE.png",
+    "emojiName": "brown_candle"
+  },
+  "brown_carpet": {
+    "file": "BROWN_CARPET.png",
+    "emojiName": "brown_carpet"
+  },
+  "brown_concrete": {
+    "file": "BROWN_CONCRETE.png",
+    "emojiName": "brown_concrete"
+  },
+  "brown_concrete_powder": {
+    "file": "BROWN_CONCRETE_POWDER.png",
+    "emojiName": "brown_concrete_powder"
+  },
+  "brown_concrete_slab": {
+    "file": "BROWN_CONCRETE_SLAB.png",
+    "emojiName": "brown_concrete_slab"
+  },
+  "brown_concrete_stairs": {
+    "file": "BROWN_CONCRETE_STAIRS.png",
+    "emojiName": "brown_concrete_stairs"
+  },
+  "brown_cushion": {
+    "file": "BROWN_CUSHION.png",
+    "emojiName": "brown_cushion"
+  },
+  "brown_dye": {
+    "file": "BROWN_DYE.png",
+    "emojiName": "brown_dye"
+  },
+  "brown_egg": {
+    "file": "BROWN_EGG.png",
+    "emojiName": "brown_egg"
+  },
+  "brown_glazed_terracotta": {
+    "file": "BROWN_GLAZED_TERRACOTTA.png",
+    "emojiName": "brown_glazed_terracotta"
+  },
+  "brown_harness": {
+    "file": "BROWN_HARNESS.png",
+    "emojiName": "brown_harness"
+  },
+  "brown_mushroom": {
+    "file": "BROWN_MUSHROOM.png",
+    "emojiName": "brown_mushroom"
+  },
+  "brown_mushroom_block": {
+    "file": "BROWN_MUSHROOM_BLOCK.png",
+    "emojiName": "brown_mushroom_block"
+  },
+  "brown_shulker_box": {
+    "file": "BROWN_SHULKER_BOX.png",
+    "emojiName": "brown_shulker_box"
+  },
+  "brown_stained_glass": {
+    "file": "BROWN_STAINED_GLASS.png",
+    "emojiName": "brown_stained_glass"
+  },
+  "brown_stained_glass_pane": {
+    "file": "BROWN_STAINED_GLASS_PANE.png",
+    "emojiName": "brown_stained_glass_pane"
+  },
+  "brown_terracotta": {
+    "file": "BROWN_TERRACOTTA.png",
+    "emojiName": "brown_terracotta"
+  },
+  "brown_wool": {
+    "file": "BROWN_WOOL.png",
+    "emojiName": "brown_wool"
+  },
+  "brown_wool_slab": {
+    "file": "BROWN_WOOL_SLAB.png",
+    "emojiName": "brown_wool_slab"
+  },
+  "brown_wool_stairs": {
+    "file": "BROWN_WOOL_STAIRS.png",
+    "emojiName": "brown_wool_stairs"
+  },
+  "brush": {
+    "file": "BRUSH.png",
+    "emojiName": "brush"
+  },
+  "bubble_coral": {
+    "file": "BUBBLE_CORAL.png",
+    "emojiName": "bubble_coral"
+  },
+  "bubble_coral_block": {
+    "file": "BUBBLE_CORAL_BLOCK.png",
+    "emojiName": "bubble_coral_block"
+  },
+  "bubble_coral_fan": {
+    "file": "BUBBLE_CORAL_FAN.png",
+    "emojiName": "bubble_coral_fan"
+  },
+  "bucket": {
+    "file": "BUCKET.png",
+    "emojiName": "bucket"
+  },
+  "budding_amethyst": {
+    "file": "BUDDING_AMETHYST.png",
+    "emojiName": "budding_amethyst"
+  },
+  "bundle": {
+    "file": "BUNDLE.png",
+    "emojiName": "bundle"
+  },
+  "buried_treasure_map": {
+    "file": "BURIED_TREASURE_MAP.png",
+    "emojiName": "buried_treasure_map"
+  },
+  "burn_pottery_sherd": {
+    "file": "BURN_POTTERY_SHERD.png",
+    "emojiName": "burn_pottery_sherd"
+  },
+  "bush": {
+    "file": "BUSH.png",
+    "emojiName": "bush"
+  },
+  "cactus": {
+    "file": "CACTUS.png",
+    "emojiName": "cactus"
+  },
+  "cactus_flower": {
+    "file": "CACTUS_FLOWER.png",
+    "emojiName": "cactus_flower"
+  },
+  "cake": {
+    "file": "CAKE.png",
+    "emojiName": "cake"
+  },
+  "calcite": {
+    "file": "CALCITE.png",
+    "emojiName": "calcite"
+  },
+  "calibrated_sculk_sensor": {
+    "file": "CALIBRATED_SCULK_SENSOR.png",
+    "emojiName": "calibrated_sculk_sensor"
+  },
+  "camel_husk_spawn_egg": {
+    "file": "CAMEL_HUSK_SPAWN_EGG.png",
+    "emojiName": "camel_husk_spawn_egg"
+  },
+  "camel_spawn_egg": {
+    "file": "CAMEL_SPAWN_EGG.png",
+    "emojiName": "camel_spawn_egg"
+  },
+  "campfire": {
+    "file": "CAMPFIRE.png",
+    "emojiName": "campfire"
+  },
+  "candle": {
+    "file": "CANDLE.png",
+    "emojiName": "candle"
+  },
+  "carrot": {
+    "file": "CARROT.png",
+    "emojiName": "carrot"
+  },
+  "carrot_on_a_stick": {
+    "file": "CARROT_ON_A_STICK.png",
+    "emojiName": "carrot_on_a_stick"
+  },
+  "cartography_table": {
+    "file": "CARTOGRAPHY_TABLE.png",
+    "emojiName": "cartography_table"
+  },
+  "carved_pumpkin": {
+    "file": "CARVED_PUMPKIN.png",
+    "emojiName": "carved_pumpkin"
+  },
+  "cat_spawn_egg": {
+    "file": "CAT_SPAWN_EGG.png",
+    "emojiName": "cat_spawn_egg"
+  },
+  "cauldron": {
+    "file": "CAULDRON.png",
+    "emojiName": "cauldron"
+  },
+  "cave_spider_spawn_egg": {
+    "file": "CAVE_SPIDER_SPAWN_EGG.png",
+    "emojiName": "cave_spider_spawn_egg"
+  },
+  "chainmail_boots": {
+    "file": "CHAINMAIL_BOOTS.png",
+    "emojiName": "chainmail_boots"
+  },
+  "chainmail_chestplate": {
+    "file": "CHAINMAIL_CHESTPLATE.png",
+    "emojiName": "chainmail_chestplate"
+  },
+  "chainmail_helmet": {
+    "file": "CHAINMAIL_HELMET.png",
+    "emojiName": "chainmail_helmet"
+  },
+  "chainmail_leggings": {
+    "file": "CHAINMAIL_LEGGINGS.png",
+    "emojiName": "chainmail_leggings"
+  },
+  "chain_command_block": {
+    "file": "CHAIN_COMMAND_BLOCK.png",
+    "emojiName": "chain_command_block"
+  },
+  "charcoal": {
+    "file": "CHARCOAL.png",
+    "emojiName": "charcoal"
+  },
+  "cherry_boat": {
+    "file": "CHERRY_BOAT.png",
+    "emojiName": "cherry_boat"
+  },
+  "cherry_button": {
+    "file": "CHERRY_BUTTON.png",
+    "emojiName": "cherry_button"
+  },
+  "cherry_chest_boat": {
+    "file": "CHERRY_CHEST_BOAT.png",
+    "emojiName": "cherry_chest_boat"
+  },
+  "cherry_door": {
+    "file": "CHERRY_DOOR.png",
+    "emojiName": "cherry_door"
+  },
+  "cherry_fence": {
+    "file": "CHERRY_FENCE.png",
+    "emojiName": "cherry_fence"
+  },
+  "cherry_fence_gate": {
+    "file": "CHERRY_FENCE_GATE.png",
+    "emojiName": "cherry_fence_gate"
+  },
+  "cherry_hanging_sign": {
+    "file": "CHERRY_HANGING_SIGN.png",
+    "emojiName": "cherry_hanging_sign"
+  },
+  "cherry_leaves": {
+    "file": "CHERRY_LEAVES.png",
+    "emojiName": "cherry_leaves"
+  },
+  "cherry_log": {
+    "file": "CHERRY_LOG.png",
+    "emojiName": "cherry_log"
+  },
+  "cherry_planks": {
+    "file": "CHERRY_PLANKS.png",
+    "emojiName": "cherry_planks"
+  },
+  "cherry_pressure_plate": {
+    "file": "CHERRY_PRESSURE_PLATE.png",
+    "emojiName": "cherry_pressure_plate"
+  },
+  "cherry_sapling": {
+    "file": "CHERRY_SAPLING.png",
+    "emojiName": "cherry_sapling"
+  },
+  "cherry_shelf": {
+    "file": "CHERRY_SHELF.png",
+    "emojiName": "cherry_shelf"
+  },
+  "cherry_sign": {
+    "file": "CHERRY_SIGN.png",
+    "emojiName": "cherry_sign"
+  },
+  "cherry_slab": {
+    "file": "CHERRY_SLAB.png",
+    "emojiName": "cherry_slab"
+  },
+  "cherry_stairs": {
+    "file": "CHERRY_STAIRS.png",
+    "emojiName": "cherry_stairs"
+  },
+  "cherry_trapdoor": {
+    "file": "CHERRY_TRAPDOOR.png",
+    "emojiName": "cherry_trapdoor"
+  },
+  "cherry_wood": {
+    "file": "CHERRY_WOOD.png",
+    "emojiName": "cherry_wood"
+  },
+  "chest": {
+    "file": "CHEST.png",
+    "emojiName": "chest"
+  },
+  "chest_minecart": {
+    "file": "CHEST_MINECART.png",
+    "emojiName": "chest_minecart"
+  },
+  "chicken": {
+    "file": "CHICKEN.png",
+    "emojiName": "chicken"
+  },
+  "chicken_spawn_egg": {
+    "file": "CHICKEN_SPAWN_EGG.png",
+    "emojiName": "chicken_spawn_egg"
+  },
+  "chipped_anvil": {
+    "file": "CHIPPED_ANVIL.png",
+    "emojiName": "chipped_anvil"
+  },
+  "chiseled_bookshelf": {
+    "file": "CHISELED_BOOKSHELF.png",
+    "emojiName": "chiseled_bookshelf"
+  },
+  "chiseled_cinnabar": {
+    "file": "CHISELED_CINNABAR.png",
+    "emojiName": "chiseled_cinnabar"
+  },
+  "chiseled_copper": {
+    "file": "CHISELED_COPPER.png",
+    "emojiName": "chiseled_copper"
+  },
+  "chiseled_deepslate": {
+    "file": "CHISELED_DEEPSLATE.png",
+    "emojiName": "chiseled_deepslate"
+  },
+  "chiseled_nether_bricks": {
+    "file": "CHISELED_NETHER_BRICKS.png",
+    "emojiName": "chiseled_nether_bricks"
+  },
+  "chiseled_polished_blackstone": {
+    "file": "CHISELED_POLISHED_BLACKSTONE.png",
+    "emojiName": "chiseled_polished_blackstone"
+  },
+  "chiseled_quartz_block": {
+    "file": "CHISELED_QUARTZ_BLOCK.png",
+    "emojiName": "chiseled_quartz_block"
+  },
+  "chiseled_red_sandstone": {
+    "file": "CHISELED_RED_SANDSTONE.png",
+    "emojiName": "chiseled_red_sandstone"
+  },
+  "chiseled_resin_bricks": {
+    "file": "CHISELED_RESIN_BRICKS.png",
+    "emojiName": "chiseled_resin_bricks"
+  },
+  "chiseled_sandstone": {
+    "file": "CHISELED_SANDSTONE.png",
+    "emojiName": "chiseled_sandstone"
+  },
+  "chiseled_stone_bricks": {
+    "file": "CHISELED_STONE_BRICKS.png",
+    "emojiName": "chiseled_stone_bricks"
+  },
+  "chiseled_sulfur": {
+    "file": "CHISELED_SULFUR.png",
+    "emojiName": "chiseled_sulfur"
+  },
+  "chiseled_tuff": {
+    "file": "CHISELED_TUFF.png",
+    "emojiName": "chiseled_tuff"
+  },
+  "chiseled_tuff_bricks": {
+    "file": "CHISELED_TUFF_BRICKS.png",
+    "emojiName": "chiseled_tuff_bricks"
+  },
+  "chorus_flower": {
+    "file": "CHORUS_FLOWER.png",
+    "emojiName": "chorus_flower"
+  },
+  "chorus_fruit": {
+    "file": "CHORUS_FRUIT.png",
+    "emojiName": "chorus_fruit"
+  },
+  "chorus_plant": {
+    "file": "CHORUS_PLANT.png",
+    "emojiName": "chorus_plant"
+  },
+  "cinnabar_bricks": {
+    "file": "CINNABAR_BRICKS.png",
+    "emojiName": "cinnabar_bricks"
+  },
+  "cinnabar_brick_slab": {
+    "file": "CINNABAR_BRICK_SLAB.png",
+    "emojiName": "cinnabar_brick_slab"
+  },
+  "cinnabar_brick_stairs": {
+    "file": "CINNABAR_BRICK_STAIRS.png",
+    "emojiName": "cinnabar_brick_stairs"
+  },
+  "cinnabar_brick_wall": {
+    "file": "CINNABAR_BRICK_WALL.png",
+    "emojiName": "cinnabar_brick_wall"
+  },
+  "cinnabar_slab": {
+    "file": "CINNABAR_SLAB.png",
+    "emojiName": "cinnabar_slab"
+  },
+  "cinnabar_stairs": {
+    "file": "CINNABAR_STAIRS.png",
+    "emojiName": "cinnabar_stairs"
+  },
+  "cinnabar_wall": {
+    "file": "CINNABAR_WALL.png",
+    "emojiName": "cinnabar_wall"
+  },
+  "clay": {
+    "file": "CLAY.png",
+    "emojiName": "clay"
+  },
+  "clay_ball": {
+    "file": "CLAY_BALL.png",
+    "emojiName": "clay_ball"
+  },
+  "clock": {
+    "file": "CLOCK.png",
+    "emojiName": "clock"
+  },
+  "closed_eyeblossom": {
+    "file": "CLOSED_EYEBLOSSOM.png",
+    "emojiName": "closed_eyeblossom"
+  },
+  "coal": {
+    "file": "COAL.png",
+    "emojiName": "coal"
+  },
+  "coal_block": {
+    "file": "COAL_BLOCK.png",
+    "emojiName": "coal_block"
+  },
+  "coal_ore": {
+    "file": "COAL_ORE.png",
+    "emojiName": "coal_ore"
+  },
+  "coarse_dirt": {
+    "file": "COARSE_DIRT.png",
+    "emojiName": "coarse_dirt"
+  },
+  "coast_armor_trim_smithing_template": {
+    "file": "COAST_ARMOR_TRIM_SMITHING_TEMPLATE.png",
+    "emojiName": "coast_armor_trim_template"
+  },
+  "cobbled_deepslate": {
+    "file": "COBBLED_DEEPSLATE.png",
+    "emojiName": "cobbled_deepslate"
+  },
+  "cobbled_deepslate_slab": {
+    "file": "COBBLED_DEEPSLATE_SLAB.png",
+    "emojiName": "cobbled_deepslate_slab"
+  },
+  "cobbled_deepslate_stairs": {
+    "file": "COBBLED_DEEPSLATE_STAIRS.png",
+    "emojiName": "cobbled_deepslate_stairs"
+  },
+  "cobbled_deepslate_wall": {
+    "file": "COBBLED_DEEPSLATE_WALL.png",
+    "emojiName": "cobbled_deepslate_wall"
+  },
+  "cobblestone": {
+    "file": "COBBLESTONE.png",
+    "emojiName": "cobblestone"
+  },
+  "cobblestone_slab": {
+    "file": "COBBLESTONE_SLAB.png",
+    "emojiName": "cobblestone_slab"
+  },
+  "cobblestone_stairs": {
+    "file": "COBBLESTONE_STAIRS.png",
+    "emojiName": "cobblestone_stairs"
+  },
+  "cobblestone_wall": {
+    "file": "COBBLESTONE_WALL.png",
+    "emojiName": "cobblestone_wall"
+  },
+  "cobweb": {
+    "file": "COBWEB.png",
+    "emojiName": "cobweb"
+  },
+  "cocoa_beans": {
+    "file": "COCOA_BEANS.png",
+    "emojiName": "cocoa_beans"
+  },
+  "cod": {
+    "file": "COD.png",
+    "emojiName": "cod"
+  },
+  "cod_bucket": {
+    "file": "COD_BUCKET.png",
+    "emojiName": "cod_bucket"
+  },
+  "cod_spawn_egg": {
+    "file": "COD_SPAWN_EGG.png",
+    "emojiName": "cod_spawn_egg"
+  },
+  "command_block": {
+    "file": "COMMAND_BLOCK.png",
+    "emojiName": "command_block"
+  },
+  "command_block_minecart": {
+    "file": "COMMAND_BLOCK_MINECART.png",
+    "emojiName": "command_block_minecart"
+  },
+  "comparator": {
+    "file": "COMPARATOR.png",
+    "emojiName": "comparator"
+  },
+  "compass": {
+    "file": "COMPASS.png",
+    "emojiName": "compass"
+  },
+  "composter": {
+    "file": "COMPOSTER.png",
+    "emojiName": "composter"
+  },
+  "conduit": {
+    "file": "CONDUIT.png",
+    "emojiName": "conduit"
+  },
+  "cooked_beef": {
+    "file": "COOKED_BEEF.png",
+    "emojiName": "cooked_beef"
+  },
+  "cooked_chicken": {
+    "file": "COOKED_CHICKEN.png",
+    "emojiName": "cooked_chicken"
+  },
+  "cooked_cod": {
+    "file": "COOKED_COD.png",
+    "emojiName": "cooked_cod"
+  },
+  "cooked_mutton": {
+    "file": "COOKED_MUTTON.png",
+    "emojiName": "cooked_mutton"
+  },
+  "cooked_porkchop": {
+    "file": "COOKED_PORKCHOP.png",
+    "emojiName": "cooked_porkchop"
+  },
+  "cooked_rabbit": {
+    "file": "COOKED_RABBIT.png",
+    "emojiName": "cooked_rabbit"
+  },
+  "cooked_salmon": {
+    "file": "COOKED_SALMON.png",
+    "emojiName": "cooked_salmon"
+  },
+  "cookie": {
+    "file": "COOKIE.png",
+    "emojiName": "cookie"
+  },
+  "copper_axe": {
+    "file": "COPPER_AXE.png",
+    "emojiName": "copper_axe"
+  },
+  "copper_block": {
+    "file": "COPPER_BLOCK.png",
+    "emojiName": "copper_block"
+  },
+  "copper_boots": {
+    "file": "COPPER_BOOTS.png",
+    "emojiName": "copper_boots"
+  },
+  "copper_bulb": {
+    "file": "COPPER_BULB.png",
+    "emojiName": "copper_bulb"
+  },
+  "copper_chain": {
+    "file": "COPPER_CHAIN.png",
+    "emojiName": "copper_chain"
+  },
+  "copper_chest": {
+    "file": "COPPER_CHEST.png",
+    "emojiName": "copper_chest"
+  },
+  "copper_chestplate": {
+    "file": "COPPER_CHESTPLATE.png",
+    "emojiName": "copper_chestplate"
+  },
+  "copper_door": {
+    "file": "COPPER_DOOR.png",
+    "emojiName": "copper_door"
+  },
+  "copper_golem_spawn_egg": {
+    "file": "COPPER_GOLEM_SPAWN_EGG.png",
+    "emojiName": "copper_golem_spawn_egg"
+  },
+  "copper_golem_statue": {
+    "file": "COPPER_GOLEM_STATUE.png",
+    "emojiName": "copper_golem_statue"
+  },
+  "copper_grate": {
+    "file": "COPPER_GRATE.png",
+    "emojiName": "copper_grate"
+  },
+  "copper_helmet": {
+    "file": "COPPER_HELMET.png",
+    "emojiName": "copper_helmet"
+  },
+  "copper_horse_armor": {
+    "file": "COPPER_HORSE_ARMOR.png",
+    "emojiName": "copper_horse_armor"
+  },
+  "copper_ingot": {
+    "file": "COPPER_INGOT.png",
+    "emojiName": "copper_ingot"
+  },
+  "copper_lantern": {
+    "file": "COPPER_LANTERN.png",
+    "emojiName": "copper_lantern"
+  },
+  "copper_leggings": {
+    "file": "COPPER_LEGGINGS.png",
+    "emojiName": "copper_leggings"
+  },
+  "copper_nautilus_armor": {
+    "file": "COPPER_NAUTILUS_ARMOR.png",
+    "emojiName": "copper_nautilus_armor"
+  },
+  "copper_nugget": {
+    "file": "COPPER_NUGGET.png",
+    "emojiName": "copper_nugget"
+  },
+  "copper_ore": {
+    "file": "COPPER_ORE.png",
+    "emojiName": "copper_ore"
+  },
+  "copper_pickaxe": {
+    "file": "COPPER_PICKAXE.png",
+    "emojiName": "copper_pickaxe"
+  },
+  "copper_shovel": {
+    "file": "COPPER_SHOVEL.png",
+    "emojiName": "copper_shovel"
+  },
+  "copper_spear": {
+    "file": "COPPER_SPEAR.png",
+    "emojiName": "copper_spear"
+  },
+  "copper_sword": {
+    "file": "COPPER_SWORD.png",
+    "emojiName": "copper_sword"
+  },
+  "copper_torch": {
+    "file": "COPPER_TORCH.png",
+    "emojiName": "copper_torch"
+  },
+  "copper_trapdoor": {
+    "file": "COPPER_TRAPDOOR.png",
+    "emojiName": "copper_trapdoor"
+  },
+  "cornflower": {
+    "file": "CORNFLOWER.png",
+    "emojiName": "cornflower"
+  },
+  "cow_spawn_egg": {
+    "file": "COW_SPAWN_EGG.png",
+    "emojiName": "cow_spawn_egg"
+  },
+  "cracked_deepslate_bricks": {
+    "file": "CRACKED_DEEPSLATE_BRICKS.png",
+    "emojiName": "cracked_deepslate_bricks"
+  },
+  "cracked_deepslate_tiles": {
+    "file": "CRACKED_DEEPSLATE_TILES.png",
+    "emojiName": "cracked_deepslate_tiles"
+  },
+  "cracked_nether_bricks": {
+    "file": "CRACKED_NETHER_BRICKS.png",
+    "emojiName": "cracked_nether_bricks"
+  },
+  "cracked_polished_blackstone_bricks": {
+    "file": "CRACKED_POLISHED_BLACKSTONE_BRICKS.png",
+    "emojiName": "cracked_pol_blackstone_bricks"
+  },
+  "cracked_stone_bricks": {
+    "file": "CRACKED_STONE_BRICKS.png",
+    "emojiName": "cracked_stone_bricks"
+  },
+  "crafter": {
+    "file": "CRAFTER.png",
+    "emojiName": "crafter"
+  },
+  "crafting_table": {
+    "file": "CRAFTING_TABLE.png",
+    "emojiName": "crafting_table"
+  },
+  "creaking_heart": {
+    "file": "CREAKING_HEART.png",
+    "emojiName": "creaking_heart"
+  },
+  "creaking_spawn_egg": {
+    "file": "CREAKING_SPAWN_EGG.png",
+    "emojiName": "creaking_spawn_egg"
+  },
+  "creeper_banner_pattern": {
+    "file": "CREEPER_BANNER_PATTERN.png",
+    "emojiName": "creeper_banner_pattern"
+  },
+  "creeper_head": {
+    "file": "CREEPER_HEAD.png",
+    "emojiName": "creeper_head"
+  },
+  "creeper_spawn_egg": {
+    "file": "CREEPER_SPAWN_EGG.png",
+    "emojiName": "creeper_spawn_egg"
+  },
+  "crimson_button": {
+    "file": "CRIMSON_BUTTON.png",
+    "emojiName": "crimson_button"
+  },
+  "crimson_door": {
+    "file": "CRIMSON_DOOR.png",
+    "emojiName": "crimson_door"
+  },
+  "crimson_fence": {
+    "file": "CRIMSON_FENCE.png",
+    "emojiName": "crimson_fence"
+  },
+  "crimson_fence_gate": {
+    "file": "CRIMSON_FENCE_GATE.png",
+    "emojiName": "crimson_fence_gate"
+  },
+  "crimson_fungus": {
+    "file": "CRIMSON_FUNGUS.png",
+    "emojiName": "crimson_fungus"
+  },
+  "crimson_hanging_sign": {
+    "file": "CRIMSON_HANGING_SIGN.png",
+    "emojiName": "crimson_hanging_sign"
+  },
+  "crimson_hyphae": {
+    "file": "CRIMSON_HYPHAE.png",
+    "emojiName": "crimson_hyphae"
+  },
+  "crimson_nylium": {
+    "file": "CRIMSON_NYLIUM.png",
+    "emojiName": "crimson_nylium"
+  },
+  "crimson_planks": {
+    "file": "CRIMSON_PLANKS.png",
+    "emojiName": "crimson_planks"
+  },
+  "crimson_pressure_plate": {
+    "file": "CRIMSON_PRESSURE_PLATE.png",
+    "emojiName": "crimson_pressure_plate"
+  },
+  "crimson_roots": {
+    "file": "CRIMSON_ROOTS.png",
+    "emojiName": "crimson_roots"
+  },
+  "crimson_shelf": {
+    "file": "CRIMSON_SHELF.png",
+    "emojiName": "crimson_shelf"
+  },
+  "crimson_sign": {
+    "file": "CRIMSON_SIGN.png",
+    "emojiName": "crimson_sign"
+  },
+  "crimson_slab": {
+    "file": "CRIMSON_SLAB.png",
+    "emojiName": "crimson_slab"
+  },
+  "crimson_stairs": {
+    "file": "CRIMSON_STAIRS.png",
+    "emojiName": "crimson_stairs"
+  },
+  "crimson_stem": {
+    "file": "CRIMSON_STEM.png",
+    "emojiName": "crimson_stem"
+  },
+  "crimson_trapdoor": {
+    "file": "CRIMSON_TRAPDOOR.png",
+    "emojiName": "crimson_trapdoor"
+  },
+  "crossbow": {
+    "file": "CROSSBOW.png",
+    "emojiName": "crossbow"
+  },
+  "crying_obsidian": {
+    "file": "CRYING_OBSIDIAN.png",
+    "emojiName": "crying_obsidian"
+  },
+  "cut_copper": {
+    "file": "CUT_COPPER.png",
+    "emojiName": "cut_copper"
+  },
+  "cut_copper_slab": {
+    "file": "CUT_COPPER_SLAB.png",
+    "emojiName": "cut_copper_slab"
+  },
+  "cut_copper_stairs": {
+    "file": "CUT_COPPER_STAIRS.png",
+    "emojiName": "cut_copper_stairs"
+  },
+  "cut_red_sandstone": {
+    "file": "CUT_RED_SANDSTONE.png",
+    "emojiName": "cut_red_sandstone"
+  },
+  "cut_red_sandstone_slab": {
+    "file": "CUT_RED_SANDSTONE_SLAB.png",
+    "emojiName": "cut_red_sandstone_slab"
+  },
+  "cut_sandstone": {
+    "file": "CUT_SANDSTONE.png",
+    "emojiName": "cut_sandstone"
+  },
+  "cut_sandstone_slab": {
+    "file": "CUT_SANDSTONE_SLAB.png",
+    "emojiName": "cut_sandstone_slab"
+  },
+  "cyan_banner": {
+    "file": "CYAN_BANNER.png",
+    "emojiName": "cyan_banner"
+  },
+  "cyan_bed": {
+    "file": "CYAN_BED.png",
+    "emojiName": "cyan_bed"
+  },
+  "cyan_bundle": {
+    "file": "CYAN_BUNDLE.png",
+    "emojiName": "cyan_bundle"
+  },
+  "cyan_candle": {
+    "file": "CYAN_CANDLE.png",
+    "emojiName": "cyan_candle"
+  },
+  "cyan_carpet": {
+    "file": "CYAN_CARPET.png",
+    "emojiName": "cyan_carpet"
+  },
+  "cyan_concrete": {
+    "file": "CYAN_CONCRETE.png",
+    "emojiName": "cyan_concrete"
+  },
+  "cyan_concrete_powder": {
+    "file": "CYAN_CONCRETE_POWDER.png",
+    "emojiName": "cyan_concrete_powder"
+  },
+  "cyan_concrete_slab": {
+    "file": "CYAN_CONCRETE_SLAB.png",
+    "emojiName": "cyan_concrete_slab"
+  },
+  "cyan_concrete_stairs": {
+    "file": "CYAN_CONCRETE_STAIRS.png",
+    "emojiName": "cyan_concrete_stairs"
+  },
+  "cyan_cushion": {
+    "file": "CYAN_CUSHION.png",
+    "emojiName": "cyan_cushion"
+  },
+  "cyan_dye": {
+    "file": "CYAN_DYE.png",
+    "emojiName": "cyan_dye"
+  },
+  "cyan_glazed_terracotta": {
+    "file": "CYAN_GLAZED_TERRACOTTA.png",
+    "emojiName": "cyan_glazed_terracotta"
+  },
+  "cyan_harness": {
+    "file": "CYAN_HARNESS.png",
+    "emojiName": "cyan_harness"
+  },
+  "cyan_shulker_box": {
+    "file": "CYAN_SHULKER_BOX.png",
+    "emojiName": "cyan_shulker_box"
+  },
+  "cyan_stained_glass": {
+    "file": "CYAN_STAINED_GLASS.png",
+    "emojiName": "cyan_stained_glass"
+  },
+  "cyan_stained_glass_pane": {
+    "file": "CYAN_STAINED_GLASS_PANE.png",
+    "emojiName": "cyan_stained_glass_pane"
+  },
+  "cyan_terracotta": {
+    "file": "CYAN_TERRACOTTA.png",
+    "emojiName": "cyan_terracotta"
+  },
+  "cyan_wool": {
+    "file": "CYAN_WOOL.png",
+    "emojiName": "cyan_wool"
+  },
+  "cyan_wool_slab": {
+    "file": "CYAN_WOOL_SLAB.png",
+    "emojiName": "cyan_wool_slab"
+  },
+  "cyan_wool_stairs": {
+    "file": "CYAN_WOOL_STAIRS.png",
+    "emojiName": "cyan_wool_stairs"
+  },
+  "damaged_anvil": {
+    "file": "DAMAGED_ANVIL.png",
+    "emojiName": "damaged_anvil"
+  },
+  "dandelion": {
+    "file": "DANDELION.png",
+    "emojiName": "dandelion"
+  },
+  "danger_pottery_sherd": {
+    "file": "DANGER_POTTERY_SHERD.png",
+    "emojiName": "danger_pottery_sherd"
+  },
+  "dark_oak_boat": {
+    "file": "DARK_OAK_BOAT.png",
+    "emojiName": "dark_oak_boat"
+  },
+  "dark_oak_button": {
+    "file": "DARK_OAK_BUTTON.png",
+    "emojiName": "dark_oak_button"
+  },
+  "dark_oak_chest_boat": {
+    "file": "DARK_OAK_CHEST_BOAT.png",
+    "emojiName": "dark_oak_chest_boat"
+  },
+  "dark_oak_door": {
+    "file": "DARK_OAK_DOOR.png",
+    "emojiName": "dark_oak_door"
+  },
+  "dark_oak_fence": {
+    "file": "DARK_OAK_FENCE.png",
+    "emojiName": "dark_oak_fence"
+  },
+  "dark_oak_fence_gate": {
+    "file": "DARK_OAK_FENCE_GATE.png",
+    "emojiName": "dark_oak_fence_gate"
+  },
+  "dark_oak_hanging_sign": {
+    "file": "DARK_OAK_HANGING_SIGN.png",
+    "emojiName": "dark_oak_hanging_sign"
+  },
+  "dark_oak_leaves": {
+    "file": "DARK_OAK_LEAVES.png",
+    "emojiName": "dark_oak_leaves"
+  },
+  "dark_oak_log": {
+    "file": "DARK_OAK_LOG.png",
+    "emojiName": "dark_oak_log"
+  },
+  "dark_oak_planks": {
+    "file": "DARK_OAK_PLANKS.png",
+    "emojiName": "dark_oak_planks"
+  },
+  "dark_oak_pressure_plate": {
+    "file": "DARK_OAK_PRESSURE_PLATE.png",
+    "emojiName": "dark_oak_pressure_plate"
+  },
+  "dark_oak_sapling": {
+    "file": "DARK_OAK_SAPLING.png",
+    "emojiName": "dark_oak_sapling"
+  },
+  "dark_oak_shelf": {
+    "file": "DARK_OAK_SHELF.png",
+    "emojiName": "dark_oak_shelf"
+  },
+  "dark_oak_sign": {
+    "file": "DARK_OAK_SIGN.png",
+    "emojiName": "dark_oak_sign"
+  },
+  "dark_oak_slab": {
+    "file": "DARK_OAK_SLAB.png",
+    "emojiName": "dark_oak_slab"
+  },
+  "dark_oak_stairs": {
+    "file": "DARK_OAK_STAIRS.png",
+    "emojiName": "dark_oak_stairs"
+  },
+  "dark_oak_trapdoor": {
+    "file": "DARK_OAK_TRAPDOOR.png",
+    "emojiName": "dark_oak_trapdoor"
+  },
+  "dark_oak_wood": {
+    "file": "DARK_OAK_WOOD.png",
+    "emojiName": "dark_oak_wood"
+  },
+  "dark_prismarine": {
+    "file": "DARK_PRISMARINE.png",
+    "emojiName": "dark_prismarine"
+  },
+  "dark_prismarine_slab": {
+    "file": "DARK_PRISMARINE_SLAB.png",
+    "emojiName": "dark_prismarine_slab"
+  },
+  "dark_prismarine_stairs": {
+    "file": "DARK_PRISMARINE_STAIRS.png",
+    "emojiName": "dark_prismarine_stairs"
+  },
+  "daylight_detector": {
+    "file": "DAYLIGHT_DETECTOR.png",
+    "emojiName": "daylight_detector"
+  },
+  "dead_brain_coral": {
+    "file": "DEAD_BRAIN_CORAL.png",
+    "emojiName": "dead_brain_coral"
+  },
+  "dead_brain_coral_block": {
+    "file": "DEAD_BRAIN_CORAL_BLOCK.png",
+    "emojiName": "dead_brain_coral_block"
+  },
+  "dead_brain_coral_fan": {
+    "file": "DEAD_BRAIN_CORAL_FAN.png",
+    "emojiName": "dead_brain_coral_fan"
+  },
+  "dead_bubble_coral": {
+    "file": "DEAD_BUBBLE_CORAL.png",
+    "emojiName": "dead_bubble_coral"
+  },
+  "dead_bubble_coral_block": {
+    "file": "DEAD_BUBBLE_CORAL_BLOCK.png",
+    "emojiName": "dead_bubble_coral_block"
+  },
+  "dead_bubble_coral_fan": {
+    "file": "DEAD_BUBBLE_CORAL_FAN.png",
+    "emojiName": "dead_bubble_coral_fan"
+  },
+  "dead_bush": {
+    "file": "DEAD_BUSH.png",
+    "emojiName": "dead_bush"
+  },
+  "dead_fire_coral": {
+    "file": "DEAD_FIRE_CORAL.png",
+    "emojiName": "dead_fire_coral"
+  },
+  "dead_fire_coral_block": {
+    "file": "DEAD_FIRE_CORAL_BLOCK.png",
+    "emojiName": "dead_fire_coral_block"
+  },
+  "dead_fire_coral_fan": {
+    "file": "DEAD_FIRE_CORAL_FAN.png",
+    "emojiName": "dead_fire_coral_fan"
+  },
+  "dead_horn_coral": {
+    "file": "DEAD_HORN_CORAL.png",
+    "emojiName": "dead_horn_coral"
+  },
+  "dead_horn_coral_block": {
+    "file": "DEAD_HORN_CORAL_BLOCK.png",
+    "emojiName": "dead_horn_coral_block"
+  },
+  "dead_horn_coral_fan": {
+    "file": "DEAD_HORN_CORAL_FAN.png",
+    "emojiName": "dead_horn_coral_fan"
+  },
+  "dead_tube_coral": {
+    "file": "DEAD_TUBE_CORAL.png",
+    "emojiName": "dead_tube_coral"
+  },
+  "dead_tube_coral_block": {
+    "file": "DEAD_TUBE_CORAL_BLOCK.png",
+    "emojiName": "dead_tube_coral_block"
+  },
+  "dead_tube_coral_fan": {
+    "file": "DEAD_TUBE_CORAL_FAN.png",
+    "emojiName": "dead_tube_coral_fan"
+  },
+  "debug_stick": {
+    "file": "DEBUG_STICK.png",
+    "emojiName": "debug_stick"
+  },
+  "decorated_pot": {
+    "file": "DECORATED_POT.png",
+    "emojiName": "decorated_pot"
+  },
+  "deepslate": {
+    "file": "DEEPSLATE.png",
+    "emojiName": "deepslate"
+  },
+  "deepslate_bricks": {
+    "file": "DEEPSLATE_BRICKS.png",
+    "emojiName": "deepslate_bricks"
+  },
+  "deepslate_brick_slab": {
+    "file": "DEEPSLATE_BRICK_SLAB.png",
+    "emojiName": "deepslate_brick_slab"
+  },
+  "deepslate_brick_stairs": {
+    "file": "DEEPSLATE_BRICK_STAIRS.png",
+    "emojiName": "deepslate_brick_stairs"
+  },
+  "deepslate_brick_wall": {
+    "file": "DEEPSLATE_BRICK_WALL.png",
+    "emojiName": "deepslate_brick_wall"
+  },
+  "deepslate_coal_ore": {
+    "file": "DEEPSLATE_COAL_ORE.png",
+    "emojiName": "deepslate_coal_ore"
+  },
+  "deepslate_copper_ore": {
+    "file": "DEEPSLATE_COPPER_ORE.png",
+    "emojiName": "deepslate_copper_ore"
+  },
+  "deepslate_diamond_ore": {
+    "file": "DEEPSLATE_DIAMOND_ORE.png",
+    "emojiName": "deepslate_diamond_ore"
+  },
+  "deepslate_emerald_ore": {
+    "file": "DEEPSLATE_EMERALD_ORE.png",
+    "emojiName": "deepslate_emerald_ore"
+  },
+  "deepslate_gold_ore": {
+    "file": "DEEPSLATE_GOLD_ORE.png",
+    "emojiName": "deepslate_gold_ore"
+  },
+  "deepslate_iron_ore": {
+    "file": "DEEPSLATE_IRON_ORE.png",
+    "emojiName": "deepslate_iron_ore"
+  },
+  "deepslate_lapis_ore": {
+    "file": "DEEPSLATE_LAPIS_ORE.png",
+    "emojiName": "deepslate_lapis_ore"
+  },
+  "deepslate_redstone_ore": {
+    "file": "DEEPSLATE_REDSTONE_ORE.png",
+    "emojiName": "deepslate_redstone_ore"
+  },
+  "deepslate_tiles": {
+    "file": "DEEPSLATE_TILES.png",
+    "emojiName": "deepslate_tiles"
+  },
+  "deepslate_tile_slab": {
+    "file": "DEEPSLATE_TILE_SLAB.png",
+    "emojiName": "deepslate_tile_slab"
+  },
+  "deepslate_tile_stairs": {
+    "file": "DEEPSLATE_TILE_STAIRS.png",
+    "emojiName": "deepslate_tile_stairs"
+  },
+  "deepslate_tile_wall": {
+    "file": "DEEPSLATE_TILE_WALL.png",
+    "emojiName": "deepslate_tile_wall"
+  },
+  "desert_pyramid_map": {
+    "file": "DESERT_PYRAMID_MAP.png",
+    "emojiName": "desert_pyramid_map"
+  },
+  "desert_village_map": {
+    "file": "DESERT_VILLAGE_MAP.png",
+    "emojiName": "desert_village_map"
+  },
+  "detector_rail": {
+    "file": "DETECTOR_RAIL.png",
+    "emojiName": "detector_rail"
+  },
+  "diamond": {
+    "file": "DIAMOND.png",
+    "emojiName": "diamond"
+  },
+  "diamond_axe": {
+    "file": "DIAMOND_AXE.png",
+    "emojiName": "diamond_axe"
+  },
+  "diamond_block": {
+    "file": "DIAMOND_BLOCK.png",
+    "emojiName": "diamond_block"
+  },
+  "diamond_boots": {
+    "file": "DIAMOND_BOOTS.png",
+    "emojiName": "diamond_boots"
+  },
+  "diamond_chestplate": {
+    "file": "DIAMOND_CHESTPLATE.png",
+    "emojiName": "diamond_chestplate"
+  },
+  "diamond_helmet": {
+    "file": "DIAMOND_HELMET.png",
+    "emojiName": "diamond_helmet"
+  },
+  "diamond_hoe": {
+    "file": "DIAMOND_HOE.png",
+    "emojiName": "diamond_hoe"
+  },
+  "diamond_horse_armor": {
+    "file": "DIAMOND_HORSE_ARMOR.png",
+    "emojiName": "diamond_horse_armor"
+  },
+  "diamond_leggings": {
+    "file": "DIAMOND_LEGGINGS.png",
+    "emojiName": "diamond_leggings"
+  },
+  "diamond_nautilus_armor": {
+    "file": "DIAMOND_NAUTILUS_ARMOR.png",
+    "emojiName": "diamond_nautilus_armor"
+  },
+  "diamond_ore": {
+    "file": "DIAMOND_ORE.png",
+    "emojiName": "diamond_ore"
+  },
+  "diamond_pickaxe": {
+    "file": "DIAMOND_PICKAXE.png",
+    "emojiName": "diamond_pickaxe"
+  },
+  "diamond_shovel": {
+    "file": "DIAMOND_SHOVEL.png",
+    "emojiName": "diamond_shovel"
+  },
+  "diamond_spear": {
+    "file": "DIAMOND_SPEAR.png",
+    "emojiName": "diamond_spear"
+  },
+  "diamond_sword": {
+    "file": "DIAMOND_SWORD.png",
+    "emojiName": "diamond_sword"
+  },
+  "diorite": {
+    "file": "DIORITE.png",
+    "emojiName": "diorite"
+  },
+  "diorite_slab": {
+    "file": "DIORITE_SLAB.png",
+    "emojiName": "diorite_slab"
+  },
+  "diorite_stairs": {
+    "file": "DIORITE_STAIRS.png",
+    "emojiName": "diorite_stairs"
+  },
+  "diorite_wall": {
+    "file": "DIORITE_WALL.png",
+    "emojiName": "diorite_wall"
+  },
+  "dirt": {
+    "file": "DIRT.png",
+    "emojiName": "dirt"
+  },
+  "dirt_path": {
+    "file": "DIRT_PATH.png",
+    "emojiName": "dirt_path"
+  },
+  "disc_fragment_5": {
+    "file": "DISC_FRAGMENT_5.png",
+    "emojiName": "disc_fragment_5"
+  },
+  "dispenser": {
+    "file": "DISPENSER.png",
+    "emojiName": "dispenser"
+  },
+  "dolphin_spawn_egg": {
+    "file": "DOLPHIN_SPAWN_EGG.png",
+    "emojiName": "dolphin_spawn_egg"
+  },
+  "donkey_spawn_egg": {
+    "file": "DONKEY_SPAWN_EGG.png",
+    "emojiName": "donkey_spawn_egg"
+  },
+  "dragon_breath": {
+    "file": "DRAGON_BREATH.png",
+    "emojiName": "dragon_breath"
+  },
+  "dragon_egg": {
+    "file": "DRAGON_EGG.png",
+    "emojiName": "dragon_egg"
+  },
+  "dragon_head": {
+    "file": "DRAGON_HEAD.png",
+    "emojiName": "dragon_head"
+  },
+  "dried_ghast": {
+    "file": "DRIED_GHAST.png",
+    "emojiName": "dried_ghast"
+  },
+  "dried_kelp": {
+    "file": "DRIED_KELP.png",
+    "emojiName": "dried_kelp"
+  },
+  "dried_kelp_block": {
+    "file": "DRIED_KELP_BLOCK.png",
+    "emojiName": "dried_kelp_block"
+  },
+  "dripstone_block": {
+    "file": "DRIPSTONE_BLOCK.png",
+    "emojiName": "dripstone_block"
+  },
+  "dropper": {
+    "file": "DROPPER.png",
+    "emojiName": "dropper"
+  },
+  "drowned_spawn_egg": {
+    "file": "DROWNED_SPAWN_EGG.png",
+    "emojiName": "drowned_spawn_egg"
+  },
+  "dune_armor_trim_smithing_template": {
+    "file": "DUNE_ARMOR_TRIM_SMITHING_TEMPLATE.png",
+    "emojiName": "dune_armor_trim_template"
+  },
+  "echo_shard": {
+    "file": "ECHO_SHARD.png",
+    "emojiName": "echo_shard"
+  },
+  "egg": {
+    "file": "EGG.png",
+    "emojiName": "egg"
+  },
+  "elder_guardian_spawn_egg": {
+    "file": "ELDER_GUARDIAN_SPAWN_EGG.png",
+    "emojiName": "elder_guardian_spawn_egg"
+  },
+  "elytra": {
+    "file": "ELYTRA.png",
+    "emojiName": "elytra"
+  },
+  "emerald": {
+    "file": "EMERALD.png",
+    "emojiName": "emerald"
+  },
+  "emerald_block": {
+    "file": "EMERALD_BLOCK.png",
+    "emojiName": "emerald_block"
+  },
+  "emerald_ore": {
+    "file": "EMERALD_ORE.png",
+    "emojiName": "emerald_ore"
+  },
+  "enchanted_book": {
+    "file": "ENCHANTED_BOOK.png",
+    "emojiName": "enchanted_book"
+  },
+  "enchanted_golden_apple": {
+    "file": "ENCHANTED_GOLDEN_APPLE.png",
+    "emojiName": "enchanted_golden_apple"
+  },
+  "enchanting_table": {
+    "file": "ENCHANTING_TABLE.png",
+    "emojiName": "enchanting_table"
+  },
+  "enderman_spawn_egg": {
+    "file": "ENDERMAN_SPAWN_EGG.png",
+    "emojiName": "enderman_spawn_egg"
+  },
+  "endermite_spawn_egg": {
+    "file": "ENDERMITE_SPAWN_EGG.png",
+    "emojiName": "endermite_spawn_egg"
+  },
+  "ender_chest": {
+    "file": "ENDER_CHEST.png",
+    "emojiName": "ender_chest"
+  },
+  "ender_dragon_spawn_egg": {
+    "file": "ENDER_DRAGON_SPAWN_EGG.png",
+    "emojiName": "ender_dragon_spawn_egg"
+  },
+  "ender_eye": {
+    "file": "ENDER_EYE.png",
+    "emojiName": "ender_eye"
+  },
+  "ender_pearl": {
+    "file": "ENDER_PEARL.png",
+    "emojiName": "ender_pearl"
+  },
+  "end_crystal": {
+    "file": "END_CRYSTAL.png",
+    "emojiName": "end_crystal"
+  },
+  "end_portal_frame": {
+    "file": "END_PORTAL_FRAME.png",
+    "emojiName": "end_portal_frame"
+  },
+  "end_rod": {
+    "file": "END_ROD.png",
+    "emojiName": "end_rod"
+  },
+  "end_stone": {
+    "file": "END_STONE.png",
+    "emojiName": "end_stone"
+  },
+  "end_stone_bricks": {
+    "file": "END_STONE_BRICKS.png",
+    "emojiName": "end_stone_bricks"
+  },
+  "end_stone_brick_slab": {
+    "file": "END_STONE_BRICK_SLAB.png",
+    "emojiName": "end_stone_brick_slab"
+  },
+  "end_stone_brick_stairs": {
+    "file": "END_STONE_BRICK_STAIRS.png",
+    "emojiName": "end_stone_brick_stairs"
+  },
+  "end_stone_brick_wall": {
+    "file": "END_STONE_BRICK_WALL.png",
+    "emojiName": "end_stone_brick_wall"
+  },
+  "evoker_spawn_egg": {
+    "file": "EVOKER_SPAWN_EGG.png",
+    "emojiName": "evoker_spawn_egg"
+  },
+  "experience_bottle": {
+    "file": "EXPERIENCE_BOTTLE.png",
+    "emojiName": "experience_bottle"
+  },
+  "explorer_pottery_sherd": {
+    "file": "EXPLORER_POTTERY_SHERD.png",
+    "emojiName": "explorer_pottery_sherd"
+  },
+  "exposed_chiseled_copper": {
+    "file": "EXPOSED_CHISELED_COPPER.png",
+    "emojiName": "exposed_chiseled_copper"
+  },
+  "exposed_copper": {
+    "file": "EXPOSED_COPPER.png",
+    "emojiName": "exposed_copper"
+  },
+  "exposed_copper_bars": {
+    "file": "EXPOSED_COPPER_BARS.png",
+    "emojiName": "exposed_copper_bars"
+  },
+  "exposed_copper_bulb": {
+    "file": "EXPOSED_COPPER_BULB.png",
+    "emojiName": "exposed_copper_bulb"
+  },
+  "exposed_copper_chain": {
+    "file": "EXPOSED_COPPER_CHAIN.png",
+    "emojiName": "exposed_copper_chain"
+  },
+  "exposed_copper_chest": {
+    "file": "EXPOSED_COPPER_CHEST.png",
+    "emojiName": "exposed_copper_chest"
+  },
+  "exposed_copper_door": {
+    "file": "EXPOSED_COPPER_DOOR.png",
+    "emojiName": "exposed_copper_door"
+  },
+  "exposed_copper_golem_statue": {
+    "file": "EXPOSED_COPPER_GOLEM_STATUE.png",
+    "emojiName": "exposed_copper_golem_statue"
+  },
+  "exposed_copper_grate": {
+    "file": "EXPOSED_COPPER_GRATE.png",
+    "emojiName": "exposed_copper_grate"
+  },
+  "exposed_copper_lantern": {
+    "file": "EXPOSED_COPPER_LANTERN.png",
+    "emojiName": "exposed_copper_lantern"
+  },
+  "exposed_copper_trapdoor": {
+    "file": "EXPOSED_COPPER_TRAPDOOR.png",
+    "emojiName": "exposed_copper_trapdoor"
+  },
+  "exposed_cut_copper": {
+    "file": "EXPOSED_CUT_COPPER.png",
+    "emojiName": "exposed_cut_copper"
+  },
+  "exposed_cut_copper_slab": {
+    "file": "EXPOSED_CUT_COPPER_SLAB.png",
+    "emojiName": "exposed_cut_copper_slab"
+  },
+  "exposed_cut_copper_stairs": {
+    "file": "EXPOSED_CUT_COPPER_STAIRS.png",
+    "emojiName": "exposed_cut_copper_stairs"
+  },
+  "exposed_lightning_rod": {
+    "file": "EXPOSED_LIGHTNING_ROD.png",
+    "emojiName": "exposed_lightning_rod"
+  },
+  "eye_armor_trim_smithing_template": {
+    "file": "EYE_ARMOR_TRIM_SMITHING_TEMPLATE.png",
+    "emojiName": "eye_armor_trim_smithing_template"
+  },
+  "farmland": {
+    "file": "FARMLAND.png",
+    "emojiName": "farmland"
+  },
+  "feather": {
+    "file": "FEATHER.png",
+    "emojiName": "feather"
+  },
+  "fermented_spider_eye": {
+    "file": "FERMENTED_SPIDER_EYE.png",
+    "emojiName": "fermented_spider_eye"
+  },
+  "fern": {
+    "file": "FERN.png",
+    "emojiName": "fern"
+  },
+  "field_masoned_banner_pattern": {
+    "file": "FIELD_MASONED_BANNER_PATTERN.png",
+    "emojiName": "field_masoned_banner_pattern"
+  },
+  "filled_map": {
+    "file": "FILLED_MAP.png",
+    "emojiName": "filled_map"
+  },
+  "firefly_bush": {
+    "file": "FIREFLY_BUSH.png",
+    "emojiName": "firefly_bush"
+  },
+  "firework_rocket": {
+    "file": "FIREWORK_ROCKET.png",
+    "emojiName": "firework_rocket"
+  },
+  "firework_star": {
+    "file": "FIREWORK_STAR.png",
+    "emojiName": "firework_star"
+  },
+  "fire_charge": {
+    "file": "FIRE_CHARGE.png",
+    "emojiName": "fire_charge"
+  },
+  "fire_coral": {
+    "file": "FIRE_CORAL.png",
+    "emojiName": "fire_coral"
+  },
+  "fire_coral_block": {
+    "file": "FIRE_CORAL_BLOCK.png",
+    "emojiName": "fire_coral_block"
+  },
+  "fire_coral_fan": {
+    "file": "FIRE_CORAL_FAN.png",
+    "emojiName": "fire_coral_fan"
+  },
+  "fishing_rod": {
+    "file": "FISHING_ROD.png",
+    "emojiName": "fishing_rod"
+  },
+  "fletching_table": {
+    "file": "FLETCHING_TABLE.png",
+    "emojiName": "fletching_table"
+  },
+  "flint": {
+    "file": "FLINT.png",
+    "emojiName": "flint"
+  },
+  "flint_and_steel": {
+    "file": "FLINT_AND_STEEL.png",
+    "emojiName": "flint_and_steel"
+  },
+  "flowering_azalea": {
+    "file": "FLOWERING_AZALEA.png",
+    "emojiName": "flowering_azalea"
+  },
+  "flowering_azalea_leaves": {
+    "file": "FLOWERING_AZALEA_LEAVES.png",
+    "emojiName": "flowering_azalea_leaves"
+  },
+  "flower_banner_pattern": {
+    "file": "FLOWER_BANNER_PATTERN.png",
+    "emojiName": "flower_banner_pattern"
+  },
+  "flower_pot": {
+    "file": "FLOWER_POT.png",
+    "emojiName": "flower_pot"
+  },
+  "flow_armor_trim_smithing_template": {
+    "file": "FLOW_ARMOR_TRIM_SMITHING_TEMPLATE.png",
+    "emojiName": "flow_armor_trim_template"
+  },
+  "flow_banner_pattern": {
+    "file": "FLOW_BANNER_PATTERN.png",
+    "emojiName": "flow_banner_pattern"
+  },
+  "flow_pottery_sherd": {
+    "file": "FLOW_POTTERY_SHERD.png",
+    "emojiName": "flow_pottery_sherd"
+  },
+  "fox_spawn_egg": {
+    "file": "FOX_SPAWN_EGG.png",
+    "emojiName": "fox_spawn_egg"
+  },
+  "friend_pottery_sherd": {
+    "file": "FRIEND_POTTERY_SHERD.png",
+    "emojiName": "friend_pottery_sherd"
+  },
+  "frogspawn": {
+    "file": "FROGSPAWN.png",
+    "emojiName": "frogspawn"
+  },
+  "frog_spawn_egg": {
+    "file": "FROG_SPAWN_EGG.png",
+    "emojiName": "frog_spawn_egg"
+  },
+  "furnace": {
+    "file": "FURNACE.png",
+    "emojiName": "furnace"
+  },
+  "furnace_minecart": {
+    "file": "FURNACE_MINECART.png",
+    "emojiName": "furnace_minecart"
+  },
+  "ghast_spawn_egg": {
+    "file": "GHAST_SPAWN_EGG.png",
+    "emojiName": "ghast_spawn_egg"
+  },
+  "ghast_tear": {
+    "file": "GHAST_TEAR.png",
+    "emojiName": "ghast_tear"
+  },
+  "gilded_blackstone": {
+    "file": "GILDED_BLACKSTONE.png",
+    "emojiName": "gilded_blackstone"
+  },
+  "glass": {
+    "file": "GLASS.png",
+    "emojiName": "glass"
+  },
+  "glass_bottle": {
+    "file": "GLASS_BOTTLE.png",
+    "emojiName": "glass_bottle"
+  },
+  "glass_pane": {
+    "file": "GLASS_PANE.png",
+    "emojiName": "glass_pane"
+  },
+  "glistering_melon_slice": {
+    "file": "GLISTERING_MELON_SLICE.png",
+    "emojiName": "glistering_melon_slice"
+  },
+  "globe_banner_pattern": {
+    "file": "GLOBE_BANNER_PATTERN.png",
+    "emojiName": "globe_banner_pattern"
+  },
+  "glowstone": {
+    "file": "GLOWSTONE.png",
+    "emojiName": "glowstone"
+  },
+  "glowstone_dust": {
+    "file": "GLOWSTONE_DUST.png",
+    "emojiName": "glowstone_dust"
+  },
+  "glow_berries": {
+    "file": "GLOW_BERRIES.png",
+    "emojiName": "glow_berries"
+  },
+  "glow_ink_sac": {
+    "file": "GLOW_INK_SAC.png",
+    "emojiName": "glow_ink_sac"
+  },
+  "glow_item_frame": {
+    "file": "GLOW_ITEM_FRAME.png",
+    "emojiName": "glow_item_frame"
+  },
+  "glow_lichen": {
+    "file": "GLOW_LICHEN.png",
+    "emojiName": "glow_lichen"
+  },
+  "glow_squid_spawn_egg": {
+    "file": "GLOW_SQUID_SPAWN_EGG.png",
+    "emojiName": "glow_squid_spawn_egg"
+  },
+  "goat_horn": {
+    "file": "GOAT_HORN.png",
+    "emojiName": "goat_horn"
+  },
+  "goat_spawn_egg": {
+    "file": "GOAT_SPAWN_EGG.png",
+    "emojiName": "goat_spawn_egg"
+  },
+  "golden_apple": {
+    "file": "GOLDEN_APPLE.png",
+    "emojiName": "golden_apple"
+  },
+  "golden_axe": {
+    "file": "GOLDEN_AXE.png",
+    "emojiName": "golden_axe"
+  },
+  "golden_boots": {
+    "file": "GOLDEN_BOOTS.png",
+    "emojiName": "golden_boots"
+  },
+  "golden_carrot": {
+    "file": "GOLDEN_CARROT.png",
+    "emojiName": "golden_carrot"
+  },
+  "golden_chestplate": {
+    "file": "GOLDEN_CHESTPLATE.png",
+    "emojiName": "golden_chestplate"
+  },
+  "golden_dandelion": {
+    "file": "GOLDEN_DANDELION.png",
+    "emojiName": "golden_dandelion"
+  },
+  "golden_helmet": {
+    "file": "GOLDEN_HELMET.png",
+    "emojiName": "golden_helmet"
+  },
+  "golden_hoe": {
+    "file": "GOLDEN_HOE.png",
+    "emojiName": "golden_hoe"
+  },
+  "golden_horse_armor": {
+    "file": "GOLDEN_HORSE_ARMOR.png",
+    "emojiName": "golden_horse_armor"
+  },
+  "golden_leggings": {
+    "file": "GOLDEN_LEGGINGS.png",
+    "emojiName": "golden_leggings"
+  },
+  "golden_nautilus_armor": {
+    "file": "GOLDEN_NAUTILUS_ARMOR.png",
+    "emojiName": "golden_nautilus_armor"
+  },
+  "golden_pickaxe": {
+    "file": "GOLDEN_PICKAXE.png",
+    "emojiName": "golden_pickaxe"
+  },
+  "golden_shovel": {
+    "file": "GOLDEN_SHOVEL.png",
+    "emojiName": "golden_shovel"
+  },
+  "golden_spear": {
+    "file": "GOLDEN_SPEAR.png",
+    "emojiName": "golden_spear"
+  },
+  "golden_sword": {
+    "file": "GOLDEN_SWORD.png",
+    "emojiName": "golden_sword"
+  },
+  "gold_block": {
+    "file": "GOLD_BLOCK.png",
+    "emojiName": "gold_block"
+  },
+  "gold_ingot": {
+    "file": "GOLD_INGOT.png",
+    "emojiName": "gold_ingot"
+  },
+  "gold_nugget": {
+    "file": "GOLD_NUGGET.png",
+    "emojiName": "gold_nugget"
+  },
+  "gold_ore": {
+    "file": "GOLD_ORE.png",
+    "emojiName": "gold_ore"
+  },
+  "granite": {
+    "file": "GRANITE.png",
+    "emojiName": "granite"
+  },
+  "granite_slab": {
+    "file": "GRANITE_SLAB.png",
+    "emojiName": "granite_slab"
+  },
+  "granite_stairs": {
+    "file": "GRANITE_STAIRS.png",
+    "emojiName": "granite_stairs"
+  },
+  "granite_wall": {
+    "file": "GRANITE_WALL.png",
+    "emojiName": "granite_wall"
+  },
+  "grass_block": {
+    "file": "GRASS_BLOCK.png",
+    "emojiName": "grass_block"
+  },
+  "gravel": {
+    "file": "GRAVEL.png",
+    "emojiName": "gravel"
+  },
+  "gray_banner": {
+    "file": "GRAY_BANNER.png",
+    "emojiName": "gray_banner"
+  },
+  "gray_bed": {
+    "file": "GRAY_BED.png",
+    "emojiName": "gray_bed"
+  },
+  "gray_bundle": {
+    "file": "GRAY_BUNDLE.png",
+    "emojiName": "gray_bundle"
+  },
+  "gray_candle": {
+    "file": "GRAY_CANDLE.png",
+    "emojiName": "gray_candle"
+  },
+  "gray_carpet": {
+    "file": "GRAY_CARPET.png",
+    "emojiName": "gray_carpet"
+  },
+  "gray_concrete": {
+    "file": "GRAY_CONCRETE.png",
+    "emojiName": "gray_concrete"
+  },
+  "gray_concrete_powder": {
+    "file": "GRAY_CONCRETE_POWDER.png",
+    "emojiName": "gray_concrete_powder"
+  },
+  "gray_concrete_slab": {
+    "file": "GRAY_CONCRETE_SLAB.png",
+    "emojiName": "gray_concrete_slab"
+  },
+  "gray_concrete_stairs": {
+    "file": "GRAY_CONCRETE_STAIRS.png",
+    "emojiName": "gray_concrete_stairs"
+  },
+  "gray_cushion": {
+    "file": "GRAY_CUSHION.png",
+    "emojiName": "gray_cushion"
+  },
+  "gray_dye": {
+    "file": "GRAY_DYE.png",
+    "emojiName": "gray_dye"
+  },
+  "gray_glazed_terracotta": {
+    "file": "GRAY_GLAZED_TERRACOTTA.png",
+    "emojiName": "gray_glazed_terracotta"
+  },
+  "gray_harness": {
+    "file": "GRAY_HARNESS.png",
+    "emojiName": "gray_harness"
+  },
+  "gray_shulker_box": {
+    "file": "GRAY_SHULKER_BOX.png",
+    "emojiName": "gray_shulker_box"
+  },
+  "gray_stained_glass": {
+    "file": "GRAY_STAINED_GLASS.png",
+    "emojiName": "gray_stained_glass"
+  },
+  "gray_stained_glass_pane": {
+    "file": "GRAY_STAINED_GLASS_PANE.png",
+    "emojiName": "gray_stained_glass_pane"
+  },
+  "gray_terracotta": {
+    "file": "GRAY_TERRACOTTA.png",
+    "emojiName": "gray_terracotta"
+  },
+  "gray_wool": {
+    "file": "GRAY_WOOL.png",
+    "emojiName": "gray_wool"
+  },
+  "gray_wool_slab": {
+    "file": "GRAY_WOOL_SLAB.png",
+    "emojiName": "gray_wool_slab"
+  },
+  "gray_wool_stairs": {
+    "file": "GRAY_WOOL_STAIRS.png",
+    "emojiName": "gray_wool_stairs"
+  },
+  "green_banner": {
+    "file": "GREEN_BANNER.png",
+    "emojiName": "green_banner"
+  },
+  "green_bed": {
+    "file": "GREEN_BED.png",
+    "emojiName": "green_bed"
+  },
+  "green_bundle": {
+    "file": "GREEN_BUNDLE.png",
+    "emojiName": "green_bundle"
+  },
+  "green_candle": {
+    "file": "GREEN_CANDLE.png",
+    "emojiName": "green_candle"
+  },
+  "green_carpet": {
+    "file": "GREEN_CARPET.png",
+    "emojiName": "green_carpet"
+  },
+  "green_concrete": {
+    "file": "GREEN_CONCRETE.png",
+    "emojiName": "green_concrete"
+  },
+  "green_concrete_powder": {
+    "file": "GREEN_CONCRETE_POWDER.png",
+    "emojiName": "green_concrete_powder"
+  },
+  "green_concrete_slab": {
+    "file": "GREEN_CONCRETE_SLAB.png",
+    "emojiName": "green_concrete_slab"
+  },
+  "green_concrete_stairs": {
+    "file": "GREEN_CONCRETE_STAIRS.png",
+    "emojiName": "green_concrete_stairs"
+  },
+  "green_cushion": {
+    "file": "GREEN_CUSHION.png",
+    "emojiName": "green_cushion"
+  },
+  "green_dye": {
+    "file": "GREEN_DYE.png",
+    "emojiName": "green_dye"
+  },
+  "green_glazed_terracotta": {
+    "file": "GREEN_GLAZED_TERRACOTTA.png",
+    "emojiName": "green_glazed_terracotta"
+  },
+  "green_harness": {
+    "file": "GREEN_HARNESS.png",
+    "emojiName": "green_harness"
+  },
+  "green_shulker_box": {
+    "file": "GREEN_SHULKER_BOX.png",
+    "emojiName": "green_shulker_box"
+  },
+  "green_stained_glass": {
+    "file": "GREEN_STAINED_GLASS.png",
+    "emojiName": "green_stained_glass"
+  },
+  "green_stained_glass_pane": {
+    "file": "GREEN_STAINED_GLASS_PANE.png",
+    "emojiName": "green_stained_glass_pane"
+  },
+  "green_terracotta": {
+    "file": "GREEN_TERRACOTTA.png",
+    "emojiName": "green_terracotta"
+  },
+  "green_wool": {
+    "file": "GREEN_WOOL.png",
+    "emojiName": "green_wool"
+  },
+  "green_wool_slab": {
+    "file": "GREEN_WOOL_SLAB.png",
+    "emojiName": "green_wool_slab"
+  },
+  "green_wool_stairs": {
+    "file": "GREEN_WOOL_STAIRS.png",
+    "emojiName": "green_wool_stairs"
+  },
+  "grindstone": {
+    "file": "GRINDSTONE.png",
+    "emojiName": "grindstone"
+  },
+  "guardian_spawn_egg": {
+    "file": "GUARDIAN_SPAWN_EGG.png",
+    "emojiName": "guardian_spawn_egg"
+  },
+  "gunpowder": {
+    "file": "GUNPOWDER.png",
+    "emojiName": "gunpowder"
+  },
+  "guster_banner_pattern": {
+    "file": "GUSTER_BANNER_PATTERN.png",
+    "emojiName": "guster_banner_pattern"
+  },
+  "guster_pottery_sherd": {
+    "file": "GUSTER_POTTERY_SHERD.png",
+    "emojiName": "guster_pottery_sherd"
+  },
+  "hanging_roots": {
+    "file": "HANGING_ROOTS.png",
+    "emojiName": "hanging_roots"
+  },
+  "happy_ghast_spawn_egg": {
+    "file": "HAPPY_GHAST_SPAWN_EGG.png",
+    "emojiName": "happy_ghast_spawn_egg"
+  },
+  "hay_block": {
+    "file": "HAY_BLOCK.png",
+    "emojiName": "hay_block"
+  },
+  "heartbreak_pottery_sherd": {
+    "file": "HEARTBREAK_POTTERY_SHERD.png",
+    "emojiName": "heartbreak_pottery_sherd"
+  },
+  "heart_of_the_sea": {
+    "file": "HEART_OF_THE_SEA.png",
+    "emojiName": "heart_of_the_sea"
+  },
+  "heart_pottery_sherd": {
+    "file": "HEART_POTTERY_SHERD.png",
+    "emojiName": "heart_pottery_sherd"
+  },
+  "heavy_core": {
+    "file": "HEAVY_CORE.png",
+    "emojiName": "heavy_core"
+  },
+  "heavy_weighted_pressure_plate": {
+    "file": "HEAVY_WEIGHTED_PRESSURE_PLATE.png",
+    "emojiName": "heavy_weighted_pressure_plate"
+  },
+  "hoglin_spawn_egg": {
+    "file": "HOGLIN_SPAWN_EGG.png",
+    "emojiName": "hoglin_spawn_egg"
+  },
+  "honeycomb": {
+    "file": "HONEYCOMB.png",
+    "emojiName": "honeycomb"
+  },
+  "honeycomb_block": {
+    "file": "HONEYCOMB_BLOCK.png",
+    "emojiName": "honeycomb_block"
+  },
+  "honey_block": {
+    "file": "HONEY_BLOCK.png",
+    "emojiName": "honey_block"
+  },
+  "honey_bottle": {
+    "file": "HONEY_BOTTLE.png",
+    "emojiName": "honey_bottle"
+  },
+  "hopper": {
+    "file": "HOPPER.png",
+    "emojiName": "hopper"
+  },
+  "hopper_minecart": {
+    "file": "HOPPER_MINECART.png",
+    "emojiName": "hopper_minecart"
+  },
+  "horn_coral": {
+    "file": "HORN_CORAL.png",
+    "emojiName": "horn_coral"
+  },
+  "horn_coral_block": {
+    "file": "HORN_CORAL_BLOCK.png",
+    "emojiName": "horn_coral_block"
+  },
+  "horn_coral_fan": {
+    "file": "HORN_CORAL_FAN.png",
+    "emojiName": "horn_coral_fan"
+  },
+  "horse_spawn_egg": {
+    "file": "HORSE_SPAWN_EGG.png",
+    "emojiName": "horse_spawn_egg"
+  },
+  "host_armor_trim_smithing_template": {
+    "file": "HOST_ARMOR_TRIM_SMITHING_TEMPLATE.png",
+    "emojiName": "host_armor_trim_template"
+  },
+  "howl_pottery_sherd": {
+    "file": "HOWL_POTTERY_SHERD.png",
+    "emojiName": "howl_pottery_sherd"
+  },
+  "husk_spawn_egg": {
+    "file": "HUSK_SPAWN_EGG.png",
+    "emojiName": "husk_spawn_egg"
+  },
+  "ice": {
+    "file": "ICE.png",
+    "emojiName": "ice"
+  },
+  "infested_chiseled_stone_bricks": {
+    "file": "INFESTED_CHISELED_STONE_BRICKS.png",
+    "emojiName": "infested_chiseled_stone_bricks"
+  },
+  "infested_cobblestone": {
+    "file": "INFESTED_COBBLESTONE.png",
+    "emojiName": "infested_cobblestone"
+  },
+  "infested_cracked_stone_bricks": {
+    "file": "INFESTED_CRACKED_STONE_BRICKS.png",
+    "emojiName": "infested_cracked_stone_bricks"
+  },
+  "infested_deepslate": {
+    "file": "INFESTED_DEEPSLATE.png",
+    "emojiName": "infested_deepslate"
+  },
+  "infested_mossy_stone_bricks": {
+    "file": "INFESTED_MOSSY_STONE_BRICKS.png",
+    "emojiName": "infested_mossy_stone_bricks"
+  },
+  "infested_stone": {
+    "file": "INFESTED_STONE.png",
+    "emojiName": "infested_stone"
+  },
+  "infested_stone_bricks": {
+    "file": "INFESTED_STONE_BRICKS.png",
+    "emojiName": "infested_stone_bricks"
+  },
+  "ink_sac": {
+    "file": "INK_SAC.png",
+    "emojiName": "ink_sac"
+  },
+  "iron_axe": {
+    "file": "IRON_AXE.png",
+    "emojiName": "iron_axe"
+  },
+  "iron_bars": {
+    "file": "IRON_BARS.png",
+    "emojiName": "iron_bars"
+  },
+  "iron_block": {
+    "file": "IRON_BLOCK.png",
+    "emojiName": "iron_block"
+  },
+  "iron_boots": {
+    "file": "IRON_BOOTS.png",
+    "emojiName": "iron_boots"
+  },
+  "iron_chain": {
+    "file": "IRON_CHAIN.png",
+    "emojiName": "iron_chain"
+  },
+  "iron_chestplate": {
+    "file": "IRON_CHESTPLATE.png",
+    "emojiName": "iron_chestplate"
+  },
+  "iron_door": {
+    "file": "IRON_DOOR.png",
+    "emojiName": "iron_door"
+  },
+  "iron_golem_spawn_egg": {
+    "file": "IRON_GOLEM_SPAWN_EGG.png",
+    "emojiName": "iron_golem_spawn_egg"
+  },
+  "iron_helmet": {
+    "file": "IRON_HELMET.png",
+    "emojiName": "iron_helmet"
+  },
+  "iron_hoe": {
+    "file": "IRON_HOE.png",
+    "emojiName": "iron_hoe"
+  },
+  "iron_horse_armor": {
+    "file": "IRON_HORSE_ARMOR.png",
+    "emojiName": "iron_horse_armor"
+  },
+  "iron_ingot": {
+    "file": "IRON_INGOT.png",
+    "emojiName": "iron_ingot"
+  },
+  "iron_leggings": {
+    "file": "IRON_LEGGINGS.png",
+    "emojiName": "iron_leggings"
+  },
+  "iron_nautilus_armor": {
+    "file": "IRON_NAUTILUS_ARMOR.png",
+    "emojiName": "iron_nautilus_armor"
+  },
+  "iron_nugget": {
+    "file": "IRON_NUGGET.png",
+    "emojiName": "iron_nugget"
+  },
+  "iron_ore": {
+    "file": "IRON_ORE.png",
+    "emojiName": "iron_ore"
+  },
+  "iron_pickaxe": {
+    "file": "IRON_PICKAXE.png",
+    "emojiName": "iron_pickaxe"
+  },
+  "iron_shovel": {
+    "file": "IRON_SHOVEL.png",
+    "emojiName": "iron_shovel"
+  },
+  "iron_spear": {
+    "file": "IRON_SPEAR.png",
+    "emojiName": "iron_spear"
+  },
+  "iron_sword": {
+    "file": "IRON_SWORD.png",
+    "emojiName": "iron_sword"
+  },
+  "iron_trapdoor": {
+    "file": "IRON_TRAPDOOR.png",
+    "emojiName": "iron_trapdoor"
+  },
+  "item_frame": {
+    "file": "ITEM_FRAME.png",
+    "emojiName": "item_frame"
+  },
+  "jack_o_lantern": {
+    "file": "JACK_O_LANTERN.png",
+    "emojiName": "jack_o_lantern"
+  },
+  "jigsaw": {
+    "file": "JIGSAW.png",
+    "emojiName": "jigsaw"
+  },
+  "jukebox": {
+    "file": "JUKEBOX.png",
+    "emojiName": "jukebox"
+  },
+  "jungle_boat": {
+    "file": "JUNGLE_BOAT.png",
+    "emojiName": "jungle_boat"
+  },
+  "jungle_button": {
+    "file": "JUNGLE_BUTTON.png",
+    "emojiName": "jungle_button"
+  },
+  "jungle_chest_boat": {
+    "file": "JUNGLE_CHEST_BOAT.png",
+    "emojiName": "jungle_chest_boat"
+  },
+  "jungle_door": {
+    "file": "JUNGLE_DOOR.png",
+    "emojiName": "jungle_door"
+  },
+  "jungle_explorer_map": {
+    "file": "JUNGLE_EXPLORER_MAP.png",
+    "emojiName": "jungle_explorer_map"
+  },
+  "jungle_fence": {
+    "file": "JUNGLE_FENCE.png",
+    "emojiName": "jungle_fence"
+  },
+  "jungle_fence_gate": {
+    "file": "JUNGLE_FENCE_GATE.png",
+    "emojiName": "jungle_fence_gate"
+  },
+  "jungle_hanging_sign": {
+    "file": "JUNGLE_HANGING_SIGN.png",
+    "emojiName": "jungle_hanging_sign"
+  },
+  "jungle_leaves": {
+    "file": "JUNGLE_LEAVES.png",
+    "emojiName": "jungle_leaves"
+  },
+  "jungle_log": {
+    "file": "JUNGLE_LOG.png",
+    "emojiName": "jungle_log"
+  },
+  "jungle_planks": {
+    "file": "JUNGLE_PLANKS.png",
+    "emojiName": "jungle_planks"
+  },
+  "jungle_pressure_plate": {
+    "file": "JUNGLE_PRESSURE_PLATE.png",
+    "emojiName": "jungle_pressure_plate"
+  },
+  "jungle_sapling": {
+    "file": "JUNGLE_SAPLING.png",
+    "emojiName": "jungle_sapling"
+  },
+  "jungle_shelf": {
+    "file": "JUNGLE_SHELF.png",
+    "emojiName": "jungle_shelf"
+  },
+  "jungle_sign": {
+    "file": "JUNGLE_SIGN.png",
+    "emojiName": "jungle_sign"
+  },
+  "jungle_slab": {
+    "file": "JUNGLE_SLAB.png",
+    "emojiName": "jungle_slab"
+  },
+  "jungle_stairs": {
+    "file": "JUNGLE_STAIRS.png",
+    "emojiName": "jungle_stairs"
+  },
+  "jungle_trapdoor": {
+    "file": "JUNGLE_TRAPDOOR.png",
+    "emojiName": "jungle_trapdoor"
+  },
+  "jungle_wood": {
+    "file": "JUNGLE_WOOD.png",
+    "emojiName": "jungle_wood"
+  },
+  "kelp": {
+    "file": "KELP.png",
+    "emojiName": "kelp"
+  },
+  "knowledge_book": {
+    "file": "KNOWLEDGE_BOOK.png",
+    "emojiName": "knowledge_book"
+  },
+  "ladder": {
+    "file": "LADDER.png",
+    "emojiName": "ladder"
+  },
+  "lantern": {
+    "file": "LANTERN.png",
+    "emojiName": "lantern"
+  },
+  "lapis_block": {
+    "file": "LAPIS_BLOCK.png",
+    "emojiName": "lapis_block"
+  },
+  "lapis_lazuli": {
+    "file": "LAPIS_LAZULI.png",
+    "emojiName": "lapis_lazuli"
+  },
+  "lapis_ore": {
+    "file": "LAPIS_ORE.png",
+    "emojiName": "lapis_ore"
+  },
+  "large_amethyst_bud": {
+    "file": "LARGE_AMETHYST_BUD.png",
+    "emojiName": "large_amethyst_bud"
+  },
+  "large_fern": {
+    "file": "LARGE_FERN.png",
+    "emojiName": "large_fern"
+  },
+  "lava_bucket": {
+    "file": "LAVA_BUCKET.png",
+    "emojiName": "lava_bucket"
+  },
+  "lead": {
+    "file": "LEAD.png",
+    "emojiName": "lead"
+  },
+  "leaf_litter": {
+    "file": "LEAF_LITTER.png",
+    "emojiName": "leaf_litter"
+  },
+  "leather": {
+    "file": "LEATHER.png",
+    "emojiName": "leather"
+  },
+  "leather_boots": {
+    "file": "LEATHER_BOOTS.png",
+    "emojiName": "leather_boots"
+  },
+  "leather_chestplate": {
+    "file": "LEATHER_CHESTPLATE.png",
+    "emojiName": "leather_chestplate"
+  },
+  "leather_helmet": {
+    "file": "LEATHER_HELMET.png",
+    "emojiName": "leather_helmet"
+  },
+  "leather_horse_armor": {
+    "file": "LEATHER_HORSE_ARMOR.png",
+    "emojiName": "leather_horse_armor"
+  },
+  "leather_leggings": {
+    "file": "LEATHER_LEGGINGS.png",
+    "emojiName": "leather_leggings"
+  },
+  "lectern": {
+    "file": "LECTERN.png",
+    "emojiName": "lectern"
+  },
+  "lever": {
+    "file": "LEVER.png",
+    "emojiName": "lever"
+  },
+  "light": {
+    "file": "LIGHT.png",
+    "emojiName": "light"
+  },
+  "lightning_rod": {
+    "file": "LIGHTNING_ROD.png",
+    "emojiName": "lightning_rod"
+  },
+  "light_blue_banner": {
+    "file": "LIGHT_BLUE_BANNER.png",
+    "emojiName": "light_blue_banner"
+  },
+  "light_blue_bed": {
+    "file": "LIGHT_BLUE_BED.png",
+    "emojiName": "light_blue_bed"
+  },
+  "light_blue_bundle": {
+    "file": "LIGHT_BLUE_BUNDLE.png",
+    "emojiName": "light_blue_bundle"
+  },
+  "light_blue_candle": {
+    "file": "LIGHT_BLUE_CANDLE.png",
+    "emojiName": "light_blue_candle"
+  },
+  "light_blue_carpet": {
+    "file": "LIGHT_BLUE_CARPET.png",
+    "emojiName": "light_blue_carpet"
+  },
+  "light_blue_concrete": {
+    "file": "LIGHT_BLUE_CONCRETE.png",
+    "emojiName": "light_blue_concrete"
+  },
+  "light_blue_concrete_powder": {
+    "file": "LIGHT_BLUE_CONCRETE_POWDER.png",
+    "emojiName": "light_blue_concrete_powder"
+  },
+  "light_blue_concrete_slab": {
+    "file": "LIGHT_BLUE_CONCRETE_SLAB.png",
+    "emojiName": "light_blue_concrete_slab"
+  },
+  "light_blue_concrete_stairs": {
+    "file": "LIGHT_BLUE_CONCRETE_STAIRS.png",
+    "emojiName": "light_blue_concrete_stairs"
+  },
+  "light_blue_cushion": {
+    "file": "LIGHT_BLUE_CUSHION.png",
+    "emojiName": "light_blue_cushion"
+  },
+  "light_blue_dye": {
+    "file": "LIGHT_BLUE_DYE.png",
+    "emojiName": "light_blue_dye"
+  },
+  "light_blue_glazed_terracotta": {
+    "file": "LIGHT_BLUE_GLAZED_TERRACOTTA.png",
+    "emojiName": "light_blue_glazed_terracotta"
+  },
+  "light_blue_harness": {
+    "file": "LIGHT_BLUE_HARNESS.png",
+    "emojiName": "light_blue_harness"
+  },
+  "light_blue_shulker_box": {
+    "file": "LIGHT_BLUE_SHULKER_BOX.png",
+    "emojiName": "light_blue_shulker_box"
+  },
+  "light_blue_stained_glass": {
+    "file": "LIGHT_BLUE_STAINED_GLASS.png",
+    "emojiName": "light_blue_stained_glass"
+  },
+  "light_blue_stained_glass_pane": {
+    "file": "LIGHT_BLUE_STAINED_GLASS_PANE.png",
+    "emojiName": "light_blue_stained_glass_pane"
+  },
+  "light_blue_terracotta": {
+    "file": "LIGHT_BLUE_TERRACOTTA.png",
+    "emojiName": "light_blue_terracotta"
+  },
+  "light_blue_wool": {
+    "file": "LIGHT_BLUE_WOOL.png",
+    "emojiName": "light_blue_wool"
+  },
+  "light_blue_wool_slab": {
+    "file": "LIGHT_BLUE_WOOL_SLAB.png",
+    "emojiName": "light_blue_wool_slab"
+  },
+  "light_blue_wool_stairs": {
+    "file": "LIGHT_BLUE_WOOL_STAIRS.png",
+    "emojiName": "light_blue_wool_stairs"
+  },
+  "light_gray_banner": {
+    "file": "LIGHT_GRAY_BANNER.png",
+    "emojiName": "light_gray_banner"
+  },
+  "light_gray_bed": {
+    "file": "LIGHT_GRAY_BED.png",
+    "emojiName": "light_gray_bed"
+  },
+  "light_gray_bundle": {
+    "file": "LIGHT_GRAY_BUNDLE.png",
+    "emojiName": "light_gray_bundle"
+  },
+  "light_gray_candle": {
+    "file": "LIGHT_GRAY_CANDLE.png",
+    "emojiName": "light_gray_candle"
+  },
+  "light_gray_carpet": {
+    "file": "LIGHT_GRAY_CARPET.png",
+    "emojiName": "light_gray_carpet"
+  },
+  "light_gray_concrete": {
+    "file": "LIGHT_GRAY_CONCRETE.png",
+    "emojiName": "light_gray_concrete"
+  },
+  "light_gray_concrete_powder": {
+    "file": "LIGHT_GRAY_CONCRETE_POWDER.png",
+    "emojiName": "light_gray_concrete_powder"
+  },
+  "light_gray_concrete_slab": {
+    "file": "LIGHT_GRAY_CONCRETE_SLAB.png",
+    "emojiName": "light_gray_concrete_slab"
+  },
+  "light_gray_concrete_stairs": {
+    "file": "LIGHT_GRAY_CONCRETE_STAIRS.png",
+    "emojiName": "light_gray_concrete_stairs"
+  },
+  "light_gray_cushion": {
+    "file": "LIGHT_GRAY_CUSHION.png",
+    "emojiName": "light_gray_cushion"
+  },
+  "light_gray_dye": {
+    "file": "LIGHT_GRAY_DYE.png",
+    "emojiName": "light_gray_dye"
+  },
+  "light_gray_glazed_terracotta": {
+    "file": "LIGHT_GRAY_GLAZED_TERRACOTTA.png",
+    "emojiName": "light_gray_glazed_terracotta"
+  },
+  "light_gray_harness": {
+    "file": "LIGHT_GRAY_HARNESS.png",
+    "emojiName": "light_gray_harness"
+  },
+  "light_gray_shulker_box": {
+    "file": "LIGHT_GRAY_SHULKER_BOX.png",
+    "emojiName": "light_gray_shulker_box"
+  },
+  "light_gray_stained_glass": {
+    "file": "LIGHT_GRAY_STAINED_GLASS.png",
+    "emojiName": "light_gray_stained_glass"
+  },
+  "light_gray_stained_glass_pane": {
+    "file": "LIGHT_GRAY_STAINED_GLASS_PANE.png",
+    "emojiName": "light_gray_stained_glass_pane"
+  },
+  "light_gray_terracotta": {
+    "file": "LIGHT_GRAY_TERRACOTTA.png",
+    "emojiName": "light_gray_terracotta"
+  },
+  "light_gray_wool": {
+    "file": "LIGHT_GRAY_WOOL.png",
+    "emojiName": "light_gray_wool"
+  },
+  "light_gray_wool_slab": {
+    "file": "LIGHT_GRAY_WOOL_SLAB.png",
+    "emojiName": "light_gray_wool_slab"
+  },
+  "light_gray_wool_stairs": {
+    "file": "LIGHT_GRAY_WOOL_STAIRS.png",
+    "emojiName": "light_gray_wool_stairs"
+  },
+  "light_weighted_pressure_plate": {
+    "file": "LIGHT_WEIGHTED_PRESSURE_PLATE.png",
+    "emojiName": "light_weighted_pressure_plate"
+  },
+  "lilac": {
+    "file": "LILAC.png",
+    "emojiName": "lilac"
+  },
+  "lily_of_the_valley": {
+    "file": "LILY_OF_THE_VALLEY.png",
+    "emojiName": "lily_of_the_valley"
+  },
+  "lily_pad": {
+    "file": "LILY_PAD.png",
+    "emojiName": "lily_pad"
+  },
+  "lime_banner": {
+    "file": "LIME_BANNER.png",
+    "emojiName": "lime_banner"
+  },
+  "lime_bed": {
+    "file": "LIME_BED.png",
+    "emojiName": "lime_bed"
+  },
+  "lime_bundle": {
+    "file": "LIME_BUNDLE.png",
+    "emojiName": "lime_bundle"
+  },
+  "lime_candle": {
+    "file": "LIME_CANDLE.png",
+    "emojiName": "lime_candle"
+  },
+  "lime_carpet": {
+    "file": "LIME_CARPET.png",
+    "emojiName": "lime_carpet"
+  },
+  "lime_concrete": {
+    "file": "LIME_CONCRETE.png",
+    "emojiName": "lime_concrete"
+  },
+  "lime_concrete_powder": {
+    "file": "LIME_CONCRETE_POWDER.png",
+    "emojiName": "lime_concrete_powder"
+  },
+  "lime_concrete_slab": {
+    "file": "LIME_CONCRETE_SLAB.png",
+    "emojiName": "lime_concrete_slab"
+  },
+  "lime_concrete_stairs": {
+    "file": "LIME_CONCRETE_STAIRS.png",
+    "emojiName": "lime_concrete_stairs"
+  },
+  "lime_cushion": {
+    "file": "LIME_CUSHION.png",
+    "emojiName": "lime_cushion"
+  },
+  "lime_dye": {
+    "file": "LIME_DYE.png",
+    "emojiName": "lime_dye"
+  },
+  "lime_glazed_terracotta": {
+    "file": "LIME_GLAZED_TERRACOTTA.png",
+    "emojiName": "lime_glazed_terracotta"
+  },
+  "lime_harness": {
+    "file": "LIME_HARNESS.png",
+    "emojiName": "lime_harness"
+  },
+  "lime_shulker_box": {
+    "file": "LIME_SHULKER_BOX.png",
+    "emojiName": "lime_shulker_box"
+  },
+  "lime_stained_glass": {
+    "file": "LIME_STAINED_GLASS.png",
+    "emojiName": "lime_stained_glass"
+  },
+  "lime_stained_glass_pane": {
+    "file": "LIME_STAINED_GLASS_PANE.png",
+    "emojiName": "lime_stained_glass_pane"
+  },
+  "lime_terracotta": {
+    "file": "LIME_TERRACOTTA.png",
+    "emojiName": "lime_terracotta"
+  },
+  "lime_wool": {
+    "file": "LIME_WOOL.png",
+    "emojiName": "lime_wool"
+  },
+  "lime_wool_slab": {
+    "file": "LIME_WOOL_SLAB.png",
+    "emojiName": "lime_wool_slab"
+  },
+  "lime_wool_stairs": {
+    "file": "LIME_WOOL_STAIRS.png",
+    "emojiName": "lime_wool_stairs"
+  },
+  "lingering_potion": {
+    "file": "LINGERING_POTION.png",
+    "emojiName": "lingering_potion"
+  },
+  "llama_spawn_egg": {
+    "file": "LLAMA_SPAWN_EGG.png",
+    "emojiName": "llama_spawn_egg"
+  },
+  "lodestone": {
+    "file": "LODESTONE.png",
+    "emojiName": "lodestone"
+  },
+  "loom": {
+    "file": "LOOM.png",
+    "emojiName": "loom"
+  },
+  "mace": {
+    "file": "MACE.png",
+    "emojiName": "mace"
+  },
+  "magenta_banner": {
+    "file": "MAGENTA_BANNER.png",
+    "emojiName": "magenta_banner"
+  },
+  "magenta_bed": {
+    "file": "MAGENTA_BED.png",
+    "emojiName": "magenta_bed"
+  },
+  "magenta_bundle": {
+    "file": "MAGENTA_BUNDLE.png",
+    "emojiName": "magenta_bundle"
+  },
+  "magenta_candle": {
+    "file": "MAGENTA_CANDLE.png",
+    "emojiName": "magenta_candle"
+  },
+  "magenta_carpet": {
+    "file": "MAGENTA_CARPET.png",
+    "emojiName": "magenta_carpet"
+  },
+  "magenta_concrete": {
+    "file": "MAGENTA_CONCRETE.png",
+    "emojiName": "magenta_concrete"
+  },
+  "magenta_concrete_powder": {
+    "file": "MAGENTA_CONCRETE_POWDER.png",
+    "emojiName": "magenta_concrete_powder"
+  },
+  "magenta_concrete_slab": {
+    "file": "MAGENTA_CONCRETE_SLAB.png",
+    "emojiName": "magenta_concrete_slab"
+  },
+  "magenta_concrete_stairs": {
+    "file": "MAGENTA_CONCRETE_STAIRS.png",
+    "emojiName": "magenta_concrete_stairs"
+  },
+  "magenta_cushion": {
+    "file": "MAGENTA_CUSHION.png",
+    "emojiName": "magenta_cushion"
+  },
+  "magenta_dye": {
+    "file": "MAGENTA_DYE.png",
+    "emojiName": "magenta_dye"
+  },
+  "magenta_glazed_terracotta": {
+    "file": "MAGENTA_GLAZED_TERRACOTTA.png",
+    "emojiName": "magenta_glazed_terracotta"
+  },
+  "magenta_harness": {
+    "file": "MAGENTA_HARNESS.png",
+    "emojiName": "magenta_harness"
+  },
+  "magenta_shulker_box": {
+    "file": "MAGENTA_SHULKER_BOX.png",
+    "emojiName": "magenta_shulker_box"
+  },
+  "magenta_stained_glass": {
+    "file": "MAGENTA_STAINED_GLASS.png",
+    "emojiName": "magenta_stained_glass"
+  },
+  "magenta_stained_glass_pane": {
+    "file": "MAGENTA_STAINED_GLASS_PANE.png",
+    "emojiName": "magenta_stained_glass_pane"
+  },
+  "magenta_terracotta": {
+    "file": "MAGENTA_TERRACOTTA.png",
+    "emojiName": "magenta_terracotta"
+  },
+  "magenta_wool": {
+    "file": "MAGENTA_WOOL.png",
+    "emojiName": "magenta_wool"
+  },
+  "magenta_wool_slab": {
+    "file": "MAGENTA_WOOL_SLAB.png",
+    "emojiName": "magenta_wool_slab"
+  },
+  "magenta_wool_stairs": {
+    "file": "MAGENTA_WOOL_STAIRS.png",
+    "emojiName": "magenta_wool_stairs"
+  },
+  "magma_block": {
+    "file": "MAGMA_BLOCK.png",
+    "emojiName": "magma_block"
+  },
+  "magma_cream": {
+    "file": "MAGMA_CREAM.png",
+    "emojiName": "magma_cream"
+  },
+  "magma_cube_spawn_egg": {
+    "file": "MAGMA_CUBE_SPAWN_EGG.png",
+    "emojiName": "magma_cube_spawn_egg"
+  },
+  "mangrove_boat": {
+    "file": "MANGROVE_BOAT.png",
+    "emojiName": "mangrove_boat"
+  },
+  "mangrove_button": {
+    "file": "MANGROVE_BUTTON.png",
+    "emojiName": "mangrove_button"
+  },
+  "mangrove_chest_boat": {
+    "file": "MANGROVE_CHEST_BOAT.png",
+    "emojiName": "mangrove_chest_boat"
+  },
+  "mangrove_door": {
+    "file": "MANGROVE_DOOR.png",
+    "emojiName": "mangrove_door"
+  },
+  "mangrove_fence": {
+    "file": "MANGROVE_FENCE.png",
+    "emojiName": "mangrove_fence"
+  },
+  "mangrove_fence_gate": {
+    "file": "MANGROVE_FENCE_GATE.png",
+    "emojiName": "mangrove_fence_gate"
+  },
+  "mangrove_hanging_sign": {
+    "file": "MANGROVE_HANGING_SIGN.png",
+    "emojiName": "mangrove_hanging_sign"
+  },
+  "mangrove_leaves": {
+    "file": "MANGROVE_LEAVES.png",
+    "emojiName": "mangrove_leaves"
+  },
+  "mangrove_log": {
+    "file": "MANGROVE_LOG.png",
+    "emojiName": "mangrove_log"
+  },
+  "mangrove_planks": {
+    "file": "MANGROVE_PLANKS.png",
+    "emojiName": "mangrove_planks"
+  },
+  "mangrove_pressure_plate": {
+    "file": "MANGROVE_PRESSURE_PLATE.png",
+    "emojiName": "mangrove_pressure_plate"
+  },
+  "mangrove_propagule": {
+    "file": "MANGROVE_PROPAGULE.png",
+    "emojiName": "mangrove_propagule"
+  },
+  "mangrove_roots": {
+    "file": "MANGROVE_ROOTS.png",
+    "emojiName": "mangrove_roots"
+  },
+  "mangrove_shelf": {
+    "file": "MANGROVE_SHELF.png",
+    "emojiName": "mangrove_shelf"
+  },
+  "mangrove_sign": {
+    "file": "MANGROVE_SIGN.png",
+    "emojiName": "mangrove_sign"
+  },
+  "mangrove_slab": {
+    "file": "MANGROVE_SLAB.png",
+    "emojiName": "mangrove_slab"
+  },
+  "mangrove_stairs": {
+    "file": "MANGROVE_STAIRS.png",
+    "emojiName": "mangrove_stairs"
+  },
+  "mangrove_trapdoor": {
+    "file": "MANGROVE_TRAPDOOR.png",
+    "emojiName": "mangrove_trapdoor"
+  },
+  "mangrove_wood": {
+    "file": "MANGROVE_WOOD.png",
+    "emojiName": "mangrove_wood"
+  },
+  "map": {
+    "file": "MAP.png",
+    "emojiName": "map"
+  },
+  "medium_amethyst_bud": {
+    "file": "MEDIUM_AMETHYST_BUD.png",
+    "emojiName": "medium_amethyst_bud"
+  },
+  "melon": {
+    "file": "MELON.png",
+    "emojiName": "melon"
+  },
+  "melon_seeds": {
+    "file": "MELON_SEEDS.png",
+    "emojiName": "melon_seeds"
+  },
+  "melon_slice": {
+    "file": "MELON_SLICE.png",
+    "emojiName": "melon_slice"
+  },
+  "milk_bucket": {
+    "file": "MILK_BUCKET.png",
+    "emojiName": "milk_bucket"
+  },
+  "minecart": {
+    "file": "MINECART.png",
+    "emojiName": "minecart"
+  },
+  "miner_pottery_sherd": {
+    "file": "MINER_POTTERY_SHERD.png",
+    "emojiName": "miner_pottery_sherd"
+  },
+  "mineshaft_map": {
+    "file": "MINESHAFT_MAP.png",
+    "emojiName": "mineshaft_map"
+  },
+  "mojang_banner_pattern": {
+    "file": "MOJANG_BANNER_PATTERN.png",
+    "emojiName": "mojang_banner_pattern"
+  },
+  "mooshroom_spawn_egg": {
+    "file": "MOOSHROOM_SPAWN_EGG.png",
+    "emojiName": "mooshroom_spawn_egg"
+  },
+  "mossy_cobblestone": {
+    "file": "MOSSY_COBBLESTONE.png",
+    "emojiName": "mossy_cobblestone"
+  },
+  "mossy_cobblestone_slab": {
+    "file": "MOSSY_COBBLESTONE_SLAB.png",
+    "emojiName": "mossy_cobblestone_slab"
+  },
+  "mossy_cobblestone_stairs": {
+    "file": "MOSSY_COBBLESTONE_STAIRS.png",
+    "emojiName": "mossy_cobblestone_stairs"
+  },
+  "mossy_cobblestone_wall": {
+    "file": "MOSSY_COBBLESTONE_WALL.png",
+    "emojiName": "mossy_cobblestone_wall"
+  },
+  "mossy_stone_bricks": {
+    "file": "MOSSY_STONE_BRICKS.png",
+    "emojiName": "mossy_stone_bricks"
+  },
+  "mossy_stone_brick_slab": {
+    "file": "MOSSY_STONE_BRICK_SLAB.png",
+    "emojiName": "mossy_stone_brick_slab"
+  },
+  "mossy_stone_brick_stairs": {
+    "file": "MOSSY_STONE_BRICK_STAIRS.png",
+    "emojiName": "mossy_stone_brick_stairs"
+  },
+  "mossy_stone_brick_wall": {
+    "file": "MOSSY_STONE_BRICK_WALL.png",
+    "emojiName": "mossy_stone_brick_wall"
+  },
+  "moss_block": {
+    "file": "MOSS_BLOCK.png",
+    "emojiName": "moss_block"
+  },
+  "moss_carpet": {
+    "file": "MOSS_CARPET.png",
+    "emojiName": "moss_carpet"
+  },
+  "mourner_pottery_sherd": {
+    "file": "MOURNER_POTTERY_SHERD.png",
+    "emojiName": "mourner_pottery_sherd"
+  },
+  "mud": {
+    "file": "MUD.png",
+    "emojiName": "mud"
+  },
+  "muddy_mangrove_roots": {
+    "file": "MUDDY_MANGROVE_ROOTS.png",
+    "emojiName": "muddy_mangrove_roots"
+  },
+  "mud_bricks": {
+    "file": "MUD_BRICKS.png",
+    "emojiName": "mud_bricks"
+  },
+  "mud_brick_slab": {
+    "file": "MUD_BRICK_SLAB.png",
+    "emojiName": "mud_brick_slab"
+  },
+  "mud_brick_stairs": {
+    "file": "MUD_BRICK_STAIRS.png",
+    "emojiName": "mud_brick_stairs"
+  },
+  "mud_brick_wall": {
+    "file": "MUD_BRICK_WALL.png",
+    "emojiName": "mud_brick_wall"
+  },
+  "mule_spawn_egg": {
+    "file": "MULE_SPAWN_EGG.png",
+    "emojiName": "mule_spawn_egg"
+  },
+  "mushroom_stem": {
+    "file": "MUSHROOM_STEM.png",
+    "emojiName": "mushroom_stem"
+  },
+  "mushroom_stew": {
+    "file": "MUSHROOM_STEW.png",
+    "emojiName": "mushroom_stew"
+  },
+  "music_disc_11": {
+    "file": "MUSIC_DISC_11.png",
+    "emojiName": "music_disc_11"
+  },
+  "music_disc_13": {
+    "file": "MUSIC_DISC_13.png",
+    "emojiName": "music_disc_13"
+  },
+  "music_disc_5": {
+    "file": "MUSIC_DISC_5.png",
+    "emojiName": "music_disc_5"
+  },
+  "music_disc_blocks": {
+    "file": "MUSIC_DISC_BLOCKS.png",
+    "emojiName": "music_disc_blocks"
+  },
+  "music_disc_bounce": {
+    "file": "MUSIC_DISC_BOUNCE.png",
+    "emojiName": "music_disc_bounce"
+  },
+  "music_disc_cat": {
+    "file": "MUSIC_DISC_CAT.png",
+    "emojiName": "music_disc_cat"
+  },
+  "music_disc_chirp": {
+    "file": "MUSIC_DISC_CHIRP.png",
+    "emojiName": "music_disc_chirp"
+  },
+  "music_disc_creator": {
+    "file": "MUSIC_DISC_CREATOR.png",
+    "emojiName": "music_disc_creator"
+  },
+  "music_disc_creator_music_box": {
+    "file": "MUSIC_DISC_CREATOR_MUSIC_BOX.png",
+    "emojiName": "music_disc_creator_music_box"
+  },
+  "music_disc_far": {
+    "file": "MUSIC_DISC_FAR.png",
+    "emojiName": "music_disc_far"
+  },
+  "music_disc_lava_chicken": {
+    "file": "MUSIC_DISC_LAVA_CHICKEN.png",
+    "emojiName": "music_disc_lava_chicken"
+  },
+  "music_disc_mall": {
+    "file": "MUSIC_DISC_MALL.png",
+    "emojiName": "music_disc_mall"
+  },
+  "music_disc_mellohi": {
+    "file": "MUSIC_DISC_MELLOHI.png",
+    "emojiName": "music_disc_mellohi"
+  },
+  "music_disc_otherside": {
+    "file": "MUSIC_DISC_OTHERSIDE.png",
+    "emojiName": "music_disc_otherside"
+  },
+  "music_disc_pigstep": {
+    "file": "MUSIC_DISC_PIGSTEP.png",
+    "emojiName": "music_disc_pigstep"
+  },
+  "music_disc_precipice": {
+    "file": "MUSIC_DISC_PRECIPICE.png",
+    "emojiName": "music_disc_precipice"
+  },
+  "music_disc_relic": {
+    "file": "MUSIC_DISC_RELIC.png",
+    "emojiName": "music_disc_relic"
+  },
+  "music_disc_stal": {
+    "file": "MUSIC_DISC_STAL.png",
+    "emojiName": "music_disc_stal"
+  },
+  "music_disc_strad": {
+    "file": "MUSIC_DISC_STRAD.png",
+    "emojiName": "music_disc_strad"
+  },
+  "music_disc_tears": {
+    "file": "MUSIC_DISC_TEARS.png",
+    "emojiName": "music_disc_tears"
+  },
+  "music_disc_wait": {
+    "file": "MUSIC_DISC_WAIT.png",
+    "emojiName": "music_disc_wait"
+  },
+  "music_disc_ward": {
+    "file": "MUSIC_DISC_WARD.png",
+    "emojiName": "music_disc_ward"
+  },
+  "mutton": {
+    "file": "MUTTON.png",
+    "emojiName": "mutton"
+  },
+  "mycelium": {
+    "file": "MYCELIUM.png",
+    "emojiName": "mycelium"
+  },
+  "name_tag": {
+    "file": "NAME_TAG.png",
+    "emojiName": "name_tag"
+  },
+  "nautilus_shell": {
+    "file": "NAUTILUS_SHELL.png",
+    "emojiName": "nautilus_shell"
+  },
+  "nautilus_spawn_egg": {
+    "file": "NAUTILUS_SPAWN_EGG.png",
+    "emojiName": "nautilus_spawn_egg"
+  },
+  "netherite_axe": {
+    "file": "NETHERITE_AXE.png",
+    "emojiName": "netherite_axe"
+  },
+  "netherite_block": {
+    "file": "NETHERITE_BLOCK.png",
+    "emojiName": "netherite_block"
+  },
+  "netherite_boots": {
+    "file": "NETHERITE_BOOTS.png",
+    "emojiName": "netherite_boots"
+  },
+  "netherite_chestplate": {
+    "file": "NETHERITE_CHESTPLATE.png",
+    "emojiName": "netherite_chestplate"
+  },
+  "netherite_helmet": {
+    "file": "NETHERITE_HELMET.png",
+    "emojiName": "netherite_helmet"
+  },
+  "netherite_hoe": {
+    "file": "NETHERITE_HOE.png",
+    "emojiName": "netherite_hoe"
+  },
+  "netherite_horse_armor": {
+    "file": "NETHERITE_HORSE_ARMOR.png",
+    "emojiName": "netherite_horse_armor"
+  },
+  "netherite_ingot": {
+    "file": "NETHERITE_INGOT.png",
+    "emojiName": "netherite_ingot"
+  },
+  "netherite_leggings": {
+    "file": "NETHERITE_LEGGINGS.png",
+    "emojiName": "netherite_leggings"
+  },
+  "netherite_nautilus_armor": {
+    "file": "NETHERITE_NAUTILUS_ARMOR.png",
+    "emojiName": "netherite_nautilus_armor"
+  },
+  "netherite_pickaxe": {
+    "file": "NETHERITE_PICKAXE.png",
+    "emojiName": "netherite_pickaxe"
+  },
+  "netherite_scrap": {
+    "file": "NETHERITE_SCRAP.png",
+    "emojiName": "netherite_scrap"
+  },
+  "netherite_shovel": {
+    "file": "NETHERITE_SHOVEL.png",
+    "emojiName": "netherite_shovel"
+  },
+  "netherite_spear": {
+    "file": "NETHERITE_SPEAR.png",
+    "emojiName": "netherite_spear"
+  },
+  "netherite_sword": {
+    "file": "NETHERITE_SWORD.png",
+    "emojiName": "netherite_sword"
+  },
+  "netherite_upgrade_smithing_template": {
+    "file": "NETHERITE_UPGRADE_SMITHING_TEMPLATE.png",
+    "emojiName": "netherite_upgrade_template"
+  },
+  "netherrack": {
+    "file": "NETHERRACK.png",
+    "emojiName": "netherrack"
+  },
+  "nether_brick": {
+    "file": "NETHER_BRICK.png",
+    "emojiName": "nether_brick"
+  },
+  "nether_bricks": {
+    "file": "NETHER_BRICKS.png",
+    "emojiName": "nether_bricks"
+  },
+  "nether_brick_fence": {
+    "file": "NETHER_BRICK_FENCE.png",
+    "emojiName": "nether_brick_fence"
+  },
+  "nether_brick_slab": {
+    "file": "NETHER_BRICK_SLAB.png",
+    "emojiName": "nether_brick_slab"
+  },
+  "nether_brick_stairs": {
+    "file": "NETHER_BRICK_STAIRS.png",
+    "emojiName": "nether_brick_stairs"
+  },
+  "nether_brick_wall": {
+    "file": "NETHER_BRICK_WALL.png",
+    "emojiName": "nether_brick_wall"
+  },
+  "nether_gold_ore": {
+    "file": "NETHER_GOLD_ORE.png",
+    "emojiName": "nether_gold_ore"
+  },
+  "nether_quartz_ore": {
+    "file": "NETHER_QUARTZ_ORE.png",
+    "emojiName": "nether_quartz_ore"
+  },
+  "nether_sprouts": {
+    "file": "NETHER_SPROUTS.png",
+    "emojiName": "nether_sprouts"
+  },
+  "nether_star": {
+    "file": "NETHER_STAR.png",
+    "emojiName": "nether_star"
+  },
+  "nether_wart": {
+    "file": "NETHER_WART.png",
+    "emojiName": "nether_wart"
+  },
+  "nether_wart_block": {
+    "file": "NETHER_WART_BLOCK.png",
+    "emojiName": "nether_wart_block"
+  },
+  "note_block": {
+    "file": "NOTE_BLOCK.png",
+    "emojiName": "note_block"
+  },
+  "oak_boat": {
+    "file": "OAK_BOAT.png",
+    "emojiName": "oak_boat"
+  },
+  "oak_button": {
+    "file": "OAK_BUTTON.png",
+    "emojiName": "oak_button"
+  },
+  "oak_chest_boat": {
+    "file": "OAK_CHEST_BOAT.png",
+    "emojiName": "oak_chest_boat"
+  },
+  "oak_door": {
+    "file": "OAK_DOOR.png",
+    "emojiName": "oak_door"
+  },
+  "oak_fence": {
+    "file": "OAK_FENCE.png",
+    "emojiName": "oak_fence"
+  },
+  "oak_fence_gate": {
+    "file": "OAK_FENCE_GATE.png",
+    "emojiName": "oak_fence_gate"
+  },
+  "oak_hanging_sign": {
+    "file": "OAK_HANGING_SIGN.png",
+    "emojiName": "oak_hanging_sign"
+  },
+  "oak_leaves": {
+    "file": "OAK_LEAVES.png",
+    "emojiName": "oak_leaves"
+  },
+  "oak_log": {
+    "file": "OAK_LOG.png",
+    "emojiName": "oak_log"
+  },
+  "oak_planks": {
+    "file": "OAK_PLANKS.png",
+    "emojiName": "oak_planks"
+  },
+  "oak_pressure_plate": {
+    "file": "OAK_PRESSURE_PLATE.png",
+    "emojiName": "oak_pressure_plate"
+  },
+  "oak_sapling": {
+    "file": "OAK_SAPLING.png",
+    "emojiName": "oak_sapling"
+  },
+  "oak_shelf": {
+    "file": "OAK_SHELF.png",
+    "emojiName": "oak_shelf"
+  },
+  "oak_sign": {
+    "file": "OAK_SIGN.png",
+    "emojiName": "oak_sign"
+  },
+  "oak_slab": {
+    "file": "OAK_SLAB.png",
+    "emojiName": "oak_slab"
+  },
+  "oak_stairs": {
+    "file": "OAK_STAIRS.png",
+    "emojiName": "oak_stairs"
+  },
+  "oak_trapdoor": {
+    "file": "OAK_TRAPDOOR.png",
+    "emojiName": "oak_trapdoor"
+  },
+  "oak_wood": {
+    "file": "OAK_WOOD.png",
+    "emojiName": "oak_wood"
+  },
+  "observer": {
+    "file": "OBSERVER.png",
+    "emojiName": "observer"
+  },
+  "obsidian": {
+    "file": "OBSIDIAN.png",
+    "emojiName": "obsidian"
+  },
+  "ocean_explorer_map": {
+    "file": "OCEAN_EXPLORER_MAP.png",
+    "emojiName": "ocean_explorer_map"
+  },
+  "ocelot_spawn_egg": {
+    "file": "OCELOT_SPAWN_EGG.png",
+    "emojiName": "ocelot_spawn_egg"
+  },
+  "ochre_froglight": {
+    "file": "OCHRE_FROGLIGHT.png",
+    "emojiName": "ochre_froglight"
+  },
+  "ominous_bottle": {
+    "file": "OMINOUS_BOTTLE.png",
+    "emojiName": "ominous_bottle"
+  },
+  "ominous_trial_key": {
+    "file": "OMINOUS_TRIAL_KEY.png",
+    "emojiName": "ominous_trial_key"
+  },
+  "open_eyeblossom": {
+    "file": "OPEN_EYEBLOSSOM.png",
+    "emojiName": "open_eyeblossom"
+  },
+  "orange_banner": {
+    "file": "ORANGE_BANNER.png",
+    "emojiName": "orange_banner"
+  },
+  "orange_bed": {
+    "file": "ORANGE_BED.png",
+    "emojiName": "orange_bed"
+  },
+  "orange_bundle": {
+    "file": "ORANGE_BUNDLE.png",
+    "emojiName": "orange_bundle"
+  },
+  "orange_candle": {
+    "file": "ORANGE_CANDLE.png",
+    "emojiName": "orange_candle"
+  },
+  "orange_carpet": {
+    "file": "ORANGE_CARPET.png",
+    "emojiName": "orange_carpet"
+  },
+  "orange_concrete": {
+    "file": "ORANGE_CONCRETE.png",
+    "emojiName": "orange_concrete"
+  },
+  "orange_concrete_powder": {
+    "file": "ORANGE_CONCRETE_POWDER.png",
+    "emojiName": "orange_concrete_powder"
+  },
+  "orange_concrete_slab": {
+    "file": "ORANGE_CONCRETE_SLAB.png",
+    "emojiName": "orange_concrete_slab"
+  },
+  "orange_concrete_stairs": {
+    "file": "ORANGE_CONCRETE_STAIRS.png",
+    "emojiName": "orange_concrete_stairs"
+  },
+  "orange_cushion": {
+    "file": "ORANGE_CUSHION.png",
+    "emojiName": "orange_cushion"
+  },
+  "orange_dye": {
+    "file": "ORANGE_DYE.png",
+    "emojiName": "orange_dye"
+  },
+  "orange_glazed_terracotta": {
+    "file": "ORANGE_GLAZED_TERRACOTTA.png",
+    "emojiName": "orange_glazed_terracotta"
+  },
+  "orange_harness": {
+    "file": "ORANGE_HARNESS.png",
+    "emojiName": "orange_harness"
+  },
+  "orange_poplar_leaves": {
+    "file": "ORANGE_POPLAR_LEAVES.png",
+    "emojiName": "orange_poplar_leaves"
+  },
+  "orange_shulker_box": {
+    "file": "ORANGE_SHULKER_BOX.png",
+    "emojiName": "orange_shulker_box"
+  },
+  "orange_stained_glass": {
+    "file": "ORANGE_STAINED_GLASS.png",
+    "emojiName": "orange_stained_glass"
+  },
+  "orange_stained_glass_pane": {
+    "file": "ORANGE_STAINED_GLASS_PANE.png",
+    "emojiName": "orange_stained_glass_pane"
+  },
+  "orange_terracotta": {
+    "file": "ORANGE_TERRACOTTA.png",
+    "emojiName": "orange_terracotta"
+  },
+  "orange_tulip": {
+    "file": "ORANGE_TULIP.png",
+    "emojiName": "orange_tulip"
+  },
+  "orange_wool": {
+    "file": "ORANGE_WOOL.png",
+    "emojiName": "orange_wool"
+  },
+  "orange_wool_slab": {
+    "file": "ORANGE_WOOL_SLAB.png",
+    "emojiName": "orange_wool_slab"
+  },
+  "orange_wool_stairs": {
+    "file": "ORANGE_WOOL_STAIRS.png",
+    "emojiName": "orange_wool_stairs"
+  },
+  "oxeye_daisy": {
+    "file": "OXEYE_DAISY.png",
+    "emojiName": "oxeye_daisy"
+  },
+  "oxidized_chiseled_copper": {
+    "file": "OXIDIZED_CHISELED_COPPER.png",
+    "emojiName": "oxidized_chiseled_copper"
+  },
+  "oxidized_copper": {
+    "file": "OXIDIZED_COPPER.png",
+    "emojiName": "oxidized_copper"
+  },
+  "oxidized_copper_bars": {
+    "file": "OXIDIZED_COPPER_BARS.png",
+    "emojiName": "oxidized_copper_bars"
+  },
+  "oxidized_copper_bulb": {
+    "file": "OXIDIZED_COPPER_BULB.png",
+    "emojiName": "oxidized_copper_bulb"
+  },
+  "oxidized_copper_chain": {
+    "file": "OXIDIZED_COPPER_CHAIN.png",
+    "emojiName": "oxidized_copper_chain"
+  },
+  "oxidized_copper_chest": {
+    "file": "OXIDIZED_COPPER_CHEST.png",
+    "emojiName": "oxidized_copper_chest"
+  },
+  "oxidized_copper_door": {
+    "file": "OXIDIZED_COPPER_DOOR.png",
+    "emojiName": "oxidized_copper_door"
+  },
+  "oxidized_copper_golem_statue": {
+    "file": "OXIDIZED_COPPER_GOLEM_STATUE.png",
+    "emojiName": "oxidized_copper_golem_statue"
+  },
+  "oxidized_copper_grate": {
+    "file": "OXIDIZED_COPPER_GRATE.png",
+    "emojiName": "oxidized_copper_grate"
+  },
+  "oxidized_copper_lantern": {
+    "file": "OXIDIZED_COPPER_LANTERN.png",
+    "emojiName": "oxidized_copper_lantern"
+  },
+  "oxidized_copper_trapdoor": {
+    "file": "OXIDIZED_COPPER_TRAPDOOR.png",
+    "emojiName": "oxidized_copper_trapdoor"
+  },
+  "oxidized_cut_copper": {
+    "file": "OXIDIZED_CUT_COPPER.png",
+    "emojiName": "oxidized_cut_copper"
+  },
+  "oxidized_cut_copper_slab": {
+    "file": "OXIDIZED_CUT_COPPER_SLAB.png",
+    "emojiName": "oxidized_cut_copper_slab"
+  },
+  "oxidized_cut_copper_stairs": {
+    "file": "OXIDIZED_CUT_COPPER_STAIRS.png",
+    "emojiName": "oxidized_cut_copper_stairs"
+  },
+  "oxidized_lightning_rod": {
+    "file": "OXIDIZED_LIGHTNING_ROD.png",
+    "emojiName": "oxidized_lightning_rod"
+  },
+  "packed_ice": {
+    "file": "PACKED_ICE.png",
+    "emojiName": "packed_ice"
+  },
+  "packed_mud": {
+    "file": "PACKED_MUD.png",
+    "emojiName": "packed_mud"
+  },
+  "painting": {
+    "file": "PAINTING.png",
+    "emojiName": "painting"
+  },
+  "pale_hanging_moss": {
+    "file": "PALE_HANGING_MOSS.png",
+    "emojiName": "pale_hanging_moss"
+  },
+  "pale_moss_block": {
+    "file": "PALE_MOSS_BLOCK.png",
+    "emojiName": "pale_moss_block"
+  },
+  "pale_moss_carpet": {
+    "file": "PALE_MOSS_CARPET.png",
+    "emojiName": "pale_moss_carpet"
+  },
+  "pale_oak_boat": {
+    "file": "PALE_OAK_BOAT.png",
+    "emojiName": "pale_oak_boat"
+  },
+  "pale_oak_button": {
+    "file": "PALE_OAK_BUTTON.png",
+    "emojiName": "pale_oak_button"
+  },
+  "pale_oak_chest_boat": {
+    "file": "PALE_OAK_CHEST_BOAT.png",
+    "emojiName": "pale_oak_chest_boat"
+  },
+  "pale_oak_door": {
+    "file": "PALE_OAK_DOOR.png",
+    "emojiName": "pale_oak_door"
+  },
+  "pale_oak_fence": {
+    "file": "PALE_OAK_FENCE.png",
+    "emojiName": "pale_oak_fence"
+  },
+  "pale_oak_fence_gate": {
+    "file": "PALE_OAK_FENCE_GATE.png",
+    "emojiName": "pale_oak_fence_gate"
+  },
+  "pale_oak_hanging_sign": {
+    "file": "PALE_OAK_HANGING_SIGN.png",
+    "emojiName": "pale_oak_hanging_sign"
+  },
+  "pale_oak_leaves": {
+    "file": "PALE_OAK_LEAVES.png",
+    "emojiName": "pale_oak_leaves"
+  },
+  "pale_oak_log": {
+    "file": "PALE_OAK_LOG.png",
+    "emojiName": "pale_oak_log"
+  },
+  "pale_oak_planks": {
+    "file": "PALE_OAK_PLANKS.png",
+    "emojiName": "pale_oak_planks"
+  },
+  "pale_oak_pressure_plate": {
+    "file": "PALE_OAK_PRESSURE_PLATE.png",
+    "emojiName": "pale_oak_pressure_plate"
+  },
+  "pale_oak_sapling": {
+    "file": "PALE_OAK_SAPLING.png",
+    "emojiName": "pale_oak_sapling"
+  },
+  "pale_oak_shelf": {
+    "file": "PALE_OAK_SHELF.png",
+    "emojiName": "pale_oak_shelf"
+  },
+  "pale_oak_sign": {
+    "file": "PALE_OAK_SIGN.png",
+    "emojiName": "pale_oak_sign"
+  },
+  "pale_oak_slab": {
+    "file": "PALE_OAK_SLAB.png",
+    "emojiName": "pale_oak_slab"
+  },
+  "pale_oak_stairs": {
+    "file": "PALE_OAK_STAIRS.png",
+    "emojiName": "pale_oak_stairs"
+  },
+  "pale_oak_trapdoor": {
+    "file": "PALE_OAK_TRAPDOOR.png",
+    "emojiName": "pale_oak_trapdoor"
+  },
+  "pale_oak_wood": {
+    "file": "PALE_OAK_WOOD.png",
+    "emojiName": "pale_oak_wood"
+  },
+  "panda_spawn_egg": {
+    "file": "PANDA_SPAWN_EGG.png",
+    "emojiName": "panda_spawn_egg"
+  },
+  "paper": {
+    "file": "PAPER.png",
+    "emojiName": "paper"
+  },
+  "parched_spawn_egg": {
+    "file": "PARCHED_SPAWN_EGG.png",
+    "emojiName": "parched_spawn_egg"
+  },
+  "parrot_spawn_egg": {
+    "file": "PARROT_SPAWN_EGG.png",
+    "emojiName": "parrot_spawn_egg"
+  },
+  "pearlescent_froglight": {
+    "file": "PEARLESCENT_FROGLIGHT.png",
+    "emojiName": "pearlescent_froglight"
+  },
+  "peony": {
+    "file": "PEONY.png",
+    "emojiName": "peony"
+  },
+  "petrified_oak_slab": {
+    "file": "PETRIFIED_OAK_SLAB.png",
+    "emojiName": "petrified_oak_slab"
+  },
+  "phantom_membrane": {
+    "file": "PHANTOM_MEMBRANE.png",
+    "emojiName": "phantom_membrane"
+  },
+  "phantom_spawn_egg": {
+    "file": "PHANTOM_SPAWN_EGG.png",
+    "emojiName": "phantom_spawn_egg"
+  },
+  "piglin_banner_pattern": {
+    "file": "PIGLIN_BANNER_PATTERN.png",
+    "emojiName": "piglin_banner_pattern"
+  },
+  "piglin_brute_spawn_egg": {
+    "file": "PIGLIN_BRUTE_SPAWN_EGG.png",
+    "emojiName": "piglin_brute_spawn_egg"
+  },
+  "piglin_head": {
+    "file": "PIGLIN_HEAD.png",
+    "emojiName": "piglin_head"
+  },
+  "piglin_spawn_egg": {
+    "file": "PIGLIN_SPAWN_EGG.png",
+    "emojiName": "piglin_spawn_egg"
+  },
+  "pig_spawn_egg": {
+    "file": "PIG_SPAWN_EGG.png",
+    "emojiName": "pig_spawn_egg"
+  },
+  "pillager_spawn_egg": {
+    "file": "PILLAGER_SPAWN_EGG.png",
+    "emojiName": "pillager_spawn_egg"
+  },
+  "pink_banner": {
+    "file": "PINK_BANNER.png",
+    "emojiName": "pink_banner"
+  },
+  "pink_bed": {
+    "file": "PINK_BED.png",
+    "emojiName": "pink_bed"
+  },
+  "pink_bundle": {
+    "file": "PINK_BUNDLE.png",
+    "emojiName": "pink_bundle"
+  },
+  "pink_candle": {
+    "file": "PINK_CANDLE.png",
+    "emojiName": "pink_candle"
+  },
+  "pink_carpet": {
+    "file": "PINK_CARPET.png",
+    "emojiName": "pink_carpet"
+  },
+  "pink_concrete": {
+    "file": "PINK_CONCRETE.png",
+    "emojiName": "pink_concrete"
+  },
+  "pink_concrete_powder": {
+    "file": "PINK_CONCRETE_POWDER.png",
+    "emojiName": "pink_concrete_powder"
+  },
+  "pink_concrete_slab": {
+    "file": "PINK_CONCRETE_SLAB.png",
+    "emojiName": "pink_concrete_slab"
+  },
+  "pink_concrete_stairs": {
+    "file": "PINK_CONCRETE_STAIRS.png",
+    "emojiName": "pink_concrete_stairs"
+  },
+  "pink_cushion": {
+    "file": "PINK_CUSHION.png",
+    "emojiName": "pink_cushion"
+  },
+  "pink_dye": {
+    "file": "PINK_DYE.png",
+    "emojiName": "pink_dye"
+  },
+  "pink_glazed_terracotta": {
+    "file": "PINK_GLAZED_TERRACOTTA.png",
+    "emojiName": "pink_glazed_terracotta"
+  },
+  "pink_harness": {
+    "file": "PINK_HARNESS.png",
+    "emojiName": "pink_harness"
+  },
+  "pink_petals": {
+    "file": "PINK_PETALS.png",
+    "emojiName": "pink_petals"
+  },
+  "pink_shulker_box": {
+    "file": "PINK_SHULKER_BOX.png",
+    "emojiName": "pink_shulker_box"
+  },
+  "pink_stained_glass": {
+    "file": "PINK_STAINED_GLASS.png",
+    "emojiName": "pink_stained_glass"
+  },
+  "pink_stained_glass_pane": {
+    "file": "PINK_STAINED_GLASS_PANE.png",
+    "emojiName": "pink_stained_glass_pane"
+  },
+  "pink_terracotta": {
+    "file": "PINK_TERRACOTTA.png",
+    "emojiName": "pink_terracotta"
+  },
+  "pink_tulip": {
+    "file": "PINK_TULIP.png",
+    "emojiName": "pink_tulip"
+  },
+  "pink_wool": {
+    "file": "PINK_WOOL.png",
+    "emojiName": "pink_wool"
+  },
+  "pink_wool_slab": {
+    "file": "PINK_WOOL_SLAB.png",
+    "emojiName": "pink_wool_slab"
+  },
+  "pink_wool_stairs": {
+    "file": "PINK_WOOL_STAIRS.png",
+    "emojiName": "pink_wool_stairs"
+  },
+  "piston": {
+    "file": "PISTON.png",
+    "emojiName": "piston"
+  },
+  "pitcher_plant": {
+    "file": "PITCHER_PLANT.png",
+    "emojiName": "pitcher_plant"
+  },
+  "pitcher_pod": {
+    "file": "PITCHER_POD.png",
+    "emojiName": "pitcher_pod"
+  },
+  "plains_village_map": {
+    "file": "PLAINS_VILLAGE_MAP.png",
+    "emojiName": "plains_village_map"
+  },
+  "player_head": {
+    "file": "PLAYER_HEAD.png",
+    "emojiName": "player_head"
+  },
+  "plenty_pottery_sherd": {
+    "file": "PLENTY_POTTERY_SHERD.png",
+    "emojiName": "plenty_pottery_sherd"
+  },
+  "podzol": {
+    "file": "PODZOL.png",
+    "emojiName": "podzol"
+  },
+  "pointed_dripstone": {
+    "file": "POINTED_DRIPSTONE.png",
+    "emojiName": "pointed_dripstone"
+  },
+  "poisonous_potato": {
+    "file": "POISONOUS_POTATO.png",
+    "emojiName": "poisonous_potato"
+  },
+  "polar_bear_spawn_egg": {
+    "file": "POLAR_BEAR_SPAWN_EGG.png",
+    "emojiName": "polar_bear_spawn_egg"
+  },
+  "polished_andesite": {
+    "file": "POLISHED_ANDESITE.png",
+    "emojiName": "polished_andesite"
+  },
+  "polished_andesite_slab": {
+    "file": "POLISHED_ANDESITE_SLAB.png",
+    "emojiName": "polished_andesite_slab"
+  },
+  "polished_andesite_stairs": {
+    "file": "POLISHED_ANDESITE_STAIRS.png",
+    "emojiName": "polished_andesite_stairs"
+  },
+  "polished_basalt": {
+    "file": "POLISHED_BASALT.png",
+    "emojiName": "polished_basalt"
+  },
+  "polished_blackstone": {
+    "file": "POLISHED_BLACKSTONE.png",
+    "emojiName": "polished_blackstone"
+  },
+  "polished_blackstone_bricks": {
+    "file": "POLISHED_BLACKSTONE_BRICKS.png",
+    "emojiName": "polished_blackstone_bricks"
+  },
+  "polished_blackstone_brick_slab": {
+    "file": "POLISHED_BLACKSTONE_BRICK_SLAB.png",
+    "emojiName": "polished_blackstone_brick_slab"
+  },
+  "polished_blackstone_brick_stairs": {
+    "file": "POLISHED_BLACKSTONE_BRICK_STAIRS.png",
+    "emojiName": "polished_blackstone_brick_stairs"
+  },
+  "polished_blackstone_brick_wall": {
+    "file": "POLISHED_BLACKSTONE_BRICK_WALL.png",
+    "emojiName": "polished_blackstone_brick_wall"
+  },
+  "polished_blackstone_button": {
+    "file": "POLISHED_BLACKSTONE_BUTTON.png",
+    "emojiName": "polished_blackstone_button"
+  },
+  "polished_blackstone_pressure_plate": {
+    "file": "POLISHED_BLACKSTONE_PRESSURE_PLATE.png",
+    "emojiName": "pol_blackstone_pressure_plate"
+  },
+  "polished_blackstone_slab": {
+    "file": "POLISHED_BLACKSTONE_SLAB.png",
+    "emojiName": "polished_blackstone_slab"
+  },
+  "polished_blackstone_stairs": {
+    "file": "POLISHED_BLACKSTONE_STAIRS.png",
+    "emojiName": "polished_blackstone_stairs"
+  },
+  "polished_blackstone_wall": {
+    "file": "POLISHED_BLACKSTONE_WALL.png",
+    "emojiName": "polished_blackstone_wall"
+  },
+  "polished_cinnabar": {
+    "file": "POLISHED_CINNABAR.png",
+    "emojiName": "polished_cinnabar"
+  },
+  "polished_cinnabar_slab": {
+    "file": "POLISHED_CINNABAR_SLAB.png",
+    "emojiName": "polished_cinnabar_slab"
+  },
+  "polished_cinnabar_stairs": {
+    "file": "POLISHED_CINNABAR_STAIRS.png",
+    "emojiName": "polished_cinnabar_stairs"
+  },
+  "polished_cinnabar_wall": {
+    "file": "POLISHED_CINNABAR_WALL.png",
+    "emojiName": "polished_cinnabar_wall"
+  },
+  "polished_deepslate": {
+    "file": "POLISHED_DEEPSLATE.png",
+    "emojiName": "polished_deepslate"
+  },
+  "polished_deepslate_slab": {
+    "file": "POLISHED_DEEPSLATE_SLAB.png",
+    "emojiName": "polished_deepslate_slab"
+  },
+  "polished_deepslate_stairs": {
+    "file": "POLISHED_DEEPSLATE_STAIRS.png",
+    "emojiName": "polished_deepslate_stairs"
+  },
+  "polished_deepslate_wall": {
+    "file": "POLISHED_DEEPSLATE_WALL.png",
+    "emojiName": "polished_deepslate_wall"
+  },
+  "polished_diorite": {
+    "file": "POLISHED_DIORITE.png",
+    "emojiName": "polished_diorite"
+  },
+  "polished_diorite_slab": {
+    "file": "POLISHED_DIORITE_SLAB.png",
+    "emojiName": "polished_diorite_slab"
+  },
+  "polished_diorite_stairs": {
+    "file": "POLISHED_DIORITE_STAIRS.png",
+    "emojiName": "polished_diorite_stairs"
+  },
+  "polished_granite": {
+    "file": "POLISHED_GRANITE.png",
+    "emojiName": "polished_granite"
+  },
+  "polished_granite_slab": {
+    "file": "POLISHED_GRANITE_SLAB.png",
+    "emojiName": "polished_granite_slab"
+  },
+  "polished_granite_stairs": {
+    "file": "POLISHED_GRANITE_STAIRS.png",
+    "emojiName": "polished_granite_stairs"
+  },
+  "polished_sulfur": {
+    "file": "POLISHED_SULFUR.png",
+    "emojiName": "polished_sulfur"
+  },
+  "polished_sulfur_slab": {
+    "file": "POLISHED_SULFUR_SLAB.png",
+    "emojiName": "polished_sulfur_slab"
+  },
+  "polished_sulfur_stairs": {
+    "file": "POLISHED_SULFUR_STAIRS.png",
+    "emojiName": "polished_sulfur_stairs"
+  },
+  "polished_sulfur_wall": {
+    "file": "POLISHED_SULFUR_WALL.png",
+    "emojiName": "polished_sulfur_wall"
+  },
+  "polished_tuff": {
+    "file": "POLISHED_TUFF.png",
+    "emojiName": "polished_tuff"
+  },
+  "polished_tuff_slab": {
+    "file": "POLISHED_TUFF_SLAB.png",
+    "emojiName": "polished_tuff_slab"
+  },
+  "polished_tuff_stairs": {
+    "file": "POLISHED_TUFF_STAIRS.png",
+    "emojiName": "polished_tuff_stairs"
+  },
+  "polished_tuff_wall": {
+    "file": "POLISHED_TUFF_WALL.png",
+    "emojiName": "polished_tuff_wall"
+  },
+  "poplar_boat": {
+    "file": "POPLAR_BOAT.png",
+    "emojiName": "poplar_boat"
+  },
+  "poplar_button": {
+    "file": "POPLAR_BUTTON.png",
+    "emojiName": "poplar_button"
+  },
+  "poplar_chest_boat": {
+    "file": "POPLAR_CHEST_BOAT.png",
+    "emojiName": "poplar_chest_boat"
+  },
+  "poplar_door": {
+    "file": "POPLAR_DOOR.png",
+    "emojiName": "poplar_door"
+  },
+  "poplar_fence": {
+    "file": "POPLAR_FENCE.png",
+    "emojiName": "poplar_fence"
+  },
+  "poplar_fence_gate": {
+    "file": "POPLAR_FENCE_GATE.png",
+    "emojiName": "poplar_fence_gate"
+  },
+  "poplar_hanging_sign": {
+    "file": "POPLAR_HANGING_SIGN.png",
+    "emojiName": "poplar_hanging_sign"
+  },
+  "poplar_log": {
+    "file": "POPLAR_LOG.png",
+    "emojiName": "poplar_log"
+  },
+  "poplar_planks": {
+    "file": "POPLAR_PLANKS.png",
+    "emojiName": "poplar_planks"
+  },
+  "poplar_pressure_plate": {
+    "file": "POPLAR_PRESSURE_PLATE.png",
+    "emojiName": "poplar_pressure_plate"
+  },
+  "poplar_sapling": {
+    "file": "POPLAR_SAPLING.png",
+    "emojiName": "poplar_sapling"
+  },
+  "poplar_shelf": {
+    "file": "POPLAR_SHELF.png",
+    "emojiName": "poplar_shelf"
+  },
+  "poplar_sign": {
+    "file": "POPLAR_SIGN.png",
+    "emojiName": "poplar_sign"
+  },
+  "poplar_slab": {
+    "file": "POPLAR_SLAB.png",
+    "emojiName": "poplar_slab"
+  },
+  "poplar_stairs": {
+    "file": "POPLAR_STAIRS.png",
+    "emojiName": "poplar_stairs"
+  },
+  "poplar_trapdoor": {
+    "file": "POPLAR_TRAPDOOR.png",
+    "emojiName": "poplar_trapdoor"
+  },
+  "poplar_wood": {
+    "file": "POPLAR_WOOD.png",
+    "emojiName": "poplar_wood"
+  },
+  "popped_chorus_fruit": {
+    "file": "POPPED_CHORUS_FRUIT.png",
+    "emojiName": "popped_chorus_fruit"
+  },
+  "poppy": {
+    "file": "POPPY.png",
+    "emojiName": "poppy"
+  },
+  "porkchop": {
+    "file": "PORKCHOP.png",
+    "emojiName": "porkchop"
+  },
+  "potato": {
+    "file": "POTATO.png",
+    "emojiName": "potato"
+  },
+  "potent_sulfur": {
+    "file": "POTENT_SULFUR.png",
+    "emojiName": "potent_sulfur"
+  },
+  "potion": {
+    "file": "POTION.png",
+    "emojiName": "potion"
+  },
+  "powder_snow_bucket": {
+    "file": "POWDER_SNOW_BUCKET.png",
+    "emojiName": "powder_snow_bucket"
+  },
+  "powered_rail": {
+    "file": "POWERED_RAIL.png",
+    "emojiName": "powered_rail"
+  },
+  "prismarine": {
+    "file": "PRISMARINE.png",
+    "emojiName": "prismarine"
+  },
+  "prismarine_bricks": {
+    "file": "PRISMARINE_BRICKS.png",
+    "emojiName": "prismarine_bricks"
+  },
+  "prismarine_brick_slab": {
+    "file": "PRISMARINE_BRICK_SLAB.png",
+    "emojiName": "prismarine_brick_slab"
+  },
+  "prismarine_brick_stairs": {
+    "file": "PRISMARINE_BRICK_STAIRS.png",
+    "emojiName": "prismarine_brick_stairs"
+  },
+  "prismarine_crystals": {
+    "file": "PRISMARINE_CRYSTALS.png",
+    "emojiName": "prismarine_crystals"
+  },
+  "prismarine_shard": {
+    "file": "PRISMARINE_SHARD.png",
+    "emojiName": "prismarine_shard"
+  },
+  "prismarine_slab": {
+    "file": "PRISMARINE_SLAB.png",
+    "emojiName": "prismarine_slab"
+  },
+  "prismarine_stairs": {
+    "file": "PRISMARINE_STAIRS.png",
+    "emojiName": "prismarine_stairs"
+  },
+  "prismarine_wall": {
+    "file": "PRISMARINE_WALL.png",
+    "emojiName": "prismarine_wall"
+  },
+  "prize_pottery_sherd": {
+    "file": "PRIZE_POTTERY_SHERD.png",
+    "emojiName": "prize_pottery_sherd"
+  },
+  "pufferfish": {
+    "file": "PUFFERFISH.png",
+    "emojiName": "pufferfish"
+  },
+  "pufferfish_bucket": {
+    "file": "PUFFERFISH_BUCKET.png",
+    "emojiName": "pufferfish_bucket"
+  },
+  "pufferfish_spawn_egg": {
+    "file": "PUFFERFISH_SPAWN_EGG.png",
+    "emojiName": "pufferfish_spawn_egg"
+  },
+  "pumpkin": {
+    "file": "PUMPKIN.png",
+    "emojiName": "pumpkin"
+  },
+  "pumpkin_pie": {
+    "file": "PUMPKIN_PIE.png",
+    "emojiName": "pumpkin_pie"
+  },
+  "pumpkin_seeds": {
+    "file": "PUMPKIN_SEEDS.png",
+    "emojiName": "pumpkin_seeds"
+  },
+  "purple_banner": {
+    "file": "PURPLE_BANNER.png",
+    "emojiName": "purple_banner"
+  },
+  "purple_bed": {
+    "file": "PURPLE_BED.png",
+    "emojiName": "purple_bed"
+  },
+  "purple_bundle": {
+    "file": "PURPLE_BUNDLE.png",
+    "emojiName": "purple_bundle"
+  },
+  "purple_candle": {
+    "file": "PURPLE_CANDLE.png",
+    "emojiName": "purple_candle"
+  },
+  "purple_carpet": {
+    "file": "PURPLE_CARPET.png",
+    "emojiName": "purple_carpet"
+  },
+  "purple_concrete": {
+    "file": "PURPLE_CONCRETE.png",
+    "emojiName": "purple_concrete"
+  },
+  "purple_concrete_powder": {
+    "file": "PURPLE_CONCRETE_POWDER.png",
+    "emojiName": "purple_concrete_powder"
+  },
+  "purple_concrete_slab": {
+    "file": "PURPLE_CONCRETE_SLAB.png",
+    "emojiName": "purple_concrete_slab"
+  },
+  "purple_concrete_stairs": {
+    "file": "PURPLE_CONCRETE_STAIRS.png",
+    "emojiName": "purple_concrete_stairs"
+  },
+  "purple_cushion": {
+    "file": "PURPLE_CUSHION.png",
+    "emojiName": "purple_cushion"
+  },
+  "purple_dye": {
+    "file": "PURPLE_DYE.png",
+    "emojiName": "purple_dye"
+  },
+  "purple_glazed_terracotta": {
+    "file": "PURPLE_GLAZED_TERRACOTTA.png",
+    "emojiName": "purple_glazed_terracotta"
+  },
+  "purple_harness": {
+    "file": "PURPLE_HARNESS.png",
+    "emojiName": "purple_harness"
+  },
+  "purple_shulker_box": {
+    "file": "PURPLE_SHULKER_BOX.png",
+    "emojiName": "purple_shulker_box"
+  },
+  "purple_stained_glass": {
+    "file": "PURPLE_STAINED_GLASS.png",
+    "emojiName": "purple_stained_glass"
+  },
+  "purple_stained_glass_pane": {
+    "file": "PURPLE_STAINED_GLASS_PANE.png",
+    "emojiName": "purple_stained_glass_pane"
+  },
+  "purple_terracotta": {
+    "file": "PURPLE_TERRACOTTA.png",
+    "emojiName": "purple_terracotta"
+  },
+  "purple_wool": {
+    "file": "PURPLE_WOOL.png",
+    "emojiName": "purple_wool"
+  },
+  "purple_wool_slab": {
+    "file": "PURPLE_WOOL_SLAB.png",
+    "emojiName": "purple_wool_slab"
+  },
+  "purple_wool_stairs": {
+    "file": "PURPLE_WOOL_STAIRS.png",
+    "emojiName": "purple_wool_stairs"
+  },
+  "purpur_block": {
+    "file": "PURPUR_BLOCK.png",
+    "emojiName": "purpur_block"
+  },
+  "purpur_pillar": {
+    "file": "PURPUR_PILLAR.png",
+    "emojiName": "purpur_pillar"
+  },
+  "purpur_slab": {
+    "file": "PURPUR_SLAB.png",
+    "emojiName": "purpur_slab"
+  },
+  "purpur_stairs": {
+    "file": "PURPUR_STAIRS.png",
+    "emojiName": "purpur_stairs"
+  },
+  "quartz": {
+    "file": "QUARTZ.png",
+    "emojiName": "quartz"
+  },
+  "quartz_block": {
+    "file": "QUARTZ_BLOCK.png",
+    "emojiName": "quartz_block"
+  },
+  "quartz_bricks": {
+    "file": "QUARTZ_BRICKS.png",
+    "emojiName": "quartz_bricks"
+  },
+  "quartz_pillar": {
+    "file": "QUARTZ_PILLAR.png",
+    "emojiName": "quartz_pillar"
+  },
+  "quartz_slab": {
+    "file": "QUARTZ_SLAB.png",
+    "emojiName": "quartz_slab"
+  },
+  "quartz_stairs": {
+    "file": "QUARTZ_STAIRS.png",
+    "emojiName": "quartz_stairs"
+  },
+  "rabbit": {
+    "file": "RABBIT.png",
+    "emojiName": "rabbit"
+  },
+  "rabbit_foot": {
+    "file": "RABBIT_FOOT.png",
+    "emojiName": "rabbit_foot"
+  },
+  "rabbit_hide": {
+    "file": "RABBIT_HIDE.png",
+    "emojiName": "rabbit_hide"
+  },
+  "rabbit_spawn_egg": {
+    "file": "RABBIT_SPAWN_EGG.png",
+    "emojiName": "rabbit_spawn_egg"
+  },
+  "rabbit_stew": {
+    "file": "RABBIT_STEW.png",
+    "emojiName": "rabbit_stew"
+  },
+  "rail": {
+    "file": "RAIL.png",
+    "emojiName": "rail"
+  },
+  "raiser_armor_trim_smithing_template": {
+    "file": "RAISER_ARMOR_TRIM_SMITHING_TEMPLATE.png",
+    "emojiName": "raiser_armor_trim_template"
+  },
+  "ravager_spawn_egg": {
+    "file": "RAVAGER_SPAWN_EGG.png",
+    "emojiName": "ravager_spawn_egg"
+  },
+  "raw_copper": {
+    "file": "RAW_COPPER.png",
+    "emojiName": "raw_copper"
+  },
+  "raw_copper_block": {
+    "file": "RAW_COPPER_BLOCK.png",
+    "emojiName": "raw_copper_block"
+  },
+  "raw_gold": {
+    "file": "RAW_GOLD.png",
+    "emojiName": "raw_gold"
+  },
+  "raw_gold_block": {
+    "file": "RAW_GOLD_BLOCK.png",
+    "emojiName": "raw_gold_block"
+  },
+  "raw_iron": {
+    "file": "RAW_IRON.png",
+    "emojiName": "raw_iron"
+  },
+  "raw_iron_block": {
+    "file": "RAW_IRON_BLOCK.png",
+    "emojiName": "raw_iron_block"
+  },
+  "recovery_compass": {
+    "file": "RECOVERY_COMPASS.png",
+    "emojiName": "recovery_compass"
+  },
+  "redstone": {
+    "file": "REDSTONE.png",
+    "emojiName": "redstone"
+  },
+  "redstone_block": {
+    "file": "REDSTONE_BLOCK.png",
+    "emojiName": "redstone_block"
+  },
+  "redstone_lamp": {
+    "file": "REDSTONE_LAMP.png",
+    "emojiName": "redstone_lamp"
+  },
+  "redstone_ore": {
+    "file": "REDSTONE_ORE.png",
+    "emojiName": "redstone_ore"
+  },
+  "redstone_torch": {
+    "file": "REDSTONE_TORCH.png",
+    "emojiName": "redstone_torch"
+  },
+  "red_banner": {
+    "file": "RED_BANNER.png",
+    "emojiName": "red_banner"
+  },
+  "red_bed": {
+    "file": "RED_BED.png",
+    "emojiName": "red_bed"
+  },
+  "red_bundle": {
+    "file": "RED_BUNDLE.png",
+    "emojiName": "red_bundle"
+  },
+  "red_candle": {
+    "file": "RED_CANDLE.png",
+    "emojiName": "red_candle"
+  },
+  "red_carpet": {
+    "file": "RED_CARPET.png",
+    "emojiName": "red_carpet"
+  },
+  "red_concrete": {
+    "file": "RED_CONCRETE.png",
+    "emojiName": "red_concrete"
+  },
+  "red_concrete_powder": {
+    "file": "RED_CONCRETE_POWDER.png",
+    "emojiName": "red_concrete_powder"
+  },
+  "red_concrete_slab": {
+    "file": "RED_CONCRETE_SLAB.png",
+    "emojiName": "red_concrete_slab"
+  },
+  "red_concrete_stairs": {
+    "file": "RED_CONCRETE_STAIRS.png",
+    "emojiName": "red_concrete_stairs"
+  },
+  "red_cushion": {
+    "file": "RED_CUSHION.png",
+    "emojiName": "red_cushion"
+  },
+  "red_dye": {
+    "file": "RED_DYE.png",
+    "emojiName": "red_dye"
+  },
+  "red_glazed_terracotta": {
+    "file": "RED_GLAZED_TERRACOTTA.png",
+    "emojiName": "red_glazed_terracotta"
+  },
+  "red_harness": {
+    "file": "RED_HARNESS.png",
+    "emojiName": "red_harness"
+  },
+  "red_mushroom": {
+    "file": "RED_MUSHROOM.png",
+    "emojiName": "red_mushroom"
+  },
+  "red_mushroom_block": {
+    "file": "RED_MUSHROOM_BLOCK.png",
+    "emojiName": "red_mushroom_block"
+  },
+  "red_nether_bricks": {
+    "file": "RED_NETHER_BRICKS.png",
+    "emojiName": "red_nether_bricks"
+  },
+  "red_nether_brick_slab": {
+    "file": "RED_NETHER_BRICK_SLAB.png",
+    "emojiName": "red_nether_brick_slab"
+  },
+  "red_nether_brick_stairs": {
+    "file": "RED_NETHER_BRICK_STAIRS.png",
+    "emojiName": "red_nether_brick_stairs"
+  },
+  "red_nether_brick_wall": {
+    "file": "RED_NETHER_BRICK_WALL.png",
+    "emojiName": "red_nether_brick_wall"
+  },
+  "red_poplar_leaves": {
+    "file": "RED_POPLAR_LEAVES.png",
+    "emojiName": "red_poplar_leaves"
+  },
+  "red_sand": {
+    "file": "RED_SAND.png",
+    "emojiName": "red_sand"
+  },
+  "red_sandstone": {
+    "file": "RED_SANDSTONE.png",
+    "emojiName": "red_sandstone"
+  },
+  "red_sandstone_slab": {
+    "file": "RED_SANDSTONE_SLAB.png",
+    "emojiName": "red_sandstone_slab"
+  },
+  "red_sandstone_stairs": {
+    "file": "RED_SANDSTONE_STAIRS.png",
+    "emojiName": "red_sandstone_stairs"
+  },
+  "red_sandstone_wall": {
+    "file": "RED_SANDSTONE_WALL.png",
+    "emojiName": "red_sandstone_wall"
+  },
+  "red_shrub": {
+    "file": "RED_SHRUB.png",
+    "emojiName": "red_shrub"
+  },
+  "red_shulker_box": {
+    "file": "RED_SHULKER_BOX.png",
+    "emojiName": "red_shulker_box"
+  },
+  "red_stained_glass": {
+    "file": "RED_STAINED_GLASS.png",
+    "emojiName": "red_stained_glass"
+  },
+  "red_stained_glass_pane": {
+    "file": "RED_STAINED_GLASS_PANE.png",
+    "emojiName": "red_stained_glass_pane"
+  },
+  "red_terracotta": {
+    "file": "RED_TERRACOTTA.png",
+    "emojiName": "red_terracotta"
+  },
+  "red_tulip": {
+    "file": "RED_TULIP.png",
+    "emojiName": "red_tulip"
+  },
+  "red_wool": {
+    "file": "RED_WOOL.png",
+    "emojiName": "red_wool"
+  },
+  "red_wool_slab": {
+    "file": "RED_WOOL_SLAB.png",
+    "emojiName": "red_wool_slab"
+  },
+  "red_wool_stairs": {
+    "file": "RED_WOOL_STAIRS.png",
+    "emojiName": "red_wool_stairs"
+  },
+  "reinforced_deepslate": {
+    "file": "REINFORCED_DEEPSLATE.png",
+    "emojiName": "reinforced_deepslate"
+  },
+  "repeater": {
+    "file": "REPEATER.png",
+    "emojiName": "repeater"
+  },
+  "repeating_command_block": {
+    "file": "REPEATING_COMMAND_BLOCK.png",
+    "emojiName": "repeating_command_block"
+  },
+  "resin_block": {
+    "file": "RESIN_BLOCK.png",
+    "emojiName": "resin_block"
+  },
+  "resin_brick": {
+    "file": "RESIN_BRICK.png",
+    "emojiName": "resin_brick"
+  },
+  "resin_bricks": {
+    "file": "RESIN_BRICKS.png",
+    "emojiName": "resin_bricks"
+  },
+  "resin_brick_slab": {
+    "file": "RESIN_BRICK_SLAB.png",
+    "emojiName": "resin_brick_slab"
+  },
+  "resin_brick_stairs": {
+    "file": "RESIN_BRICK_STAIRS.png",
+    "emojiName": "resin_brick_stairs"
+  },
+  "resin_brick_wall": {
+    "file": "RESIN_BRICK_WALL.png",
+    "emojiName": "resin_brick_wall"
+  },
+  "resin_clump": {
+    "file": "RESIN_CLUMP.png",
+    "emojiName": "resin_clump"
+  },
+  "respawn_anchor": {
+    "file": "RESPAWN_ANCHOR.png",
+    "emojiName": "respawn_anchor"
+  },
+  "rib_armor_trim_smithing_template": {
+    "file": "RIB_ARMOR_TRIM_SMITHING_TEMPLATE.png",
+    "emojiName": "rib_armor_trim_smithing_template"
+  },
+  "rooted_dirt": {
+    "file": "ROOTED_DIRT.png",
+    "emojiName": "rooted_dirt"
+  },
+  "rose_bush": {
+    "file": "ROSE_BUSH.png",
+    "emojiName": "rose_bush"
+  },
+  "rotten_flesh": {
+    "file": "ROTTEN_FLESH.png",
+    "emojiName": "rotten_flesh"
+  },
+  "saddle": {
+    "file": "SADDLE.png",
+    "emojiName": "saddle"
+  },
+  "salmon": {
+    "file": "SALMON.png",
+    "emojiName": "salmon"
+  },
+  "salmon_bucket": {
+    "file": "SALMON_BUCKET.png",
+    "emojiName": "salmon_bucket"
+  },
+  "salmon_spawn_egg": {
+    "file": "SALMON_SPAWN_EGG.png",
+    "emojiName": "salmon_spawn_egg"
+  },
+  "sand": {
+    "file": "SAND.png",
+    "emojiName": "sand"
+  },
+  "sandstone": {
+    "file": "SANDSTONE.png",
+    "emojiName": "sandstone"
+  },
+  "sandstone_slab": {
+    "file": "SANDSTONE_SLAB.png",
+    "emojiName": "sandstone_slab"
+  },
+  "sandstone_stairs": {
+    "file": "SANDSTONE_STAIRS.png",
+    "emojiName": "sandstone_stairs"
+  },
+  "sandstone_wall": {
+    "file": "SANDSTONE_WALL.png",
+    "emojiName": "sandstone_wall"
+  },
+  "savanna_village_map": {
+    "file": "SAVANNA_VILLAGE_MAP.png",
+    "emojiName": "savanna_village_map"
+  },
+  "scaffolding": {
+    "file": "SCAFFOLDING.png",
+    "emojiName": "scaffolding"
+  },
+  "scrape_pottery_sherd": {
+    "file": "SCRAPE_POTTERY_SHERD.png",
+    "emojiName": "scrape_pottery_sherd"
+  },
+  "sculk": {
+    "file": "SCULK.png",
+    "emojiName": "sculk"
+  },
+  "sculk_catalyst": {
+    "file": "SCULK_CATALYST.png",
+    "emojiName": "sculk_catalyst"
+  },
+  "sculk_sensor": {
+    "file": "SCULK_SENSOR.png",
+    "emojiName": "sculk_sensor"
+  },
+  "sculk_shrieker": {
+    "file": "SCULK_SHRIEKER.png",
+    "emojiName": "sculk_shrieker"
+  },
+  "sculk_vein": {
+    "file": "SCULK_VEIN.png",
+    "emojiName": "sculk_vein"
+  },
+  "seagrass": {
+    "file": "SEAGRASS.png",
+    "emojiName": "seagrass"
+  },
+  "sea_lantern": {
+    "file": "SEA_LANTERN.png",
+    "emojiName": "sea_lantern"
+  },
+  "sea_pickle": {
+    "file": "SEA_PICKLE.png",
+    "emojiName": "sea_pickle"
+  },
+  "sentry_armor_trim_smithing_template": {
+    "file": "SENTRY_ARMOR_TRIM_SMITHING_TEMPLATE.png",
+    "emojiName": "sentry_armor_trim_template"
+  },
+  "shaper_armor_trim_smithing_template": {
+    "file": "SHAPER_ARMOR_TRIM_SMITHING_TEMPLATE.png",
+    "emojiName": "shaper_armor_trim_template"
+  },
+  "sheaf_pottery_sherd": {
+    "file": "SHEAF_POTTERY_SHERD.png",
+    "emojiName": "sheaf_pottery_sherd"
+  },
+  "shears": {
+    "file": "SHEARS.png",
+    "emojiName": "shears"
+  },
+  "sheep_spawn_egg": {
+    "file": "SHEEP_SPAWN_EGG.png",
+    "emojiName": "sheep_spawn_egg"
+  },
+  "shelf_mushroom": {
+    "file": "SHELF_MUSHROOM.png",
+    "emojiName": "shelf_mushroom"
+  },
+  "shelter_pottery_sherd": {
+    "file": "SHELTER_POTTERY_SHERD.png",
+    "emojiName": "shelter_pottery_sherd"
+  },
+  "shield": {
+    "file": "SHIELD.png",
+    "emojiName": "shield"
+  },
+  "short_dry_grass": {
+    "file": "SHORT_DRY_GRASS.png",
+    "emojiName": "short_dry_grass"
+  },
+  "short_grass": {
+    "file": "SHORT_GRASS.png",
+    "emojiName": "short_grass"
+  },
+  "shroomlight": {
+    "file": "SHROOMLIGHT.png",
+    "emojiName": "shroomlight"
+  },
+  "shulker_box": {
+    "file": "SHULKER_BOX.png",
+    "emojiName": "shulker_box"
+  },
+  "shulker_shell": {
+    "file": "SHULKER_SHELL.png",
+    "emojiName": "shulker_shell"
+  },
+  "shulker_spawn_egg": {
+    "file": "SHULKER_SPAWN_EGG.png",
+    "emojiName": "shulker_spawn_egg"
+  },
+  "silence_armor_trim_smithing_template": {
+    "file": "SILENCE_ARMOR_TRIM_SMITHING_TEMPLATE.png",
+    "emojiName": "silence_armor_trim_template"
+  },
+  "silverfish_spawn_egg": {
+    "file": "SILVERFISH_SPAWN_EGG.png",
+    "emojiName": "silverfish_spawn_egg"
+  },
+  "skeleton_horse_spawn_egg": {
+    "file": "SKELETON_HORSE_SPAWN_EGG.png",
+    "emojiName": "skeleton_horse_spawn_egg"
+  },
+  "skeleton_skull": {
+    "file": "SKELETON_SKULL.png",
+    "emojiName": "skeleton_skull"
+  },
+  "skeleton_spawn_egg": {
+    "file": "SKELETON_SPAWN_EGG.png",
+    "emojiName": "skeleton_spawn_egg"
+  },
+  "skull_banner_pattern": {
+    "file": "SKULL_BANNER_PATTERN.png",
+    "emojiName": "skull_banner_pattern"
+  },
+  "skull_pottery_sherd": {
+    "file": "SKULL_POTTERY_SHERD.png",
+    "emojiName": "skull_pottery_sherd"
+  },
+  "slime_ball": {
+    "file": "SLIME_BALL.png",
+    "emojiName": "slime_ball"
+  },
+  "slime_block": {
+    "file": "SLIME_BLOCK.png",
+    "emojiName": "slime_block"
+  },
+  "slime_spawn_egg": {
+    "file": "SLIME_SPAWN_EGG.png",
+    "emojiName": "slime_spawn_egg"
+  },
+  "small_amethyst_bud": {
+    "file": "SMALL_AMETHYST_BUD.png",
+    "emojiName": "small_amethyst_bud"
+  },
+  "small_dripleaf": {
+    "file": "SMALL_DRIPLEAF.png",
+    "emojiName": "small_dripleaf"
+  },
+  "smithing_table": {
+    "file": "SMITHING_TABLE.png",
+    "emojiName": "smithing_table"
+  },
+  "smoker": {
+    "file": "SMOKER.png",
+    "emojiName": "smoker"
+  },
+  "smooth_basalt": {
+    "file": "SMOOTH_BASALT.png",
+    "emojiName": "smooth_basalt"
+  },
+  "smooth_quartz": {
+    "file": "SMOOTH_QUARTZ.png",
+    "emojiName": "smooth_quartz"
+  },
+  "smooth_quartz_slab": {
+    "file": "SMOOTH_QUARTZ_SLAB.png",
+    "emojiName": "smooth_quartz_slab"
+  },
+  "smooth_quartz_stairs": {
+    "file": "SMOOTH_QUARTZ_STAIRS.png",
+    "emojiName": "smooth_quartz_stairs"
+  },
+  "smooth_red_sandstone": {
+    "file": "SMOOTH_RED_SANDSTONE.png",
+    "emojiName": "smooth_red_sandstone"
+  },
+  "smooth_red_sandstone_slab": {
+    "file": "SMOOTH_RED_SANDSTONE_SLAB.png",
+    "emojiName": "smooth_red_sandstone_slab"
+  },
+  "smooth_red_sandstone_stairs": {
+    "file": "SMOOTH_RED_SANDSTONE_STAIRS.png",
+    "emojiName": "smooth_red_sandstone_stairs"
+  },
+  "smooth_sandstone": {
+    "file": "SMOOTH_SANDSTONE.png",
+    "emojiName": "smooth_sandstone"
+  },
+  "smooth_sandstone_slab": {
+    "file": "SMOOTH_SANDSTONE_SLAB.png",
+    "emojiName": "smooth_sandstone_slab"
+  },
+  "smooth_sandstone_stairs": {
+    "file": "SMOOTH_SANDSTONE_STAIRS.png",
+    "emojiName": "smooth_sandstone_stairs"
+  },
+  "smooth_stone": {
+    "file": "SMOOTH_STONE.png",
+    "emojiName": "smooth_stone"
+  },
+  "smooth_stone_slab": {
+    "file": "SMOOTH_STONE_SLAB.png",
+    "emojiName": "smooth_stone_slab"
+  },
+  "sniffer_egg": {
+    "file": "SNIFFER_EGG.png",
+    "emojiName": "sniffer_egg"
+  },
+  "sniffer_spawn_egg": {
+    "file": "SNIFFER_SPAWN_EGG.png",
+    "emojiName": "sniffer_spawn_egg"
+  },
+  "snort_pottery_sherd": {
+    "file": "SNORT_POTTERY_SHERD.png",
+    "emojiName": "snort_pottery_sherd"
+  },
+  "snout_armor_trim_smithing_template": {
+    "file": "SNOUT_ARMOR_TRIM_SMITHING_TEMPLATE.png",
+    "emojiName": "snout_armor_trim_template"
+  },
+  "snow": {
+    "file": "SNOW.png",
+    "emojiName": "snow"
+  },
+  "snowball": {
+    "file": "SNOWBALL.png",
+    "emojiName": "snowball"
+  },
+  "snowy_village_map": {
+    "file": "SNOWY_VILLAGE_MAP.png",
+    "emojiName": "snowy_village_map"
+  },
+  "snow_block": {
+    "file": "SNOW_BLOCK.png",
+    "emojiName": "snow_block"
+  },
+  "snow_golem_spawn_egg": {
+    "file": "SNOW_GOLEM_SPAWN_EGG.png",
+    "emojiName": "snow_golem_spawn_egg"
+  },
+  "soul_campfire": {
+    "file": "SOUL_CAMPFIRE.png",
+    "emojiName": "soul_campfire"
+  },
+  "soul_lantern": {
+    "file": "SOUL_LANTERN.png",
+    "emojiName": "soul_lantern"
+  },
+  "soul_sand": {
+    "file": "SOUL_SAND.png",
+    "emojiName": "soul_sand"
+  },
+  "soul_soil": {
+    "file": "SOUL_SOIL.png",
+    "emojiName": "soul_soil"
+  },
+  "soul_torch": {
+    "file": "SOUL_TORCH.png",
+    "emojiName": "soul_torch"
+  },
+  "spawner": {
+    "file": "SPAWNER.png",
+    "emojiName": "spawner"
+  },
+  "spectral_arrow": {
+    "file": "SPECTRAL_ARROW.png",
+    "emojiName": "spectral_arrow"
+  },
+  "spider_eye": {
+    "file": "SPIDER_EYE.png",
+    "emojiName": "spider_eye"
+  },
+  "spider_spawn_egg": {
+    "file": "SPIDER_SPAWN_EGG.png",
+    "emojiName": "spider_spawn_egg"
+  },
+  "spire_armor_trim_smithing_template": {
+    "file": "SPIRE_ARMOR_TRIM_SMITHING_TEMPLATE.png",
+    "emojiName": "spire_armor_trim_template"
+  },
+  "splash_potion": {
+    "file": "SPLASH_POTION.png",
+    "emojiName": "splash_potion"
+  },
+  "sponge": {
+    "file": "SPONGE.png",
+    "emojiName": "sponge"
+  },
+  "spore_blossom": {
+    "file": "SPORE_BLOSSOM.png",
+    "emojiName": "spore_blossom"
+  },
+  "spruce_boat": {
+    "file": "SPRUCE_BOAT.png",
+    "emojiName": "spruce_boat"
+  },
+  "spruce_button": {
+    "file": "SPRUCE_BUTTON.png",
+    "emojiName": "spruce_button"
+  },
+  "spruce_chest_boat": {
+    "file": "SPRUCE_CHEST_BOAT.png",
+    "emojiName": "spruce_chest_boat"
+  },
+  "spruce_door": {
+    "file": "SPRUCE_DOOR.png",
+    "emojiName": "spruce_door"
+  },
+  "spruce_fence": {
+    "file": "SPRUCE_FENCE.png",
+    "emojiName": "spruce_fence"
+  },
+  "spruce_fence_gate": {
+    "file": "SPRUCE_FENCE_GATE.png",
+    "emojiName": "spruce_fence_gate"
+  },
+  "spruce_hanging_sign": {
+    "file": "SPRUCE_HANGING_SIGN.png",
+    "emojiName": "spruce_hanging_sign"
+  },
+  "spruce_leaves": {
+    "file": "SPRUCE_LEAVES.png",
+    "emojiName": "spruce_leaves"
+  },
+  "spruce_log": {
+    "file": "SPRUCE_LOG.png",
+    "emojiName": "spruce_log"
+  },
+  "spruce_planks": {
+    "file": "SPRUCE_PLANKS.png",
+    "emojiName": "spruce_planks"
+  },
+  "spruce_pressure_plate": {
+    "file": "SPRUCE_PRESSURE_PLATE.png",
+    "emojiName": "spruce_pressure_plate"
+  },
+  "spruce_sapling": {
+    "file": "SPRUCE_SAPLING.png",
+    "emojiName": "spruce_sapling"
+  },
+  "spruce_shelf": {
+    "file": "SPRUCE_SHELF.png",
+    "emojiName": "spruce_shelf"
+  },
+  "spruce_sign": {
+    "file": "SPRUCE_SIGN.png",
+    "emojiName": "spruce_sign"
+  },
+  "spruce_slab": {
+    "file": "SPRUCE_SLAB.png",
+    "emojiName": "spruce_slab"
+  },
+  "spruce_stairs": {
+    "file": "SPRUCE_STAIRS.png",
+    "emojiName": "spruce_stairs"
+  },
+  "spruce_trapdoor": {
+    "file": "SPRUCE_TRAPDOOR.png",
+    "emojiName": "spruce_trapdoor"
+  },
+  "spruce_wood": {
+    "file": "SPRUCE_WOOD.png",
+    "emojiName": "spruce_wood"
+  },
+  "spyglass": {
+    "file": "SPYGLASS.png",
+    "emojiName": "spyglass"
+  },
+  "squid_spawn_egg": {
+    "file": "SQUID_SPAWN_EGG.png",
+    "emojiName": "squid_spawn_egg"
+  },
+  "stick": {
+    "file": "STICK.png",
+    "emojiName": "stick"
+  },
+  "sticky_piston": {
+    "file": "STICKY_PISTON.png",
+    "emojiName": "sticky_piston"
+  },
+  "stone": {
+    "file": "STONE.png",
+    "emojiName": "stone"
+  },
+  "stonecutter": {
+    "file": "STONECUTTER.png",
+    "emojiName": "stonecutter"
+  },
+  "stone_axe": {
+    "file": "STONE_AXE.png",
+    "emojiName": "stone_axe"
+  },
+  "stone_bricks": {
+    "file": "STONE_BRICKS.png",
+    "emojiName": "stone_bricks"
+  },
+  "stone_brick_slab": {
+    "file": "STONE_BRICK_SLAB.png",
+    "emojiName": "stone_brick_slab"
+  },
+  "stone_brick_stairs": {
+    "file": "STONE_BRICK_STAIRS.png",
+    "emojiName": "stone_brick_stairs"
+  },
+  "stone_brick_wall": {
+    "file": "STONE_BRICK_WALL.png",
+    "emojiName": "stone_brick_wall"
+  },
+  "stone_button": {
+    "file": "STONE_BUTTON.png",
+    "emojiName": "stone_button"
+  },
+  "stone_hoe": {
+    "file": "STONE_HOE.png",
+    "emojiName": "stone_hoe"
+  },
+  "stone_pickaxe": {
+    "file": "STONE_PICKAXE.png",
+    "emojiName": "stone_pickaxe"
+  },
+  "stone_pressure_plate": {
+    "file": "STONE_PRESSURE_PLATE.png",
+    "emojiName": "stone_pressure_plate"
+  },
+  "stone_shovel": {
+    "file": "STONE_SHOVEL.png",
+    "emojiName": "stone_shovel"
+  },
+  "stone_slab": {
+    "file": "STONE_SLAB.png",
+    "emojiName": "stone_slab"
+  },
+  "stone_spear": {
+    "file": "STONE_SPEAR.png",
+    "emojiName": "stone_spear"
+  },
+  "stone_stairs": {
+    "file": "STONE_STAIRS.png",
+    "emojiName": "stone_stairs"
+  },
+  "stone_sword": {
+    "file": "STONE_SWORD.png",
+    "emojiName": "stone_sword"
+  },
+  "straw_bed": {
+    "file": "STRAW_BED.png",
+    "emojiName": "straw_bed"
+  },
+  "stray_spawn_egg": {
+    "file": "STRAY_SPAWN_EGG.png",
+    "emojiName": "stray_spawn_egg"
+  },
+  "strider_spawn_egg": {
+    "file": "STRIDER_SPAWN_EGG.png",
+    "emojiName": "strider_spawn_egg"
+  },
+  "string": {
+    "file": "STRING.png",
+    "emojiName": "string"
+  },
+  "stripped_acacia_log": {
+    "file": "STRIPPED_ACACIA_LOG.png",
+    "emojiName": "stripped_acacia_log"
+  },
+  "stripped_acacia_wood": {
+    "file": "STRIPPED_ACACIA_WOOD.png",
+    "emojiName": "stripped_acacia_wood"
+  },
+  "stripped_bamboo_block": {
+    "file": "STRIPPED_BAMBOO_BLOCK.png",
+    "emojiName": "stripped_bamboo_block"
+  },
+  "stripped_birch_log": {
+    "file": "STRIPPED_BIRCH_LOG.png",
+    "emojiName": "stripped_birch_log"
+  },
+  "stripped_birch_wood": {
+    "file": "STRIPPED_BIRCH_WOOD.png",
+    "emojiName": "stripped_birch_wood"
+  },
+  "stripped_cherry_log": {
+    "file": "STRIPPED_CHERRY_LOG.png",
+    "emojiName": "stripped_cherry_log"
+  },
+  "stripped_cherry_wood": {
+    "file": "STRIPPED_CHERRY_WOOD.png",
+    "emojiName": "stripped_cherry_wood"
+  },
+  "stripped_crimson_hyphae": {
+    "file": "STRIPPED_CRIMSON_HYPHAE.png",
+    "emojiName": "stripped_crimson_hyphae"
+  },
+  "stripped_crimson_stem": {
+    "file": "STRIPPED_CRIMSON_STEM.png",
+    "emojiName": "stripped_crimson_stem"
+  },
+  "stripped_dark_oak_log": {
+    "file": "STRIPPED_DARK_OAK_LOG.png",
+    "emojiName": "stripped_dark_oak_log"
+  },
+  "stripped_dark_oak_wood": {
+    "file": "STRIPPED_DARK_OAK_WOOD.png",
+    "emojiName": "stripped_dark_oak_wood"
+  },
+  "stripped_jungle_log": {
+    "file": "STRIPPED_JUNGLE_LOG.png",
+    "emojiName": "stripped_jungle_log"
+  },
+  "stripped_jungle_wood": {
+    "file": "STRIPPED_JUNGLE_WOOD.png",
+    "emojiName": "stripped_jungle_wood"
+  },
+  "stripped_mangrove_log": {
+    "file": "STRIPPED_MANGROVE_LOG.png",
+    "emojiName": "stripped_mangrove_log"
+  },
+  "stripped_mangrove_wood": {
+    "file": "STRIPPED_MANGROVE_WOOD.png",
+    "emojiName": "stripped_mangrove_wood"
+  },
+  "stripped_oak_log": {
+    "file": "STRIPPED_OAK_LOG.png",
+    "emojiName": "stripped_oak_log"
+  },
+  "stripped_oak_wood": {
+    "file": "STRIPPED_OAK_WOOD.png",
+    "emojiName": "stripped_oak_wood"
+  },
+  "stripped_pale_oak_log": {
+    "file": "STRIPPED_PALE_OAK_LOG.png",
+    "emojiName": "stripped_pale_oak_log"
+  },
+  "stripped_pale_oak_wood": {
+    "file": "STRIPPED_PALE_OAK_WOOD.png",
+    "emojiName": "stripped_pale_oak_wood"
+  },
+  "stripped_poplar_log": {
+    "file": "STRIPPED_POPLAR_LOG.png",
+    "emojiName": "stripped_poplar_log"
+  },
+  "stripped_poplar_wood": {
+    "file": "STRIPPED_POPLAR_WOOD.png",
+    "emojiName": "stripped_poplar_wood"
+  },
+  "stripped_spruce_log": {
+    "file": "STRIPPED_SPRUCE_LOG.png",
+    "emojiName": "stripped_spruce_log"
+  },
+  "stripped_spruce_wood": {
+    "file": "STRIPPED_SPRUCE_WOOD.png",
+    "emojiName": "stripped_spruce_wood"
+  },
+  "stripped_warped_hyphae": {
+    "file": "STRIPPED_WARPED_HYPHAE.png",
+    "emojiName": "stripped_warped_hyphae"
+  },
+  "stripped_warped_stem": {
+    "file": "STRIPPED_WARPED_STEM.png",
+    "emojiName": "stripped_warped_stem"
+  },
+  "structure_block": {
+    "file": "STRUCTURE_BLOCK.png",
+    "emojiName": "structure_block"
+  },
+  "structure_void": {
+    "file": "STRUCTURE_VOID.png",
+    "emojiName": "structure_void"
+  },
+  "sugar": {
+    "file": "SUGAR.png",
+    "emojiName": "sugar"
+  },
+  "sugar_cane": {
+    "file": "SUGAR_CANE.png",
+    "emojiName": "sugar_cane"
+  },
+  "sulfur": {
+    "file": "SULFUR.png",
+    "emojiName": "sulfur"
+  },
+  "sulfur_bricks": {
+    "file": "SULFUR_BRICKS.png",
+    "emojiName": "sulfur_bricks"
+  },
+  "sulfur_brick_slab": {
+    "file": "SULFUR_BRICK_SLAB.png",
+    "emojiName": "sulfur_brick_slab"
+  },
+  "sulfur_brick_stairs": {
+    "file": "SULFUR_BRICK_STAIRS.png",
+    "emojiName": "sulfur_brick_stairs"
+  },
+  "sulfur_brick_wall": {
+    "file": "SULFUR_BRICK_WALL.png",
+    "emojiName": "sulfur_brick_wall"
+  },
+  "sulfur_cube_bucket": {
+    "file": "SULFUR_CUBE_BUCKET.png",
+    "emojiName": "sulfur_cube_bucket"
+  },
+  "sulfur_cube_spawn_egg": {
+    "file": "SULFUR_CUBE_SPAWN_EGG.png",
+    "emojiName": "sulfur_cube_spawn_egg"
+  },
+  "sulfur_slab": {
+    "file": "SULFUR_SLAB.png",
+    "emojiName": "sulfur_slab"
+  },
+  "sulfur_spike": {
+    "file": "SULFUR_SPIKE.png",
+    "emojiName": "sulfur_spike"
+  },
+  "sulfur_stairs": {
+    "file": "SULFUR_STAIRS.png",
+    "emojiName": "sulfur_stairs"
+  },
+  "sulfur_wall": {
+    "file": "SULFUR_WALL.png",
+    "emojiName": "sulfur_wall"
+  },
+  "sunflower": {
+    "file": "SUNFLOWER.png",
+    "emojiName": "sunflower"
+  },
+  "suspicious_gravel": {
+    "file": "SUSPICIOUS_GRAVEL.png",
+    "emojiName": "suspicious_gravel"
+  },
+  "suspicious_sand": {
+    "file": "SUSPICIOUS_SAND.png",
+    "emojiName": "suspicious_sand"
+  },
+  "suspicious_stew": {
+    "file": "SUSPICIOUS_STEW.png",
+    "emojiName": "suspicious_stew"
+  },
+  "swamp_explorer_map": {
+    "file": "SWAMP_EXPLORER_MAP.png",
+    "emojiName": "swamp_explorer_map"
+  },
+  "sweet_berries": {
+    "file": "SWEET_BERRIES.png",
+    "emojiName": "sweet_berries"
+  },
+  "tadpole_bucket": {
+    "file": "TADPOLE_BUCKET.png",
+    "emojiName": "tadpole_bucket"
+  },
+  "tadpole_spawn_egg": {
+    "file": "TADPOLE_SPAWN_EGG.png",
+    "emojiName": "tadpole_spawn_egg"
+  },
+  "taiga_village_map": {
+    "file": "TAIGA_VILLAGE_MAP.png",
+    "emojiName": "taiga_village_map"
+  },
+  "tall_dry_grass": {
+    "file": "TALL_DRY_GRASS.png",
+    "emojiName": "tall_dry_grass"
+  },
+  "tall_grass": {
+    "file": "TALL_GRASS.png",
+    "emojiName": "tall_grass"
+  },
+  "target": {
+    "file": "TARGET.png",
+    "emojiName": "target"
+  },
+  "terracotta": {
+    "file": "TERRACOTTA.png",
+    "emojiName": "terracotta"
+  },
+  "test_block": {
+    "file": "TEST_BLOCK.png",
+    "emojiName": "test_block"
+  },
+  "test_instance_block": {
+    "file": "TEST_INSTANCE_BLOCK.png",
+    "emojiName": "test_instance_block"
+  },
+  "tide_armor_trim_smithing_template": {
+    "file": "TIDE_ARMOR_TRIM_SMITHING_TEMPLATE.png",
+    "emojiName": "tide_armor_trim_template"
+  },
+  "tinted_glass": {
+    "file": "TINTED_GLASS.png",
+    "emojiName": "tinted_glass"
+  },
+  "tipped_arrow": {
+    "file": "TIPPED_ARROW.png",
+    "emojiName": "tipped_arrow"
+  },
+  "tnt": {
+    "file": "TNT.png",
+    "emojiName": "tnt"
+  },
+  "tnt_minecart": {
+    "file": "TNT_MINECART.png",
+    "emojiName": "tnt_minecart"
+  },
+  "torch": {
+    "file": "TORCH.png",
+    "emojiName": "torch"
+  },
+  "torchflower": {
+    "file": "TORCHFLOWER.png",
+    "emojiName": "torchflower"
+  },
+  "torchflower_seeds": {
+    "file": "TORCHFLOWER_SEEDS.png",
+    "emojiName": "torchflower_seeds"
+  },
+  "totem_of_undying": {
+    "file": "TOTEM_OF_UNDYING.png",
+    "emojiName": "totem_of_undying"
+  },
+  "trader_llama_spawn_egg": {
+    "file": "TRADER_LLAMA_SPAWN_EGG.png",
+    "emojiName": "trader_llama_spawn_egg"
+  },
+  "trapped_chest": {
+    "file": "TRAPPED_CHEST.png",
+    "emojiName": "trapped_chest"
+  },
+  "trial_explorer_map": {
+    "file": "TRIAL_EXPLORER_MAP.png",
+    "emojiName": "trial_explorer_map"
+  },
+  "trial_key": {
+    "file": "TRIAL_KEY.png",
+    "emojiName": "trial_key"
+  },
+  "trial_spawner": {
+    "file": "TRIAL_SPAWNER.png",
+    "emojiName": "trial_spawner"
+  },
+  "trident": {
+    "file": "TRIDENT.png",
+    "emojiName": "trident"
+  },
+  "tripwire_hook": {
+    "file": "TRIPWIRE_HOOK.png",
+    "emojiName": "tripwire_hook"
+  },
+  "tropical_fish": {
+    "file": "TROPICAL_FISH.png",
+    "emojiName": "tropical_fish"
+  },
+  "tropical_fish_bucket": {
+    "file": "TROPICAL_FISH_BUCKET.png",
+    "emojiName": "tropical_fish_bucket"
+  },
+  "tropical_fish_spawn_egg": {
+    "file": "TROPICAL_FISH_SPAWN_EGG.png",
+    "emojiName": "tropical_fish_spawn_egg"
+  },
+  "tube_coral": {
+    "file": "TUBE_CORAL.png",
+    "emojiName": "tube_coral"
+  },
+  "tube_coral_block": {
+    "file": "TUBE_CORAL_BLOCK.png",
+    "emojiName": "tube_coral_block"
+  },
+  "tube_coral_fan": {
+    "file": "TUBE_CORAL_FAN.png",
+    "emojiName": "tube_coral_fan"
+  },
+  "tuff": {
+    "file": "TUFF.png",
+    "emojiName": "tuff"
+  },
+  "tuff_bricks": {
+    "file": "TUFF_BRICKS.png",
+    "emojiName": "tuff_bricks"
+  },
+  "tuff_brick_slab": {
+    "file": "TUFF_BRICK_SLAB.png",
+    "emojiName": "tuff_brick_slab"
+  },
+  "tuff_brick_stairs": {
+    "file": "TUFF_BRICK_STAIRS.png",
+    "emojiName": "tuff_brick_stairs"
+  },
+  "tuff_brick_wall": {
+    "file": "TUFF_BRICK_WALL.png",
+    "emojiName": "tuff_brick_wall"
+  },
+  "tuff_slab": {
+    "file": "TUFF_SLAB.png",
+    "emojiName": "tuff_slab"
+  },
+  "tuff_stairs": {
+    "file": "TUFF_STAIRS.png",
+    "emojiName": "tuff_stairs"
+  },
+  "tuff_wall": {
+    "file": "TUFF_WALL.png",
+    "emojiName": "tuff_wall"
+  },
+  "turtle_egg": {
+    "file": "TURTLE_EGG.png",
+    "emojiName": "turtle_egg"
+  },
+  "turtle_helmet": {
+    "file": "TURTLE_HELMET.png",
+    "emojiName": "turtle_helmet"
+  },
+  "turtle_scute": {
+    "file": "TURTLE_SCUTE.png",
+    "emojiName": "turtle_scute"
+  },
+  "turtle_spawn_egg": {
+    "file": "TURTLE_SPAWN_EGG.png",
+    "emojiName": "turtle_spawn_egg"
+  },
+  "twisting_vines": {
+    "file": "TWISTING_VINES.png",
+    "emojiName": "twisting_vines"
+  },
+  "vault": {
+    "file": "VAULT.png",
+    "emojiName": "vault"
+  },
+  "verdant_froglight": {
+    "file": "VERDANT_FROGLIGHT.png",
+    "emojiName": "verdant_froglight"
+  },
+  "vex_armor_trim_smithing_template": {
+    "file": "VEX_ARMOR_TRIM_SMITHING_TEMPLATE.png",
+    "emojiName": "vex_armor_trim_smithing_template"
+  },
+  "vex_spawn_egg": {
+    "file": "VEX_SPAWN_EGG.png",
+    "emojiName": "vex_spawn_egg"
+  },
+  "villager_spawn_egg": {
+    "file": "VILLAGER_SPAWN_EGG.png",
+    "emojiName": "villager_spawn_egg"
+  },
+  "vindicator_spawn_egg": {
+    "file": "VINDICATOR_SPAWN_EGG.png",
+    "emojiName": "vindicator_spawn_egg"
+  },
+  "vine": {
+    "file": "VINE.png",
+    "emojiName": "vine"
+  },
+  "wandering_trader_spawn_egg": {
+    "file": "WANDERING_TRADER_SPAWN_EGG.png",
+    "emojiName": "wandering_trader_spawn_egg"
+  },
+  "warden_spawn_egg": {
+    "file": "WARDEN_SPAWN_EGG.png",
+    "emojiName": "warden_spawn_egg"
+  },
+  "ward_armor_trim_smithing_template": {
+    "file": "WARD_ARMOR_TRIM_SMITHING_TEMPLATE.png",
+    "emojiName": "ward_armor_trim_template"
+  },
+  "warm_ocean_ruins_map": {
+    "file": "WARM_OCEAN_RUINS_MAP.png",
+    "emojiName": "warm_ocean_ruins_map"
+  },
+  "warped_button": {
+    "file": "WARPED_BUTTON.png",
+    "emojiName": "warped_button"
+  },
+  "warped_door": {
+    "file": "WARPED_DOOR.png",
+    "emojiName": "warped_door"
+  },
+  "warped_fence": {
+    "file": "WARPED_FENCE.png",
+    "emojiName": "warped_fence"
+  },
+  "warped_fence_gate": {
+    "file": "WARPED_FENCE_GATE.png",
+    "emojiName": "warped_fence_gate"
+  },
+  "warped_fungus": {
+    "file": "WARPED_FUNGUS.png",
+    "emojiName": "warped_fungus"
+  },
+  "warped_fungus_on_a_stick": {
+    "file": "WARPED_FUNGUS_ON_A_STICK.png",
+    "emojiName": "warped_fungus_on_a_stick"
+  },
+  "warped_hanging_sign": {
+    "file": "WARPED_HANGING_SIGN.png",
+    "emojiName": "warped_hanging_sign"
+  },
+  "warped_hyphae": {
+    "file": "WARPED_HYPHAE.png",
+    "emojiName": "warped_hyphae"
+  },
+  "warped_nylium": {
+    "file": "WARPED_NYLIUM.png",
+    "emojiName": "warped_nylium"
+  },
+  "warped_planks": {
+    "file": "WARPED_PLANKS.png",
+    "emojiName": "warped_planks"
+  },
+  "warped_pressure_plate": {
+    "file": "WARPED_PRESSURE_PLATE.png",
+    "emojiName": "warped_pressure_plate"
+  },
+  "warped_roots": {
+    "file": "WARPED_ROOTS.png",
+    "emojiName": "warped_roots"
+  },
+  "warped_shelf": {
+    "file": "WARPED_SHELF.png",
+    "emojiName": "warped_shelf"
+  },
+  "warped_sign": {
+    "file": "WARPED_SIGN.png",
+    "emojiName": "warped_sign"
+  },
+  "warped_slab": {
+    "file": "WARPED_SLAB.png",
+    "emojiName": "warped_slab"
+  },
+  "warped_stairs": {
+    "file": "WARPED_STAIRS.png",
+    "emojiName": "warped_stairs"
+  },
+  "warped_stem": {
+    "file": "WARPED_STEM.png",
+    "emojiName": "warped_stem"
+  },
+  "warped_trapdoor": {
+    "file": "WARPED_TRAPDOOR.png",
+    "emojiName": "warped_trapdoor"
+  },
+  "warped_wart_block": {
+    "file": "WARPED_WART_BLOCK.png",
+    "emojiName": "warped_wart_block"
+  },
+  "water_bucket": {
+    "file": "WATER_BUCKET.png",
+    "emojiName": "water_bucket"
+  },
+  "waxed_chiseled_copper": {
+    "file": "WAXED_CHISELED_COPPER.png",
+    "emojiName": "waxed_chiseled_copper"
+  },
+  "waxed_copper_bars": {
+    "file": "WAXED_COPPER_BARS.png",
+    "emojiName": "waxed_copper_bars"
+  },
+  "waxed_copper_block": {
+    "file": "WAXED_COPPER_BLOCK.png",
+    "emojiName": "waxed_copper_block"
+  },
+  "waxed_copper_bulb": {
+    "file": "WAXED_COPPER_BULB.png",
+    "emojiName": "waxed_copper_bulb"
+  },
+  "waxed_copper_chain": {
+    "file": "WAXED_COPPER_CHAIN.png",
+    "emojiName": "waxed_copper_chain"
+  },
+  "waxed_copper_chest": {
+    "file": "WAXED_COPPER_CHEST.png",
+    "emojiName": "waxed_copper_chest"
+  },
+  "waxed_copper_door": {
+    "file": "WAXED_COPPER_DOOR.png",
+    "emojiName": "waxed_copper_door"
+  },
+  "waxed_copper_golem_statue": {
+    "file": "WAXED_COPPER_GOLEM_STATUE.png",
+    "emojiName": "waxed_copper_golem_statue"
+  },
+  "waxed_copper_grate": {
+    "file": "WAXED_COPPER_GRATE.png",
+    "emojiName": "waxed_copper_grate"
+  },
+  "waxed_copper_lantern": {
+    "file": "WAXED_COPPER_LANTERN.png",
+    "emojiName": "waxed_copper_lantern"
+  },
+  "waxed_copper_trapdoor": {
+    "file": "WAXED_COPPER_TRAPDOOR.png",
+    "emojiName": "waxed_copper_trapdoor"
+  },
+  "waxed_cut_copper": {
+    "file": "WAXED_CUT_COPPER.png",
+    "emojiName": "waxed_cut_copper"
+  },
+  "waxed_cut_copper_slab": {
+    "file": "WAXED_CUT_COPPER_SLAB.png",
+    "emojiName": "waxed_cut_copper_slab"
+  },
+  "waxed_cut_copper_stairs": {
+    "file": "WAXED_CUT_COPPER_STAIRS.png",
+    "emojiName": "waxed_cut_copper_stairs"
+  },
+  "waxed_exposed_chiseled_copper": {
+    "file": "WAXED_EXPOSED_CHISELED_COPPER.png",
+    "emojiName": "waxed_exposed_chiseled_copper"
+  },
+  "waxed_exposed_copper": {
+    "file": "WAXED_EXPOSED_COPPER.png",
+    "emojiName": "waxed_exposed_copper"
+  },
+  "waxed_exposed_copper_bars": {
+    "file": "WAXED_EXPOSED_COPPER_BARS.png",
+    "emojiName": "waxed_exposed_copper_bars"
+  },
+  "waxed_exposed_copper_bulb": {
+    "file": "WAXED_EXPOSED_COPPER_BULB.png",
+    "emojiName": "waxed_exposed_copper_bulb"
+  },
+  "waxed_exposed_copper_chain": {
+    "file": "WAXED_EXPOSED_COPPER_CHAIN.png",
+    "emojiName": "waxed_exposed_copper_chain"
+  },
+  "waxed_exposed_copper_chest": {
+    "file": "WAXED_EXPOSED_COPPER_CHEST.png",
+    "emojiName": "waxed_exposed_copper_chest"
+  },
+  "waxed_exposed_copper_door": {
+    "file": "WAXED_EXPOSED_COPPER_DOOR.png",
+    "emojiName": "waxed_exposed_copper_door"
+  },
+  "waxed_exposed_copper_golem_statue": {
+    "file": "WAXED_EXPOSED_COPPER_GOLEM_STATUE.png",
+    "emojiName": "waxed_exposed_copper_golem_statu"
+  },
+  "waxed_exposed_copper_grate": {
+    "file": "WAXED_EXPOSED_COPPER_GRATE.png",
+    "emojiName": "waxed_exposed_copper_grate"
+  },
+  "waxed_exposed_copper_lantern": {
+    "file": "WAXED_EXPOSED_COPPER_LANTERN.png",
+    "emojiName": "waxed_exposed_copper_lantern"
+  },
+  "waxed_exposed_copper_trapdoor": {
+    "file": "WAXED_EXPOSED_COPPER_TRAPDOOR.png",
+    "emojiName": "waxed_exposed_copper_trapdoor"
+  },
+  "waxed_exposed_cut_copper": {
+    "file": "WAXED_EXPOSED_CUT_COPPER.png",
+    "emojiName": "waxed_exposed_cut_copper"
+  },
+  "waxed_exposed_cut_copper_slab": {
+    "file": "WAXED_EXPOSED_CUT_COPPER_SLAB.png",
+    "emojiName": "waxed_exposed_cut_copper_slab"
+  },
+  "waxed_exposed_cut_copper_stairs": {
+    "file": "WAXED_EXPOSED_CUT_COPPER_STAIRS.png",
+    "emojiName": "waxed_exposed_cut_copper_stairs"
+  },
+  "waxed_exposed_lightning_rod": {
+    "file": "WAXED_EXPOSED_LIGHTNING_ROD.png",
+    "emojiName": "waxed_exposed_lightning_rod"
+  },
+  "waxed_lightning_rod": {
+    "file": "WAXED_LIGHTNING_ROD.png",
+    "emojiName": "waxed_lightning_rod"
+  },
+  "waxed_oxidized_chiseled_copper": {
+    "file": "WAXED_OXIDIZED_CHISELED_COPPER.png",
+    "emojiName": "waxed_oxidized_chiseled_copper"
+  },
+  "waxed_oxidized_copper": {
+    "file": "WAXED_OXIDIZED_COPPER.png",
+    "emojiName": "waxed_oxidized_copper"
+  },
+  "waxed_oxidized_copper_bars": {
+    "file": "WAXED_OXIDIZED_COPPER_BARS.png",
+    "emojiName": "waxed_oxidized_copper_bars"
+  },
+  "waxed_oxidized_copper_bulb": {
+    "file": "WAXED_OXIDIZED_COPPER_BULB.png",
+    "emojiName": "waxed_oxidized_copper_bulb"
+  },
+  "waxed_oxidized_copper_chain": {
+    "file": "WAXED_OXIDIZED_COPPER_CHAIN.png",
+    "emojiName": "waxed_oxidized_copper_chain"
+  },
+  "waxed_oxidized_copper_chest": {
+    "file": "WAXED_OXIDIZED_COPPER_CHEST.png",
+    "emojiName": "waxed_oxidized_copper_chest"
+  },
+  "waxed_oxidized_copper_door": {
+    "file": "WAXED_OXIDIZED_COPPER_DOOR.png",
+    "emojiName": "waxed_oxidized_copper_door"
+  },
+  "waxed_oxidized_copper_golem_statue": {
+    "file": "WAXED_OXIDIZED_COPPER_GOLEM_STATUE.png",
+    "emojiName": "waxed_oxidized_copper_golem_stat"
+  },
+  "waxed_oxidized_copper_grate": {
+    "file": "WAXED_OXIDIZED_COPPER_GRATE.png",
+    "emojiName": "waxed_oxidized_copper_grate"
+  },
+  "waxed_oxidized_copper_lantern": {
+    "file": "WAXED_OXIDIZED_COPPER_LANTERN.png",
+    "emojiName": "waxed_oxidized_copper_lantern"
+  },
+  "waxed_oxidized_copper_trapdoor": {
+    "file": "WAXED_OXIDIZED_COPPER_TRAPDOOR.png",
+    "emojiName": "waxed_oxidized_copper_trapdoor"
+  },
+  "waxed_oxidized_cut_copper": {
+    "file": "WAXED_OXIDIZED_CUT_COPPER.png",
+    "emojiName": "waxed_oxidized_cut_copper"
+  },
+  "waxed_oxidized_cut_copper_slab": {
+    "file": "WAXED_OXIDIZED_CUT_COPPER_SLAB.png",
+    "emojiName": "waxed_oxidized_cut_copper_slab"
+  },
+  "waxed_oxidized_cut_copper_stairs": {
+    "file": "WAXED_OXIDIZED_CUT_COPPER_STAIRS.png",
+    "emojiName": "waxed_oxidized_cut_copper_stairs"
+  },
+  "waxed_oxidized_lightning_rod": {
+    "file": "WAXED_OXIDIZED_LIGHTNING_ROD.png",
+    "emojiName": "waxed_oxidized_lightning_rod"
+  },
+  "waxed_weathered_chiseled_copper": {
+    "file": "WAXED_WEATHERED_CHISELED_COPPER.png",
+    "emojiName": "waxed_weathered_chiseled_copper"
+  },
+  "waxed_weathered_copper": {
+    "file": "WAXED_WEATHERED_COPPER.png",
+    "emojiName": "waxed_weathered_copper"
+  },
+  "waxed_weathered_copper_bars": {
+    "file": "WAXED_WEATHERED_COPPER_BARS.png",
+    "emojiName": "waxed_weathered_copper_bars"
+  },
+  "waxed_weathered_copper_bulb": {
+    "file": "WAXED_WEATHERED_COPPER_BULB.png",
+    "emojiName": "waxed_weathered_copper_bulb"
+  },
+  "waxed_weathered_copper_chain": {
+    "file": "WAXED_WEATHERED_COPPER_CHAIN.png",
+    "emojiName": "waxed_weathered_copper_chain"
+  },
+  "waxed_weathered_copper_chest": {
+    "file": "WAXED_WEATHERED_COPPER_CHEST.png",
+    "emojiName": "waxed_weathered_copper_chest"
+  },
+  "waxed_weathered_copper_door": {
+    "file": "WAXED_WEATHERED_COPPER_DOOR.png",
+    "emojiName": "waxed_weathered_copper_door"
+  },
+  "waxed_weathered_copper_golem_statue": {
+    "file": "WAXED_WEATHERED_COPPER_GOLEM_STATUE.png",
+    "emojiName": "waxed_weathered_copper_golem_sta"
+  },
+  "waxed_weathered_copper_grate": {
+    "file": "WAXED_WEATHERED_COPPER_GRATE.png",
+    "emojiName": "waxed_weathered_copper_grate"
+  },
+  "waxed_weathered_copper_lantern": {
+    "file": "WAXED_WEATHERED_COPPER_LANTERN.png",
+    "emojiName": "waxed_weathered_copper_lantern"
+  },
+  "waxed_weathered_copper_trapdoor": {
+    "file": "WAXED_WEATHERED_COPPER_TRAPDOOR.png",
+    "emojiName": "waxed_weathered_copper_trapdoor"
+  },
+  "waxed_weathered_cut_copper": {
+    "file": "WAXED_WEATHERED_CUT_COPPER.png",
+    "emojiName": "waxed_weathered_cut_copper"
+  },
+  "waxed_weathered_cut_copper_slab": {
+    "file": "WAXED_WEATHERED_CUT_COPPER_SLAB.png",
+    "emojiName": "waxed_weathered_cut_copper_slab"
+  },
+  "waxed_weathered_cut_copper_stairs": {
+    "file": "WAXED_WEATHERED_CUT_COPPER_STAIRS.png",
+    "emojiName": "waxed_weathered_cut_copper_stair"
+  },
+  "waxed_weathered_lightning_rod": {
+    "file": "WAXED_WEATHERED_LIGHTNING_ROD.png",
+    "emojiName": "waxed_weathered_lightning_rod"
+  },
+  "wayfinder_armor_trim_smithing_template": {
+    "file": "WAYFINDER_ARMOR_TRIM_SMITHING_TEMPLATE.png",
+    "emojiName": "wayfinder_armor_trim_template"
+  },
+  "weathered_chiseled_copper": {
+    "file": "WEATHERED_CHISELED_COPPER.png",
+    "emojiName": "weathered_chiseled_copper"
+  },
+  "weathered_copper": {
+    "file": "WEATHERED_COPPER.png",
+    "emojiName": "weathered_copper"
+  },
+  "weathered_copper_bars": {
+    "file": "WEATHERED_COPPER_BARS.png",
+    "emojiName": "weathered_copper_bars"
+  },
+  "weathered_copper_bulb": {
+    "file": "WEATHERED_COPPER_BULB.png",
+    "emojiName": "weathered_copper_bulb"
+  },
+  "weathered_copper_chain": {
+    "file": "WEATHERED_COPPER_CHAIN.png",
+    "emojiName": "weathered_copper_chain"
+  },
+  "weathered_copper_chest": {
+    "file": "WEATHERED_COPPER_CHEST.png",
+    "emojiName": "weathered_copper_chest"
+  },
+  "weathered_copper_door": {
+    "file": "WEATHERED_COPPER_DOOR.png",
+    "emojiName": "weathered_copper_door"
+  },
+  "weathered_copper_golem_statue": {
+    "file": "WEATHERED_COPPER_GOLEM_STATUE.png",
+    "emojiName": "weathered_copper_golem_statue"
+  },
+  "weathered_copper_grate": {
+    "file": "WEATHERED_COPPER_GRATE.png",
+    "emojiName": "weathered_copper_grate"
+  },
+  "weathered_copper_lantern": {
+    "file": "WEATHERED_COPPER_LANTERN.png",
+    "emojiName": "weathered_copper_lantern"
+  },
+  "weathered_copper_trapdoor": {
+    "file": "WEATHERED_COPPER_TRAPDOOR.png",
+    "emojiName": "weathered_copper_trapdoor"
+  },
+  "weathered_cut_copper": {
+    "file": "WEATHERED_CUT_COPPER.png",
+    "emojiName": "weathered_cut_copper"
+  },
+  "weathered_cut_copper_slab": {
+    "file": "WEATHERED_CUT_COPPER_SLAB.png",
+    "emojiName": "weathered_cut_copper_slab"
+  },
+  "weathered_cut_copper_stairs": {
+    "file": "WEATHERED_CUT_COPPER_STAIRS.png",
+    "emojiName": "weathered_cut_copper_stairs"
+  },
+  "weathered_lightning_rod": {
+    "file": "WEATHERED_LIGHTNING_ROD.png",
+    "emojiName": "weathered_lightning_rod"
+  },
+  "weeping_vines": {
+    "file": "WEEPING_VINES.png",
+    "emojiName": "weeping_vines"
+  },
+  "wet_sponge": {
+    "file": "WET_SPONGE.png",
+    "emojiName": "wet_sponge"
+  },
+  "wheat": {
+    "file": "WHEAT.png",
+    "emojiName": "wheat"
+  },
+  "wheat_seeds": {
+    "file": "WHEAT_SEEDS.png",
+    "emojiName": "wheat_seeds"
+  },
+  "white_banner": {
+    "file": "WHITE_BANNER.png",
+    "emojiName": "white_banner"
+  },
+  "white_bed": {
+    "file": "WHITE_BED.png",
+    "emojiName": "white_bed"
+  },
+  "white_bundle": {
+    "file": "WHITE_BUNDLE.png",
+    "emojiName": "white_bundle"
+  },
+  "white_candle": {
+    "file": "WHITE_CANDLE.png",
+    "emojiName": "white_candle"
+  },
+  "white_carpet": {
+    "file": "WHITE_CARPET.png",
+    "emojiName": "white_carpet"
+  },
+  "white_concrete": {
+    "file": "WHITE_CONCRETE.png",
+    "emojiName": "white_concrete"
+  },
+  "white_concrete_powder": {
+    "file": "WHITE_CONCRETE_POWDER.png",
+    "emojiName": "white_concrete_powder"
+  },
+  "white_concrete_slab": {
+    "file": "WHITE_CONCRETE_SLAB.png",
+    "emojiName": "white_concrete_slab"
+  },
+  "white_concrete_stairs": {
+    "file": "WHITE_CONCRETE_STAIRS.png",
+    "emojiName": "white_concrete_stairs"
+  },
+  "white_cushion": {
+    "file": "WHITE_CUSHION.png",
+    "emojiName": "white_cushion"
+  },
+  "white_dye": {
+    "file": "WHITE_DYE.png",
+    "emojiName": "white_dye"
+  },
+  "white_glazed_terracotta": {
+    "file": "WHITE_GLAZED_TERRACOTTA.png",
+    "emojiName": "white_glazed_terracotta"
+  },
+  "white_harness": {
+    "file": "WHITE_HARNESS.png",
+    "emojiName": "white_harness"
+  },
+  "white_shulker_box": {
+    "file": "WHITE_SHULKER_BOX.png",
+    "emojiName": "white_shulker_box"
+  },
+  "white_stained_glass": {
+    "file": "WHITE_STAINED_GLASS.png",
+    "emojiName": "white_stained_glass"
+  },
+  "white_stained_glass_pane": {
+    "file": "WHITE_STAINED_GLASS_PANE.png",
+    "emojiName": "white_stained_glass_pane"
+  },
+  "white_terracotta": {
+    "file": "WHITE_TERRACOTTA.png",
+    "emojiName": "white_terracotta"
+  },
+  "white_tulip": {
+    "file": "WHITE_TULIP.png",
+    "emojiName": "white_tulip"
+  },
+  "white_wool": {
+    "file": "WHITE_WOOL.png",
+    "emojiName": "white_wool"
+  },
+  "white_wool_slab": {
+    "file": "WHITE_WOOL_SLAB.png",
+    "emojiName": "white_wool_slab"
+  },
+  "white_wool_stairs": {
+    "file": "WHITE_WOOL_STAIRS.png",
+    "emojiName": "white_wool_stairs"
+  },
+  "wildflowers": {
+    "file": "WILDFLOWERS.png",
+    "emojiName": "wildflowers"
+  },
+  "wild_armor_trim_smithing_template": {
+    "file": "WILD_ARMOR_TRIM_SMITHING_TEMPLATE.png",
+    "emojiName": "wild_armor_trim_template"
+  },
+  "wind_charge": {
+    "file": "WIND_CHARGE.png",
+    "emojiName": "wind_charge"
+  },
+  "witch_spawn_egg": {
+    "file": "WITCH_SPAWN_EGG.png",
+    "emojiName": "witch_spawn_egg"
+  },
+  "wither_rose": {
+    "file": "WITHER_ROSE.png",
+    "emojiName": "wither_rose"
+  },
+  "wither_skeleton_skull": {
+    "file": "WITHER_SKELETON_SKULL.png",
+    "emojiName": "wither_skeleton_skull"
+  },
+  "wither_skeleton_spawn_egg": {
+    "file": "WITHER_SKELETON_SPAWN_EGG.png",
+    "emojiName": "wither_skeleton_spawn_egg"
+  },
+  "wither_spawn_egg": {
+    "file": "WITHER_SPAWN_EGG.png",
+    "emojiName": "wither_spawn_egg"
+  },
+  "wolf_armor": {
+    "file": "WOLF_ARMOR.png",
+    "emojiName": "wolf_armor"
+  },
+  "wolf_spawn_egg": {
+    "file": "WOLF_SPAWN_EGG.png",
+    "emojiName": "wolf_spawn_egg"
+  },
+  "wooden_axe": {
+    "file": "WOODEN_AXE.png",
+    "emojiName": "wooden_axe"
+  },
+  "wooden_hoe": {
+    "file": "WOODEN_HOE.png",
+    "emojiName": "wooden_hoe"
+  },
+  "wooden_pickaxe": {
+    "file": "WOODEN_PICKAXE.png",
+    "emojiName": "wooden_pickaxe"
+  },
+  "wooden_shovel": {
+    "file": "WOODEN_SHOVEL.png",
+    "emojiName": "wooden_shovel"
+  },
+  "wooden_spear": {
+    "file": "WOODEN_SPEAR.png",
+    "emojiName": "wooden_spear"
+  },
+  "wooden_sword": {
+    "file": "WOODEN_SWORD.png",
+    "emojiName": "wooden_sword"
+  },
+  "woodland_explorer_map": {
+    "file": "WOODLAND_EXPLORER_MAP.png",
+    "emojiName": "woodland_explorer_map"
+  },
+  "writable_book": {
+    "file": "WRITABLE_BOOK.png",
+    "emojiName": "writable_book"
+  },
+  "written_book": {
+    "file": "WRITTEN_BOOK.png",
+    "emojiName": "written_book"
+  },
+  "yellow_banner": {
+    "file": "YELLOW_BANNER.png",
+    "emojiName": "yellow_banner"
+  },
+  "yellow_bed": {
+    "file": "YELLOW_BED.png",
+    "emojiName": "yellow_bed"
+  },
+  "yellow_bundle": {
+    "file": "YELLOW_BUNDLE.png",
+    "emojiName": "yellow_bundle"
+  },
+  "yellow_candle": {
+    "file": "YELLOW_CANDLE.png",
+    "emojiName": "yellow_candle"
+  },
+  "yellow_carpet": {
+    "file": "YELLOW_CARPET.png",
+    "emojiName": "yellow_carpet"
+  },
+  "yellow_concrete": {
+    "file": "YELLOW_CONCRETE.png",
+    "emojiName": "yellow_concrete"
+  },
+  "yellow_concrete_powder": {
+    "file": "YELLOW_CONCRETE_POWDER.png",
+    "emojiName": "yellow_concrete_powder"
+  },
+  "yellow_concrete_slab": {
+    "file": "YELLOW_CONCRETE_SLAB.png",
+    "emojiName": "yellow_concrete_slab"
+  },
+  "yellow_concrete_stairs": {
+    "file": "YELLOW_CONCRETE_STAIRS.png",
+    "emojiName": "yellow_concrete_stairs"
+  },
+  "yellow_cushion": {
+    "file": "YELLOW_CUSHION.png",
+    "emojiName": "yellow_cushion"
+  },
+  "yellow_dye": {
+    "file": "YELLOW_DYE.png",
+    "emojiName": "yellow_dye"
+  },
+  "yellow_glazed_terracotta": {
+    "file": "YELLOW_GLAZED_TERRACOTTA.png",
+    "emojiName": "yellow_glazed_terracotta"
+  },
+  "yellow_harness": {
+    "file": "YELLOW_HARNESS.png",
+    "emojiName": "yellow_harness"
+  },
+  "yellow_poplar_leaves": {
+    "file": "YELLOW_POPLAR_LEAVES.png",
+    "emojiName": "yellow_poplar_leaves"
+  },
+  "yellow_shulker_box": {
+    "file": "YELLOW_SHULKER_BOX.png",
+    "emojiName": "yellow_shulker_box"
+  },
+  "yellow_stained_glass": {
+    "file": "YELLOW_STAINED_GLASS.png",
+    "emojiName": "yellow_stained_glass"
+  },
+  "yellow_stained_glass_pane": {
+    "file": "YELLOW_STAINED_GLASS_PANE.png",
+    "emojiName": "yellow_stained_glass_pane"
+  },
+  "yellow_terracotta": {
+    "file": "YELLOW_TERRACOTTA.png",
+    "emojiName": "yellow_terracotta"
+  },
+  "yellow_wool": {
+    "file": "YELLOW_WOOL.png",
+    "emojiName": "yellow_wool"
+  },
+  "yellow_wool_slab": {
+    "file": "YELLOW_WOOL_SLAB.png",
+    "emojiName": "yellow_wool_slab"
+  },
+  "yellow_wool_stairs": {
+    "file": "YELLOW_WOOL_STAIRS.png",
+    "emojiName": "yellow_wool_stairs"
+  },
+  "zoglin_spawn_egg": {
+    "file": "ZOGLIN_SPAWN_EGG.png",
+    "emojiName": "zoglin_spawn_egg"
+  },
+  "zombie_head": {
+    "file": "ZOMBIE_HEAD.png",
+    "emojiName": "zombie_head"
+  },
+  "zombie_horse_spawn_egg": {
+    "file": "ZOMBIE_HORSE_SPAWN_EGG.png",
+    "emojiName": "zombie_horse_spawn_egg"
+  },
+  "zombie_nautilus_spawn_egg": {
+    "file": "ZOMBIE_NAUTILUS_SPAWN_EGG.png",
+    "emojiName": "zombie_nautilus_spawn_egg"
+  },
+  "zombie_spawn_egg": {
+    "file": "ZOMBIE_SPAWN_EGG.png",
+    "emojiName": "zombie_spawn_egg"
+  },
+  "zombie_villager_spawn_egg": {
+    "file": "ZOMBIE_VILLAGER_SPAWN_EGG.png",
+    "emojiName": "zombie_villager_spawn_egg"
+  },
+  "zombified_piglin_spawn_egg": {
+    "file": "ZOMBIFIED_PIGLIN_SPAWN_EGG.png",
+    "emojiName": "zombified_piglin_spawn_egg"
+  }
+}

@@ -2,7 +2,33 @@
  * helpers/utils.js - Các hàm tiện ích bổ trợ cho Bot Check Stats
  */
 
-// Từ điển Custom Emojis Discord để hiển thị icon Minecraft in-game
+const fs = require('fs');
+const path = require('path');
+
+// Đường dẫn file mapping emoji đã upload lên Discord
+const DISCORD_EMOJI_FILE = path.join(__dirname, '../public/textures/discord_emojis.json');
+let DYNAMIC_EMOJIS = {};
+
+function loadDynamicEmojis() {
+  if (fs.existsSync(DISCORD_EMOJI_FILE)) {
+    try {
+      DYNAMIC_EMOJIS = JSON.parse(fs.readFileSync(DISCORD_EMOJI_FILE, 'utf8'));
+    } catch (_) {}
+  }
+}
+loadDynamicEmojis();
+
+// Tự động cập nhật cache khi có emoji mới được upload
+if (fs.existsSync(DISCORD_EMOJI_FILE)) {
+  try {
+    const watcher = fs.watch(DISCORD_EMOJI_FILE, () => {
+      loadDynamicEmojis();
+    });
+    if (watcher && watcher.unref) watcher.unref();
+  } catch (_) {}
+}
+
+// Từ điển Custom Emojis Discord để hiển thị icon Minecraft in-game (Dự phòng)
 const CUSTOM_EMOJIS = {
   'emerald': '<:emerald:1526222843585757405>',
   'sunflower': '<:gold_ingot:1526222925349388298>', // Dùng gold ingot đỡ cho xu
@@ -21,21 +47,56 @@ const CUSTOM_EMOJIS = {
 };
 
 // Hàm lấy Emoji dựa theo tên vật phẩm Minecraft
-function getCustomEmoji(itemName) {
-  if (!itemName) return '🔹';
-  const nameLower = itemName.toLowerCase();
-  
-  // 1. Khớp chính xác
-  if (CUSTOM_EMOJIS[nameLower]) return CUSTOM_EMOJIS[nameLower];
-  
-  // 2. Khớp từ khóa
-  for (const [key, emoji] of Object.entries(CUSTOM_EMOJIS)) {
-    if (nameLower.includes(key)) {
+function getCustomEmoji(itemInput, fallback = '🔹') {
+  if (!itemInput) return fallback;
+
+  // Hỗ trợ cả string và object (item từ Mineflayer / AH / Order)
+  let rawName = '';
+  if (typeof itemInput === 'object') {
+    rawName = itemInput.itemName || itemInput.name || itemInput.displayName || '';
+  } else {
+    rawName = String(itemInput);
+  }
+
+  if (!rawName) return fallback;
+
+  let clean = cleanMinecraftText(rawName)
+    .toLowerCase()
+    .replace(/^minecraft:/i, '')
+    .trim()
+    .replace(/[\s-]+/g, '_')
+    .replace(/[^a-z0-9_]/g, '');
+
+  if (!clean) return fallback;
+
+  // 1. Khớp chính xác trong Dynamic Emojis (Discord Application Emojis mới)
+  if (DYNAMIC_EMOJIS[clean]) return DYNAMIC_EMOJIS[clean];
+
+  // 2. Khớp chính xác trong CUSTOM_EMOJIS dự phòng
+  if (CUSTOM_EMOJIS[clean]) return CUSTOM_EMOJIS[clean];
+
+  // 3. Khớp tiền tố/hậu tố trong Dynamic Emojis (vd: minecraft:enchanted_golden_apple -> golden_apple)
+  for (const [key, emoji] of Object.entries(DYNAMIC_EMOJIS)) {
+    if (clean === key || clean.endsWith('_' + key) || clean.startsWith(key + '_')) {
       return emoji;
     }
   }
-  
-  return '🔹'; // Icon mặc định nếu không có hình khối
+
+  // 4. Khớp chứa từ khóa trong Dynamic Emojis
+  for (const [key, emoji] of Object.entries(DYNAMIC_EMOJIS)) {
+    if (clean.includes(key)) {
+      return emoji;
+    }
+  }
+
+  // 5. Khớp từ khóa trong CUSTOM_EMOJIS
+  for (const [key, emoji] of Object.entries(CUSTOM_EMOJIS)) {
+    if (clean.includes(key)) {
+      return emoji;
+    }
+  }
+
+  return fallback;
 }
 
 // Định dạng tên vật phẩm Minecraft (vd: iron_chestplate -> Iron Chestplate)
@@ -139,6 +200,7 @@ function formatVietnamTime(date, includeSeconds = true) {
 
 module.exports = {
   CUSTOM_EMOJIS,
+  loadDynamicEmojis,
   cleanMinecraftText,
   getCustomEmoji,
   formatItemName,

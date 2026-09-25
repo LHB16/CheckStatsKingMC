@@ -109,8 +109,8 @@ module.exports = {
 
       // CHẾ ĐỘ VĂN BẢN (Text Mode)
       const textTitle = totalPages > 1
-        ? `📦 Danh sách AH: **${itemQuery.toUpperCase()}** ${emoji} (Trang 1/${totalPages})`
-        : `📦 Danh sách AH: **${itemQuery.toUpperCase()}** ${emoji}`;
+        ? `${emoji} Danh sách AH: **${itemQuery.toUpperCase()}** (Trang 1/${totalPages})`
+        : `${emoji} Danh sách AH: **${itemQuery.toUpperCase()}**`;
 
       const embed = new EmbedBuilder()
         .setTitle(textTitle)

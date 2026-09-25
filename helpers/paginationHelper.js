@@ -73,7 +73,10 @@ function formatAhTextPage(items, itemQuery, pageIndex, pageSize = 9) {
     const nameToShow = (cleanDisplay && cleanDisplay !== 'Item' && !isOrderTitle)
       ? cleanDisplay
       : formatItemDisplayName(rawName || itemQuery);
-    return `📦 **#${startIndex + idx + 1}** **${nameToShow}** | Giá: **${priceText}**`;
+
+    // Lấy đúng Emoji 3D cho vật phẩm này
+    const itemEmoji = getCustomEmoji(rawName || itemQuery || cleanDisplay);
+    return `${itemEmoji} **#${startIndex + idx + 1}** **${nameToShow}** | Giá: **${priceText}**`;
   });
 
   let text = lines.join('\n');
@@ -111,7 +114,10 @@ function formatOrderTextPage(orders, itemQuery, pageIndex, pageSize = 9) {
     }
 
     const buyerText = (buyerName && buyerName !== 'Ẩn danh') ? ` (Người mua: **${buyerName}**)` : '';
-    return `📦 **#${startIndex + idx + 1}** **${nameToShow}**${buyerText} | Giá: **${priceText}**`;
+    // Lấy đúng Emoji 3D cho vật phẩm order này
+    const itemEmoji = getCustomEmoji(itemQueryId || rawName || itemQuery || cleanDisplay);
+
+    return `${itemEmoji} **#${startIndex + idx + 1}** **${nameToShow}**${buyerText} | Giá: **${priceText}**`;
   });
 
   let text = lines.join('\n');
@@ -292,7 +298,7 @@ async function handlePaginationButtons(interaction) {
     const titlePrefix = session.type === 'ah' ? 'Danh sách AH' : 'Danh sách đơn hàng';
 
     const embed = new EmbedBuilder()
-      .setTitle(`📦 ${titlePrefix}: **${session.itemQuery.toUpperCase()}** ${emoji} (Trang ${newPage}/${session.totalPages})`)
+      .setTitle(`${emoji} ${titlePrefix}: **${session.itemQuery.toUpperCase()}** (Trang ${newPage}/${session.totalPages})`)
       .setColor('#2b2d31')
       .setTimestamp()
       .setFooter({ text: `KingMC.vn Stats Bot • Trang ${newPage}/${session.totalPages} • Thiết kế bởi BinhLH` });

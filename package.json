@@ -7,7 +7,10 @@
     "start": "node index.js",
     "debug": "node debug/debug_bot.js",
     "postinstall": "npx puppeteer browsers install chrome",
-    "build:dashboard": "npm run --prefix dashboard build"
+    "build:dashboard": "npm run --prefix dashboard build",
+    "emoji:optimize": "node scripts/optimize_textures_to_emojis.js",
+    "emoji:upload": "node scripts/upload_discord_emojis.js",
+    "emoji:sync": "node scripts/upload_discord_emojis.js --sync-only"
   },
   "dependencies": {
     "discord.js": "^14.15.3",
@@ -17,6 +20,7 @@
     "mineflayer": "^4.37.1",
     "mongoose": "^9.10.1",
     "ping-minecraft-server": "^1.0.1",
-    "puppeteer": "^25.4.0"
+    "puppeteer": "^25.4.0",
+    "sharp": "^0.35.4"
   }
 }
