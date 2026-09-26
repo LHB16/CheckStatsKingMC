@@ -2,11 +2,20 @@
  * mongoHelper.js - Quản lý Kết nối Tập trung và Models MongoDB (Worker, DiscordGuild)
  */
 
+const fs = require('fs');
+const path = require('path');
+const dns = require('dns');
 const mongoose = require('mongoose');
+
+// Cấu hình Google/Cloudflare DNS để phân giải SRV records MongoDB mượt mà trên mọi mạng
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (e) {}
 
 let isConnected = false;
 let WorkerModel = null;
 let DiscordGuildModel = null;
+let DonationConfigModel = null;
 
 // Khởi tạo Worker Schema
 function setupWorkerModel() {
@@ -54,6 +63,27 @@ function setupDiscordGuildModel() {
   return DiscordGuildModel;
 }
 
+// Khởi tạo Donation Config Schema
+function setupDonationConfigModel() {
+  if (DonationConfigModel) return DonationConfigModel;
+
+  const DonationConfigSchema = new mongoose.Schema({
+    key: { type: String, required: true, unique: true, index: true },
+    title: { type: String, default: 'Ủng hộ cho tôi:' },
+    description: { type: String, default: 'Quét mã QR để ủng hộ kinh phí duy trì bot KingMC hoạt động 24/7.' },
+    accountName: { type: String, default: 'LUU HUU BINH' },
+    bankName: { type: String, default: 'VietQR (Hỗ trợ tất cả ngân hàng & ví điện tử)' },
+    imageBuffer: { type: Buffer, required: true },
+    contentType: { type: String, default: 'image/jpeg' },
+    fileName: { type: String, default: 'donate_qr.jpg' }
+  }, {
+    timestamps: true
+  });
+
+  DonationConfigModel = mongoose.models.DonationConfig || mongoose.model('DonationConfig', DonationConfigSchema);
+  return DonationConfigModel;
+}
+
 // Kết nối MongoDB tập trung
 async function connectMongo() {
   const mongoUri = process.env.MONGODB_URI;
@@ -66,6 +96,7 @@ async function connectMongo() {
     isConnected = true;
     setupWorkerModel();
     setupDiscordGuildModel();
+    setupDonationConfigModel();
     return true;
   }
 
@@ -77,6 +108,7 @@ async function connectMongo() {
     isConnected = true;
     setupWorkerModel();
     setupDiscordGuildModel();
+    setupDonationConfigModel();
     console.log('✅ [MongoHelper] Kết nối MongoDB Atlas THÀNH CÔNG!');
     return true;
   } catch (err) {
@@ -98,11 +130,77 @@ function getDiscordGuildModel() {
   return setupDiscordGuildModel();
 }
 
+function getDonationConfigModel() {
+  return setupDonationConfigModel();
+}
+
+/**
+ * Nạp (Seed) hoặc cập nhật ảnh Donate vào MongoDB
+ */
+async function seedDonationImage(filePath, customData = {}) {
+  const connected = await connectMongo();
+  if (!connected) {
+    throw new Error('Không thể kết nối MongoDB để seed dữ liệu ảnh donate.');
+  }
+
+  const Model = setupDonationConfigModel();
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`File ảnh không tồn tại tại đường dẫn: ${filePath}`);
+  }
+
+  const imageBuffer = fs.readFileSync(filePath);
+  const key = customData.key || 'donate_qr';
+
+  const doc = await Model.findOneAndUpdate(
+    { key },
+    {
+      key,
+      title: customData.title || 'Ủng hộ cho tôi:',
+      description: customData.description || 'Mọi đóng góp từ bạn là nguồn động lực lớn giúp bot duy trì hoạt động máy chủ và proxy ổn định 24/7.',
+      accountName: customData.accountName || 'LUU HUU BINH',
+      bankName: customData.bankName || 'VietQR (Mọi ứng dụng ngân hàng & ví điện tử)',
+      imageBuffer,
+      contentType: customData.contentType || 'image/jpeg',
+      fileName: customData.fileName || 'donate_qr.jpg'
+    },
+    { upsert: true, returnDocument: 'after' }
+  );
+
+  console.log(`✅ [MongoHelper] Đã lưu/cập nhật ảnh donate vào MongoDB Atlas (Key: ${key}, Size: ${imageBuffer.length} bytes).`);
+  return doc;
+}
+
+/**
+ * Lấy dữ liệu ảnh và cấu hình Donate trực tiếp từ MongoDB
+ */
+async function getDonationConfig(key = 'donate_qr') {
+  const connected = await connectMongo();
+  if (!connected) return null;
+
+  const Model = setupDonationConfigModel();
+  let doc = await Model.findOne({ key }).lean();
+
+  // Tự động seed nếu MongoDB chưa có dữ liệu nhưng có file ảnh dự phòng trong public/images
+  if (!doc) {
+    const defaultImagePath = path.join(__dirname, '../public/images/donate_qr.jpg');
+    if (fs.existsSync(defaultImagePath)) {
+      console.log(`[MongoHelper] Chưa có record [${key}] trong MongoDB, đang tự động nạp từ file cục bộ...`);
+      doc = await seedDonationImage(defaultImagePath, { key });
+    }
+  }
+
+  return doc;
+}
+
 module.exports = {
   connectMongo,
   isMongoAvailable,
   getWorkerModel,
   getDiscordGuildModel,
+  getDonationConfigModel,
   setupWorkerModel,
-  setupDiscordGuildModel
+  setupDiscordGuildModel,
+  setupDonationConfigModel,
+  seedDonationImage,
+  getDonationConfig
 };

@@ -55,6 +55,8 @@ module.exports = {
             `  └ *Xem danh sách & số lượng người chơi đang online.*\n` +
             `• \`?ping\` hoặc \`/ping\`\n` +
             `  └ *Kiểm tra độ trễ Discord Bot & trạng thái máy chủ KingMC.*\n` +
+            `• \`/donate\`\n` +
+            `  └ *Xem thông tin & mã QR ủng hộ kinh phí duy trì bot.*\n` +
             `• \`?help\` hoặc \`/help\`\n` +
             `  └ *Hiển thị bảng trợ giúp này.*`,
           inline: false
