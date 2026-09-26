@@ -706,14 +706,33 @@ class PersistentBot extends EventEmitter {
             let price = '';
             let seller = '';
             let expiration = '';
+            let quantity = '';
 
             for (const line of loreArray) {
               const cleanLine = cleanMinecraftText(line).trim();
               const lowerLine = cleanLine.toLowerCase();
+              const normLine = normalizeSmallCaps(cleanLine);
+
+              // Trích xuất Số lượng nếu có trong lore
+              if (!quantity) {
+                if (
+                  lowerLine.includes('số lượng') ||
+                  lowerLine.includes('so luong') ||
+                  lowerLine.includes('sl:') ||
+                  normLine.includes('so luong') ||
+                  normLine.includes('sl:')
+                ) {
+                  if (cleanLine.includes(':')) {
+                    quantity = cleanLine.split(':').slice(1).join(':').trim();
+                  } else {
+                    quantity = cleanLine.replace(/^.*?(?:số\s*lượng|so\s*luong|sl)\s*/iu, '').trim();
+                  }
+                }
+              }
 
               // Trích xuất Giá mỗi item (Ví dụ: giá: $ 638M)
               if (!price) {
-                if (lowerLine.includes('giá') || lowerLine.includes('gia') || lowerLine.includes('$')) {
+                if (lowerLine.includes('giá') || lowerLine.includes('gia') || lowerLine.includes('$') || normLine.includes('gia')) {
                   if (cleanLine.includes(':')) {
                     price = cleanLine.split(':').slice(1).join(':').trim();
                   } else if (cleanLine.includes('$')) {
@@ -725,7 +744,7 @@ class PersistentBot extends EventEmitter {
 
               // Trích xuất Người bán (Ví dụ: người bán: KhoaCoCaiNjt)
               if (!seller) {
-                if (lowerLine.includes('người bán') || lowerLine.includes('nguoi ban') || lowerLine.includes('seller')) {
+                if (lowerLine.includes('người bán') || lowerLine.includes('nguoi ban') || lowerLine.includes('seller') || normLine.includes('nguoi ban')) {
                   if (cleanLine.includes(':')) {
                     seller = cleanLine.split(':').slice(1).join(':').trim();
                   }
@@ -734,7 +753,7 @@ class PersistentBot extends EventEmitter {
 
               // Trích xuất Thời gian hết hạn (Ví dụ: hết hạn vào: 2 ngày)
               if (!expiration) {
-                if (lowerLine.includes('hết hạn') || lowerLine.includes('het han') || lowerLine.includes('expire')) {
+                if (lowerLine.includes('hết hạn') || lowerLine.includes('het han') || lowerLine.includes('expire') || normLine.includes('het han')) {
                   if (cleanLine.includes(':')) {
                     expiration = cleanLine.split(':').slice(1).join(':').trim();
                   }
@@ -742,10 +761,15 @@ class PersistentBot extends EventEmitter {
               }
             }
 
+            if (!quantity && item.count) {
+              quantity = String(item.count);
+            }
+
             items.push({
               slot: i,
               itemName: item.name,
               displayName: displayName,
+              quantity: quantity || '1',
               price: price || 'N/A',
               seller: seller || 'Ẩn danh',
               expiration: expiration || null,
@@ -1185,6 +1209,19 @@ class PersistentBot extends EventEmitter {
           for (const line of loreArray) {
             const cleanLine = cleanMinecraftText(line).trim();
             const lowerLine = cleanLine.toLowerCase();
+            const normLine = normalizeSmallCaps(cleanLine);
+
+            // Trích xuất Tiến độ đã giao (Ví dụ: ĐÃ GIAO: 49985/50000)
+            if (!delivered) {
+              if (lowerLine.includes('đã giao') || lowerLine.includes('da giao') || normLine.includes('da giao')) {
+                if (cleanLine.includes(':')) {
+                  delivered = cleanLine.split(':').slice(1).join(':').trim();
+                } else {
+                  const match = cleanLine.match(/(\d[\d,\.]*\s*\/\s*\d[\d,\.]*)/);
+                  if (match) delivered = match[1].replace(/\s+/g, '');
+                }
+              }
+            }
 
             // Trích xuất Số lượng (Ví dụ: SỐ LƯỢNG: 50000 Blaze Rod)
             if (!quantity) {
@@ -1193,7 +1230,10 @@ class PersistentBot extends EventEmitter {
                 lowerLine.includes('so luong') ||
                 lowerLine.includes('sl:') ||
                 lowerLine.includes('cần mua') ||
-                lowerLine.includes('can mua')
+                lowerLine.includes('can mua') ||
+                normLine.includes('so luong') ||
+                normLine.includes('sl:') ||
+                normLine.includes('can mua')
               ) {
                 if (cleanLine.includes(':')) {
                   quantity = cleanLine.split(':').slice(1).join(':').trim();
@@ -1205,7 +1245,7 @@ class PersistentBot extends EventEmitter {
 
             // Trích xuất Giá mỗi item (Ví dụ: GIÁ MỖI ITEM: $ 151.6)
             if (!price) {
-              if (lowerLine.includes('giá') || lowerLine.includes('gia') || lowerLine.includes('$')) {
+              if (lowerLine.includes('giá') || lowerLine.includes('gia') || lowerLine.includes('$') || normLine.includes('gia')) {
                 if (cleanLine.includes(':')) {
                   price = cleanLine.split(':').slice(1).join(':').trim();
                 } else if (cleanLine.includes('$')) {
@@ -1214,20 +1254,27 @@ class PersistentBot extends EventEmitter {
                 }
               }
             }
+          }
 
-            // Trích xuất Tiến độ đã giao (Ví dụ: ĐÃ GIAO: 49985/50000)
-            if (!delivered) {
-              if (lowerLine.includes('đã giao') || lowerLine.includes('da giao')) {
-                if (cleanLine.includes(':')) {
-                  delivered = cleanLine.split(':').slice(1).join(':').trim();
-                }
+          // Tính toán số lượng còn lại (remaining) từ tiến độ đã giao (x/y)
+          let remaining = null;
+          if (delivered) {
+            const parts = delivered.replace(/,/g, '').split('/');
+            if (parts.length === 2) {
+              const deliveredNum = parseInt(parts[0], 10);
+              const totalNum = parseInt(parts[1], 10);
+              if (!isNaN(deliveredNum) && !isNaN(totalNum)) {
+                remaining = Math.max(0, totalNum - deliveredNum);
               }
             }
           }
 
-          // Fallback nếu không parse được quantity từ lore
-          if (!quantity && item.count) {
-            quantity = String(item.count);
+          // Fallback nếu không có remaining
+          if (remaining === null && quantity) {
+            const cleanQtyMatch = quantity.replace(/,/g, '').match(/\d+/);
+            if (cleanQtyMatch) {
+              remaining = parseInt(cleanQtyMatch[0], 10);
+            }
           }
 
           orders.push({
@@ -1236,7 +1283,8 @@ class PersistentBot extends EventEmitter {
             itemName: item.name,
             displayName: displayName,
             buyer: buyer || 'Ẩn danh',
-            quantity: quantity || '1',
+            quantity: quantity || (remaining !== null ? String(remaining) : (item.count ? String(item.count) : '1')),
+            remaining: remaining !== null ? String(remaining) : null,
             price: price || 'N/A',
             delivered: delivered || null,
             lore: loreArray

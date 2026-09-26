@@ -8,7 +8,7 @@ const path = require('path');
 const CONFIG_PATH = path.join(__dirname, '../config.json');
 
 const defaultConfig = {
-  displayMode: 'image' // Mặc định là 'image' (có thể chuyển sang 'text')
+  displayMode: 'text' // Mặc định là 'text' (có thể chuyển sang 'image')
 };
 
 function loadConfig() {

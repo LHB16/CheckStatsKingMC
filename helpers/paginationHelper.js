@@ -61,7 +61,8 @@ function buildPaginationRow(sessionId, currentPage, totalPages, disabled = false
  */
 function formatAhTextPage(items, itemQuery, pageIndex, pageSize = 9) {
   const startIndex = (pageIndex - 1) * pageSize;
-  const lines = items.map((item, idx) => {
+  const blocks = items.map((item, idx) => {
+    const stt = startIndex + idx + 1;
     const priceText = item.price || 'N/A';
     const cleanDisplay = (item.displayName || '').replace(/§[0-9a-fk-or]/gi, '').trim();
     const rawName = item.itemName || item.name;
@@ -74,12 +75,18 @@ function formatAhTextPage(items, itemQuery, pageIndex, pageSize = 9) {
       ? cleanDisplay
       : (rawName ? formatItemDisplayName(rawName) : itemQuery);
 
+    const quantity = item.quantity || item.count || '1';
+    const seller = item.seller || 'Ẩn danh';
+
     // Lấy đúng Emoji 3D cho vật phẩm này
     const itemEmoji = getCustomEmoji(rawName || itemQuery || cleanDisplay);
-    return `${itemEmoji} **#${startIndex + idx + 1}** **${nameToShow}** | Giá: **${priceText}**`;
+    const line1 = `${itemEmoji} **#${stt} ${nameToShow}** | Số lượng: \`${quantity}\``;
+    const line2 = `   └─ Người bán: **${seller}** | Giá: **${priceText}**`;
+
+    return `${line1}\n${line2}`;
   });
 
-  let text = lines.join('\n');
+  let text = blocks.join('\n\n');
   if (text.length > 4096) {
     text = text.substring(0, 4080) + '...';
   }
@@ -91,7 +98,8 @@ function formatAhTextPage(items, itemQuery, pageIndex, pageSize = 9) {
  */
 function formatOrderTextPage(orders, itemQuery, pageIndex, pageSize = 9) {
   const startIndex = (pageIndex - 1) * pageSize;
-  const lines = orders.map((order, idx) => {
+  const blocks = orders.map((order, idx) => {
+    const stt = startIndex + idx + 1;
     const priceText = order.price || 'N/A';
     const cleanDisplay = (order.displayName || '').replace(/§[0-9a-fk-or]/gi, '').trim();
     const rawName = order.itemName || order.name;
@@ -112,15 +120,22 @@ function formatOrderTextPage(orders, itemQuery, pageIndex, pageSize = 9) {
     if (!buyerName || buyerName === 'Ẩn danh' || /^(?:don\s*hang|order)/i.test(normalizeSmallCaps(buyerName))) {
       buyerName = cleanBuyerName(order.displayName || cleanDisplay);
     }
+    buyerName = buyerName || 'Ẩn danh';
 
-    const buyerText = (buyerName && buyerName !== 'Ẩn danh') ? ` (Người mua: **${buyerName}**)` : '';
+    // Xác định thông tin tiến độ giao hoặc số lượng
+    const progressInfo = order.delivered
+      ? `Đã giao: \`${order.delivered}\``
+      : (order.remaining ? `Còn lại: \`${order.remaining}\`` : `Số lượng: \`${order.quantity || '1'}\``);
+
     // Lấy đúng Emoji 3D cho vật phẩm order này
     const itemEmoji = getCustomEmoji(itemQueryId || rawName || itemQuery || cleanDisplay);
+    const line1 = `${itemEmoji} **#${stt} ${nameToShow}** | ${progressInfo}`;
+    const line2 = `   └─ Người mua: **${buyerName}** | Giá: **${priceText}**`;
 
-    return `${itemEmoji} **#${startIndex + idx + 1}** **${nameToShow}**${buyerText} | Giá: **${priceText}**`;
+    return `${line1}\n${line2}`;
   });
 
-  let text = lines.join('\n');
+  let text = blocks.join('\n\n');
   if (text.length > 4096) {
     text = text.substring(0, 4080) + '...';
   }
