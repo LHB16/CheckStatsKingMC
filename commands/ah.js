@@ -33,9 +33,11 @@ module.exports = {
 
       // Trường hợp KHÔNG có vật phẩm nào trên AH
       if (items.length === 0) {
+        const chestEmoji = getCustomEmoji('chest');
+        const barrierEmoji = getCustomEmoji('barrier');
         const emptyEmbed = new EmbedBuilder()
-          .setTitle(`📦 Đấu Giá (AH): **${itemQuery}**`)
-          .setDescription(`⚠️ Không tìm thấy AH cho món đồ **${itemQuery}**.`)
+          .setTitle(`${chestEmoji} Đấu Giá (AH): **${itemQuery}**`)
+          .setDescription(`${barrierEmoji} Không tìm thấy AH cho món đồ **${itemQuery}**.`)
           .setColor('#ef4444')
           .setTimestamp()
           .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });

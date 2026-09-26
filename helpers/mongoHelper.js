@@ -70,7 +70,7 @@ function setupDonationConfigModel() {
   const DonationConfigSchema = new mongoose.Schema({
     key: { type: String, required: true, unique: true, index: true },
     title: { type: String, default: 'Ủng hộ cho tôi:' },
-    description: { type: String, default: 'Quét mã QR để ủng hộ kinh phí duy trì bot KingMC hoạt động 24/7.' },
+    description: { type: String, default: 'Cảm ơn bạn đã luôn tin tưởng và sử dụng KingMC Stats Bot!\nMọi đóng góp dù lớn hay nhỏ đều là nguồn hỗ trợ quý báu.' },
     accountName: { type: String, default: 'LUU HUU BINH' },
     bankName: { type: String, default: 'VietQR (Hỗ trợ tất cả ngân hàng & ví điện tử)' },
     imageBuffer: { type: Buffer, required: true },
@@ -156,7 +156,7 @@ async function seedDonationImage(filePath, customData = {}) {
     {
       key,
       title: customData.title || 'Ủng hộ cho tôi:',
-      description: customData.description || 'Mọi đóng góp từ bạn là nguồn động lực lớn giúp bot duy trì hoạt động máy chủ và proxy ổn định 24/7.',
+      description: customData.description || 'Cảm ơn bạn đã luôn tin tưởng và sử dụng KingMC Stats Bot!\nMọi đóng góp dù lớn hay nhỏ đều là nguồn hỗ trợ quý báu.',
       accountName: customData.accountName || 'LUU HUU BINH',
       bankName: customData.bankName || 'VietQR (Mọi ứng dụng ngân hàng & ví điện tử)',
       imageBuffer,

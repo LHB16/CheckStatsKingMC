@@ -33,9 +33,11 @@ module.exports = {
 
       // Trường hợp KHÔNG có đơn hàng nào
       if (orders.length === 0) {
+        const chestEmoji = getCustomEmoji('chest');
+        const barrierEmoji = getCustomEmoji('barrier');
         const emptyEmbed = new EmbedBuilder()
-          .setTitle(`📦 Đơn hàng: **${itemQuery}**`)
-          .setDescription(`⚠️ Không tìm thấy Order cho món đồ **${itemQuery}**.`)
+          .setTitle(`${chestEmoji} Đơn hàng: **${itemQuery}**`)
+          .setDescription(`${barrierEmoji} Không tìm thấy Order cho món đồ **${itemQuery}**.`)
           .setColor('#ef4444')
           .setTimestamp()
           .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });

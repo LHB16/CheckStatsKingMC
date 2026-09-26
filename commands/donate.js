@@ -45,22 +45,16 @@ module.exports = {
       const qrAttachment = new AttachmentBuilder(rawBuffer, { name: fileName });
 
       const netherStarEmoji = getCustomEmoji('nether_star');
-      const emeraldEmoji = getCustomEmoji('emerald');
-      const sunflowerEmoji = getCustomEmoji('sunflower');
 
       const embed = new EmbedBuilder()
         .setTitle(`${netherStarEmoji} **${donationData.title || 'Ủng hộ cho tôi:'}**`)
         .setColor('#2b2d31')
         .setDescription(
-          `Cảm ơn bạn đã luôn tin tưởng và sử dụng **KingMC Stats Bot**!\n\n` +
-          `Mọi đóng góp dù lớn hay nhỏ đều là nguồn hỗ trợ quý báu giúp duy trì chi phí vận hành máy chủ, proxy và các tính năng bot hoạt động mượt mà 24/7.\n\n` +
-          `**Thông tin nhận ủng hộ:**\n` +
-          `• ${emeraldEmoji} **Chủ tài khoản:** \`${donationData.accountName || 'LUU HUU BINH'}\`\n` +
-          `• ${sunflowerEmoji} **Hình thức:** \`${donationData.bankName || 'VietQR (Mọi ứng dụng ngân hàng & ví điện tử)'}\`\n` +
-          `• 📲 **Cách thực hiện:** Mở bất kỳ ứng dụng ngân hàng hoặc ví điện tử (ZaloPay, Viettel Money, Momo, VNPay...) và quét mã QR bên dưới.`
+          donationData.description ||
+          `Cảm ơn bạn đã luôn tin tưởng và sử dụng KingMC Stats Bot!\nMọi đóng góp dù lớn hay nhỏ đều là nguồn hỗ trợ quý báu.`
         )
         .setImage(`attachment://${fileName}`)
-        .setFooter({ text: 'KingMC.vn Stats Bot • Cảm ơn sự đồng hành của bạn! • Thiết kế bởi BinhLH' })
+        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
         .setTimestamp();
 
       const responsePayload = {
