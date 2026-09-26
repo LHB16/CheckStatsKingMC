@@ -189,6 +189,17 @@ async function getDonationConfig(key = 'donate_qr') {
     }
   }
 
+  // Đảm bảo dữ liệu nhị phân BSON Binary của MongoDB được chuyển đổi chuẩn thành Buffer của Node.js
+  if (doc && doc.imageBuffer) {
+    if (!Buffer.isBuffer(doc.imageBuffer)) {
+      if (doc.imageBuffer.buffer) {
+        doc.imageBuffer = Buffer.from(doc.imageBuffer.buffer);
+      } else {
+        doc.imageBuffer = Buffer.from(doc.imageBuffer);
+      }
+    }
+  }
+
   return doc;
 }
 

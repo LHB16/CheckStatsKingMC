@@ -30,9 +30,19 @@ module.exports = {
         return await interaction.reply({ content: errorMsg });
       }
 
+      // Chuẩn hóa dữ liệu ảnh sang Buffer chuẩn của Node.js
+      let rawBuffer = donationData.imageBuffer;
+      if (!Buffer.isBuffer(rawBuffer)) {
+        if (rawBuffer && rawBuffer.buffer) {
+          rawBuffer = Buffer.from(rawBuffer.buffer);
+        } else if (rawBuffer) {
+          rawBuffer = Buffer.from(rawBuffer);
+        }
+      }
+
       // Tạo tệp đính kèm từ Image Buffer nhị phân lưu trữ trong MongoDB
       const fileName = donationData.fileName || 'donate_qr.jpg';
-      const qrAttachment = new AttachmentBuilder(donationData.imageBuffer, { name: fileName });
+      const qrAttachment = new AttachmentBuilder(rawBuffer, { name: fileName });
 
       const netherStarEmoji = getCustomEmoji('nether_star');
       const emeraldEmoji = getCustomEmoji('emerald');
