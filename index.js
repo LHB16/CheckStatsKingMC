@@ -716,7 +716,10 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
         },
         editReply: async (data) => {
            if (interaction._replyMessage) {
-              await interaction._replyMessage.edit(data);
+              const editPayload = typeof data === 'string'
+                 ? { content: data }
+                 : { content: '', ...data };
+              await interaction._replyMessage.edit(editPayload);
            } else {
               await message.channel.send(data);
            }

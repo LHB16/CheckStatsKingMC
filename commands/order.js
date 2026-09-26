@@ -52,7 +52,7 @@ module.exports = {
 
       // Lấy chế độ hiển thị từ configHelper ('text' hoặc 'image')
       const displayMode = configHelper.getDisplayMode();
-      const emoji = getCustomEmoji(itemQuery);
+      const chestEmoji = getCustomEmoji('chest');
 
       // CHẾ ĐỘ RENDER ẢNH (Image Mode) - Chụp đồng thời 1 lần tất cả các trang
       if (displayMode === 'image') {
@@ -82,11 +82,7 @@ module.exports = {
             .setImage('attachment://order_table_p1.png')
             .setColor('#2b2d31')
             .setTimestamp()
-            .setFooter({
-              text: totalPages > 1
-                ? `KingMC.vn Stats Bot • Trang 1/${totalPages} • Thiết kế bởi BinhLH`
-                : 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH'
-            });
+            .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
 
           // Nếu có từ 2 trang trở lên, tạo session phân trang (5 phút TTL) và gắn nút
           if (totalPages > 1) {
@@ -110,18 +106,14 @@ module.exports = {
 
       // CHẾ ĐỘ VĂN BẢN (Text Mode)
       const textTitle = totalPages > 1
-        ? `${emoji} Danh sách đơn hàng: **${itemQuery}** (Trang 1/${totalPages})`
-        : `${emoji} Danh sách đơn hàng: **${itemQuery}**`;
+        ? `${chestEmoji} Danh sách Order: **${itemQuery}** (Trang 1/${totalPages})`
+        : `${chestEmoji} Danh sách Order: **${itemQuery}**`;
 
       const embed = new EmbedBuilder()
         .setTitle(textTitle)
         .setColor('#2b2d31')
         .setTimestamp()
-        .setFooter({
-          text: totalPages > 1
-            ? `KingMC.vn Stats Bot • Trang 1/${totalPages} • Thiết kế bởi BinhLH`
-            : 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH'
-        });
+        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
 
       const descriptionText = formatOrderTextPage(page1Orders, itemQuery, 1, 9);
       embed.setDescription(descriptionText);

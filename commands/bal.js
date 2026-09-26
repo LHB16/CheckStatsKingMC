@@ -58,7 +58,7 @@ module.exports = {
       }
       
       const embed = new EmbedBuilder()
-        .setTitle(`${netherStarEmoji} Số dư người chơi: **${targetPlayer}** ${netherStarEmoji}`)
+        .setTitle(`${netherStarEmoji} Balance: **${targetPlayer}** ${netherStarEmoji}`)
         .setColor('#2b2d31')
         .setThumbnail(skinHelper.getAvatarUrl(targetPlayer, 64, true))
         .setDescription(`${emeraldEmoji} **SỐ DƯ:** \`${cleanVal}\`\n\n\u200B`)

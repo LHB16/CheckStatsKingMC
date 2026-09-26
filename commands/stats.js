@@ -44,7 +44,7 @@ module.exports = {
       const mapEmoji = getCustomEmoji('map');
 
       const embed = new EmbedBuilder()
-        .setTitle(`${netherStarEmoji} Thống kê người chơi: **${targetPlayer}** ${netherStarEmoji}`)
+        .setTitle(`${netherStarEmoji} Stats: **${targetPlayer}** ${netherStarEmoji}`)
         .setColor('#2b2d31')
         .setThumbnail(skinHelper.getAvatarUrl(targetPlayer, 64, true))
         .setTimestamp()

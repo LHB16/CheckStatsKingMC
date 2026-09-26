@@ -40,17 +40,17 @@ function buildPaginationRow(sessionId, currentPage, totalPages, disabled = false
   return new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`page_${sessionId}_prev`)
-      .setLabel('◀️ Trước')
+      .setLabel('◀')
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(disabled || currentPage <= 1),
     new ButtonBuilder()
       .setCustomId(`page_${sessionId}_indicator`)
-      .setLabel(`Trang ${currentPage}/${totalPages}`)
+      .setLabel(`${currentPage}/${totalPages}`)
       .setStyle(ButtonStyle.Primary)
       .setDisabled(true),
     new ButtonBuilder()
       .setCustomId(`page_${sessionId}_next`)
-      .setLabel('Sau ▶️')
+      .setLabel('▶')
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(disabled || currentPage >= totalPages)
   );
@@ -86,7 +86,7 @@ function formatAhTextPage(items, itemQuery, pageIndex, pageSize = 9) {
     return `${line1}\n${line2}`;
   });
 
-  let text = blocks.join('\n\n');
+  let text = blocks.join('\n');
   if (text.length > 4096) {
     text = text.substring(0, 4080) + '...';
   }
@@ -135,7 +135,7 @@ function formatOrderTextPage(orders, itemQuery, pageIndex, pageSize = 9) {
     return `${line1}\n${line2}`;
   });
 
-  let text = blocks.join('\n\n');
+  let text = blocks.join('\n');
   if (text.length > 4096) {
     text = text.substring(0, 4080) + '...';
   }
@@ -301,7 +301,7 @@ async function handlePaginationButtons(interaction) {
           .setImage(`attachment://${fileName}`)
           .setColor('#2b2d31')
           .setTimestamp()
-          .setFooter({ text: `KingMC.vn Stats Bot • Trang ${newPage}/${session.totalPages} • Thiết kế bởi BinhLH` });
+          .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
 
         const row = buildPaginationRow(sessionId, newPage, session.totalPages);
         await interaction.editReply({ embeds: [embed], files: [attachment], components: [row] });
@@ -310,14 +310,14 @@ async function handlePaginationButtons(interaction) {
     }
 
     // 2. Chế độ văn bản (Text Mode)
-    const emoji = getCustomEmoji(session.itemQuery);
-    const titlePrefix = session.type === 'ah' ? 'Danh sách AH' : 'Danh sách đơn hàng';
+    const chestEmoji = getCustomEmoji('chest');
+    const titlePrefix = session.type === 'ah' ? 'Danh sách AH' : 'Danh sách Order';
 
     const embed = new EmbedBuilder()
-      .setTitle(`${emoji} ${titlePrefix}: **${session.itemQuery}** (Trang ${newPage}/${session.totalPages})`)
+      .setTitle(`${chestEmoji} ${titlePrefix}: **${session.itemQuery}** (Trang ${newPage}/${session.totalPages})`)
       .setColor('#2b2d31')
       .setTimestamp()
-      .setFooter({ text: `KingMC.vn Stats Bot • Trang ${newPage}/${session.totalPages} • Thiết kế bởi BinhLH` });
+      .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
 
     const descText = session.type === 'ah'
       ? formatAhTextPage(pageItems, session.itemQuery, newPage, 9)
