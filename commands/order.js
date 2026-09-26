@@ -144,9 +144,10 @@ module.exports = {
       console.error(`[Discord-Bot] Lỗi khi xử lý lệnh order cho ${itemQuery}:`, error.message);
       recordError('order', itemQuery, error);
 
+      const barrierEmoji = getCustomEmoji('barrier');
       const errorEmbed = new EmbedBuilder()
-        .setTitle('❌ Lỗi kiểm tra đơn hàng')
-        .setDescription(`Không thể lấy danh sách đơn hàng cho **${itemQuery}**.\n\n⚠️ Đã có lỗi xảy ra trong quá trình xử lý yêu cầu. Vui lòng thử lại sau hoặc bấm nút **Báo lỗi** bên dưới để gửi thông báo tới Admin!`)
+        .setTitle(`${barrierEmoji} Lỗi kiểm tra đơn hàng`)
+        .setDescription(`Không thể lấy danh sách đơn hàng cho **${itemQuery}**.\n\n${barrierEmoji} Đã có lỗi xảy ra trong quá trình xử lý yêu cầu. Vui lòng thử lại sau hoặc bấm nút **Báo lỗi** bên dưới để gửi thông báo tới Admin!`)
         .setColor('#ef4444')
         .setTimestamp()
         .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });

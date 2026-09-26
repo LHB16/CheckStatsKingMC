@@ -3,6 +3,7 @@
  */
 
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { getCustomEmoji } = require('../helpers/utils');
 const pingServer = require('ping-minecraft-server');
 
 const KINGMC_HOSTS = [
@@ -64,8 +65,9 @@ module.exports = {
       }
     }).join('\n');
 
+    const redstoneEmoji = getCustomEmoji('redstone');
     const embed = new EmbedBuilder()
-      .setTitle('ping')
+      .setTitle(`${redstoneEmoji} Độ trễ hệ thống (Ping KingMC)`)
       .setColor('#2b2d31')
       .setDescription(`\`\`\`text\n${lines}\n\`\`\``)
       .setTimestamp()

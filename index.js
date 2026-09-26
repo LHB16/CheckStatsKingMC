@@ -19,6 +19,7 @@ const trackerHelper = require('./helpers/trackerHelper');
 const { handleTrackerButtons, buildTrackerOverviewMessage } = require('./handlers/trackerButtonHandler');
 const { handlePaginationButtons } = require('./helpers/paginationHelper');
 const skinHelper = require('./helpers/skinHelper');
+const { getCustomEmoji } = require('./helpers/utils');
 const { connectMongo, isMongoAvailable } = require('./helpers/mongoHelper');
 const { handleDashboardRequest, syncDiscordGuilds } = require('./handlers/dashboardHandler');
 
@@ -393,11 +394,12 @@ function startTrackerScheduler(queueDispatcher) {
   function formatProgressText(completed, total, success, fail, lastRecord = null) {
     const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
     const bar = renderProgressBar(completed, total, 10);
+    const barrierEmoji = getCustomEmoji('barrier');
     let text = `🔄 **Đang kiểm tra số dư định kỳ cho các tài khoản theo dõi...**\n` +
       `📊 Tiến độ: \`[ ${bar} ]\` **${completed}/${total}** (${percent}%)\n` +
-      `• Thành công: **${success}** ✅ | Thất bại: **${fail}** ⚠️`;
+      `• Thành công: **${success}** ✅ | Thất bại: **${fail}** ${barrierEmoji}`;
     if (lastRecord && lastRecord.player) {
-      const statusIcon = lastRecord.success ? '✅' : '⚠️';
+      const statusIcon = lastRecord.success ? '✅' : barrierEmoji;
       text += `\n• Vừa kiểm tra: **${lastRecord.player}** ${statusIcon} *(Worker: ${lastRecord.worker || 'Local'})*`;
     }
     return text;
@@ -422,7 +424,8 @@ function startTrackerScheduler(queueDispatcher) {
     }
 
     if (isChecking) {
-      const runningMsg = '⚠️ Tiến trình kiểm tra số dư hiện đang chạy, vui lòng đợi hoàn tất chu kỳ này.';
+      const barrierEmoji = getCustomEmoji('barrier');
+      const runningMsg = `${barrierEmoji} Tiến trình kiểm tra số dư hiện đang chạy, vui lòng đợi hoàn tất chu kỳ này.`;
       console.log(`[TrackerScheduler] ${runningMsg}`);
       if (targetInteraction) {
         await targetInteraction.editReply({ content: runningMsg }).catch(() => {});
@@ -533,10 +536,11 @@ function startTrackerScheduler(queueDispatcher) {
       const durationSec = Math.round((Date.now() - startTime) / 1000);
       console.log(`[TrackerScheduler] 🏁 Hoàn thành chu kỳ kiểm tra số dư định kỳ (${successCount} thành công, ${failCount} thất bại qua ${batchResult.workerCount} workers).`);
 
+      const barrierEmoji = getCustomEmoji('barrier');
       const summaryText = `🏁 **Đã hoàn thành chu kỳ kiểm tra số dư định kỳ:**\n` +
         `• Tổng số người chơi: **${batchResult.total}**\n` +
         `• Thành công: **${successCount}** ✅\n` +
-        `• Thất bại / Timeout: **${failCount}** ⚠️\n` +
+        `• Thất bại / Timeout: **${failCount}** ${barrierEmoji}\n` +
         `• Số Worker tham gia: **${batchResult.workerCount}** (${batchResult.workers.join(', ')})\n` +
         `• Thời gian thực hiện: **${durationSec}s**`;
 
@@ -636,7 +640,8 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     // Chặn Slash Commands khi bảo trì
     if (global.isBotMaintenance && interaction.isChatInputCommand()) {
        if (!ADMIN_ID || interaction.user.id !== ADMIN_ID) {
-          return interaction.reply({ content: `⚠️ **Bảo trì:** ${global.maintenanceMessage}`, ephemeral: true });
+          const barrierEmoji = getCustomEmoji('barrier');
+          return interaction.reply({ content: `${barrierEmoji} **Bảo trì:** ${global.maintenanceMessage}`, ephemeral: true });
        }
     }
 
@@ -678,17 +683,19 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
       const command = client.commands.get(commandName);
       if (!command) return;
 
+      const barrierEmoji = getCustomEmoji('barrier');
+
       // Chặn nếu đang bảo trì (trừ Admin)
       if (global.isBotMaintenance) {
          if (!ADMIN_ID || message.author.id !== ADMIN_ID) {
-            return message.channel.send(`⚠️ **Bảo trì:** ${global.maintenanceMessage}`);
+            return message.channel.send(`${barrierEmoji} **Bảo trì:** ${global.maintenanceMessage}`);
          }
       }
 
       const argStr = args.join(' ').trim();
       const noArgRequiredCommands = ['ping', 'help'];
       if (!noArgRequiredCommands.includes(commandName) && !argStr) {
-         return message.channel.send(`⚠️ Lệnh \`?${commandName}\` cần có tham số (tên người chơi hoặc vật phẩm). VD: \`?${commandName} BinhLH\``);
+         return message.channel.send(`${barrierEmoji} Lệnh \`?${commandName}\` cần có tham số (tên người chơi hoặc vật phẩm). VD: \`?${commandName} BinhLH\``);
       }
 
       const userId = message.author.id;
@@ -760,14 +767,16 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
          } else if (sub === 'untrack' || sub === 'remove' || sub === 'xoa') {
            const target = args.join(' ').trim();
            if (!target) {
-             return await safeSend(message.channel, '⚠️ Cú pháp: `!tracker untrack <tên_người_chơi>`');
+             const barrierEmoji = getCustomEmoji('barrier');
+             return await safeSend(message.channel, `${barrierEmoji} Cú pháp: \`!tracker untrack <tên_người_chơi>\``);
            }
            await trackerHelper.setTracking(target, false);
            await safeSend(message.channel, `✅ Đã hủy theo dõi số dư của người chơi: **${target}**`);
          } else if (sub === 'add' || sub === 'track' || sub === 'them') {
            const target = args.join(' ').trim();
            if (!target) {
-             return await safeSend(message.channel, '⚠️ Cú pháp: `!tracker add <tên_người_chơi>`');
+             const barrierEmoji = getCustomEmoji('barrier');
+             return await safeSend(message.channel, `${barrierEmoji} Cú pháp: \`!tracker add <tên_người_chơi>\``);
            }
            await trackerHelper.setTracking(target, true);
            await safeSend(message.channel, `✅ Đã thêm người chơi **${target}** vào danh sách theo dõi số dư định kỳ!`);
@@ -814,7 +823,8 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
       } else if (command === 'status' || command === 'workers') {
          const workers = await queueDispatcher.getAllWorkersStatus();
          if (workers.length === 0) {
-           await message.channel.send('⚠️ Hiện chưa có Worker nào được cấu hình.');
+           const barrierEmoji = getCustomEmoji('barrier');
+           await message.channel.send(`${barrierEmoji} Hiện chưa có Worker nào được cấu hình.`);
            return;
          }
 
@@ -844,7 +854,8 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
          const results = await queueDispatcher.restartAllWorkers();
 
          if (results.length === 0) {
-           await statusMsg.edit('⚠️ Hiện không tìm thấy Worker nào (Local hoặc Remote) được cấu hình để restart.');
+           const barrierEmoji = getCustomEmoji('barrier');
+           await statusMsg.edit(`${barrierEmoji} Hiện không tìm thấy Worker nào (Local hoặc Remote) được cấu hình để restart.`);
            return;
          }
 

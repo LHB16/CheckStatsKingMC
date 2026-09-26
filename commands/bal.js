@@ -28,6 +28,10 @@ module.exports = {
       // Gửi tác vụ vào Queue Dispatcher
       const result = await queueDispatcher.enqueueTask('bal', targetPlayer, BOT_CHECK_TIMEOUT);
       const emeraldEmoji = getCustomEmoji('emerald');
+      const netherStarEmoji = getCustomEmoji('nether_star');
+      const bellEmoji = getCustomEmoji('bell');
+      const mapEmoji = getCustomEmoji('map');
+      const barrierEmoji = getCustomEmoji('barrier');
 
       // Lưu cache skin vào Master Node nếu kết quả có chứa skin
       if (result && typeof result === 'object' && result.skin) {
@@ -54,7 +58,7 @@ module.exports = {
       }
       
       const embed = new EmbedBuilder()
-        .setTitle(`${emeraldEmoji} Số dư người chơi: **${targetPlayer}**`)
+        .setTitle(`${netherStarEmoji} Số dư người chơi: **${targetPlayer}** ${netherStarEmoji}`)
         .setColor('#2b2d31')
         .setThumbnail(skinHelper.getAvatarUrl(targetPlayer, 64, true))
         .setDescription(`${emeraldEmoji} **SỐ DƯ:** \`${cleanVal}\`\n\n\u200B`)
@@ -67,14 +71,16 @@ module.exports = {
         row.addComponents(
           new ButtonBuilder()
             .setCustomId(`track_bal_${targetPlayer}`)
-            .setLabel('🔔 Theo dõi số dư')
+            .setLabel('Theo dõi số dư')
+            .setEmoji(bellEmoji)
             .setStyle(ButtonStyle.Primary)
         );
       } else {
         row.addComponents(
           new ButtonBuilder()
             .setCustomId(`track_bal_${targetPlayer}`)
-            .setLabel('📈 Xem biểu đồ biến động')
+            .setLabel('Xem biến động')
+            .setEmoji(mapEmoji)
             .setStyle(ButtonStyle.Success)
         );
       }
@@ -84,9 +90,10 @@ module.exports = {
       console.error(`[Discord-Bot] Lỗi khi xử lý lệnh bal cho ${targetPlayer}:`, error.message);
       recordError('bal', targetPlayer, error);
 
+      const barrierEmoji = getCustomEmoji('barrier');
       const errorEmbed = new EmbedBuilder()
-        .setTitle('❌ Lỗi kiểm tra số dư')
-        .setDescription(`Không thể lấy số dư của người chơi **${targetPlayer}**.\n\n⚠️ Đã có lỗi xảy ra trong quá trình xử lý yêu cầu. Vui lòng thử lại sau hoặc bấm nút **Báo lỗi** bên dưới để gửi thông báo tới Admin!`)
+        .setTitle(`${barrierEmoji} Lỗi kiểm tra số dư`)
+        .setDescription(`Không thể lấy số dư của người chơi **${targetPlayer}**.\n\n${barrierEmoji} Đã có lỗi xảy ra trong quá trình xử lý yêu cầu. Vui lòng thử lại sau hoặc bấm nút **Báo lỗi** bên dưới để gửi thông báo tới Admin!`)
         .setColor('#ef4444')
         .setTimestamp()
         .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });

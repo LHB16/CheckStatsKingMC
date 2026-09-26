@@ -53,10 +53,15 @@ async function handleTrackerButtons(interaction) {
 
       await trackerHelper.setTracking(playerName, true, currentBal);
 
+      const mapEmoji = getCustomEmoji('map');
+      const bellEmoji = getCustomEmoji('bell');
+      const barrierEmoji = getCustomEmoji('barrier');
+
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId(`track_bal_${playerName}`)
-          .setLabel('📈 Xem biểu đồ biến động')
+          .setLabel('Xem biến động')
+          .setEmoji(mapEmoji)
           .setStyle(ButtonStyle.Success)
       );
 
@@ -66,7 +71,7 @@ async function handleTrackerButtons(interaction) {
       // Gửi phản hồi thông báo nhẹ chỉ cho người bấm (ephemeral)
       try {
         await interaction.followUp({
-          content: `🔔 Đã bật theo dõi số dư cho người chơi **${playerName}** thành công!\n⏰ Tự động kiểm tra định kỳ 1 giờ / lần. Dữ liệu lưu trữ trong 3 ngày.`,
+          content: `${bellEmoji} Đã bật theo dõi số dư cho người chơi **${playerName}** thành công!\n⏰ Tự động kiểm tra định kỳ 1 giờ / lần. Dữ liệu lưu trữ trong 3 ngày.`,
           ephemeral: true
         });
       } catch (e) {}
@@ -91,8 +96,9 @@ async function handleTrackerButtons(interaction) {
     try {
       const historyData = await trackerHelper.getPlayerHistory(playerName);
       if (!historyData) {
+        const barrierEmoji = getCustomEmoji('barrier');
         await interaction.followUp({
-          content: `⚠️ Không tìm thấy dữ liệu theo dõi cho người chơi **${playerName}**.`,
+          content: `${barrierEmoji} Không tìm thấy dữ liệu theo dõi cho người chơi **${playerName}**.`,
           ephemeral: true
         });
         return true;
@@ -111,8 +117,9 @@ async function handleTrackerButtons(interaction) {
       const latestTimestamp = latestPoint ? latestPoint.timestamp : (historyData.lastChecked || null);
       const timeAgoStr = latestTimestamp ? ` *(${formatTimeAgo(latestTimestamp)})*` : '';
 
+      const mapEmoji = getCustomEmoji('map');
       const chartEmbed = new EmbedBuilder()
-        .setTitle(`📈 Biểu Đồ Biến Động Số Dư: **${playerName}**`)
+        .setTitle(`${mapEmoji} Biểu Đồ Biến Động Số Dư: **${playerName}**`)
         .setDescription(
           `📊 **Thống kê 3 ngày gần nhất:**\n` +
           `• Số dư hiện tại: **$${(stats.currentBalance || 0).toLocaleString('en-US')}**${timeAgoStr}\n` +
@@ -170,8 +177,9 @@ async function handleTrackerButtons(interaction) {
       const latestTimestamp = latestPoint ? latestPoint.timestamp : (historyData.lastChecked || null);
       const timeAgoStr = latestTimestamp ? ` *(${formatTimeAgo(latestTimestamp)})*` : '';
 
+      const mapEmoji = getCustomEmoji('map');
       const chartEmbed = new EmbedBuilder()
-        .setTitle(`📈 Biểu Đồ Biến Động Số Dư: **${playerName}**`)
+        .setTitle(`${mapEmoji} Biểu Đồ Biến Động Số Dư: **${playerName}**`)
         .setDescription(
           `📊 **Thống kê 3 ngày gần nhất (Đã làm mới):**\n` +
           `• Số dư hiện tại: **$${(stats.currentBalance || 0).toLocaleString('en-US')}**${timeAgoStr}\n` +
@@ -222,12 +230,13 @@ async function handleTrackerButtons(interaction) {
         const latestTimestamp = latestPoint ? latestPoint.timestamp : (historyData?.lastChecked || null);
         const timeAgoStr = latestTimestamp ? ` *(${formatTimeAgo(latestTimestamp)})*` : '';
         const emeraldEmoji = getCustomEmoji('emerald');
+        const netherStarEmoji = getCustomEmoji('nether_star');
         const latestBal = (historyData && historyData.stats && historyData.stats.currentBalance != null)
           ? `$${Number(historyData.stats.currentBalance).toLocaleString('en-US')}`
           : 'N/A';
 
         const fallbackEmbed = new EmbedBuilder()
-          .setTitle(`${emeraldEmoji} Số dư người chơi: **${playerName}**`)
+          .setTitle(`${netherStarEmoji} Số dư người chơi: **${playerName}** ${netherStarEmoji}`)
           .setColor('#2b2d31')
           .setThumbnail(skinHelper.getAvatarUrl(playerName, 64, true))
           .setDescription(`${emeraldEmoji} **SỐ DƯ:** \`${latestBal}\`${timeAgoStr}\n\n\u200B`)
@@ -236,10 +245,12 @@ async function handleTrackerButtons(interaction) {
         restoredEmbeds = [fallbackEmbed];
       }
 
+      const mapEmoji = getCustomEmoji('map');
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId(`track_bal_${playerName}`)
-          .setLabel('📈 Xem biểu đồ biến động')
+          .setLabel('Xem biến động')
+          .setEmoji(mapEmoji)
           .setStyle(ButtonStyle.Success)
       );
 
@@ -259,8 +270,9 @@ async function handleTrackerButtons(interaction) {
   // 4. Nút Hủy theo dõi (Đã vô hiệu hóa để tránh người dùng tùy tiện hủy)
   if (customId.startsWith('untrack_bal_')) {
     const playerName = customId.replace('untrack_bal_', '').trim();
+    const barrierEmoji = getCustomEmoji('barrier');
     await interaction.reply({
-      content: `⚠️ Tính năng hủy theo dõi qua nút bấm đã bị vô hiệu hóa để tránh việc bất kỳ ai cũng có thể tự ý hủy theo dõi người chơi **${playerName}**.\nChỉ Admin mới có thể quản lý qua lệnh \`!tracker untrack <player>\`.`,
+      content: `${barrierEmoji} Tính năng hủy theo dõi qua nút bấm đã bị vô hiệu hóa để tránh việc bất kỳ ai cũng có thể tự ý hủy theo dõi người chơi **${playerName}**.\nChỉ Admin mới có thể quản lý qua lệnh \`!tracker untrack <player>\`.`,
       ephemeral: true
     });
     return true;
@@ -285,9 +297,10 @@ async function handleTrackerButtons(interaction) {
   // 6. Nút Kích hoạt chu kỳ kiểm tra ngay lập tức (Admin)
   if (customId === 'tracker_run_check') {
     const ADMIN_ID = (process.env.ADMIN_ID || '').trim();
+    const barrierEmoji = getCustomEmoji('barrier');
     if (ADMIN_ID && interaction.user.id !== ADMIN_ID) {
       await interaction.reply({
-        content: '⚠️ Chỉ Admin mới có quyền kích hoạt chu kỳ kiểm tra số dư ngay lập tức!',
+        content: `${barrierEmoji} Chỉ Admin mới có quyền kích hoạt chu kỳ kiểm tra số dư ngay lập tức!`,
         ephemeral: true
       });
       return true;
@@ -325,8 +338,9 @@ function buildTrackerOverviewMessage(overview, page = 1, pageSize = 8) {
   const endIndex = Math.min(startIndex + pageSize, total);
   const currentPlayers = (overview.players || []).slice(startIndex, endIndex);
 
+  const beaconEmoji = getCustomEmoji('beacon');
   const embed = new EmbedBuilder()
-    .setTitle(`📊 HỆ THỐNG THEO DÕI SỐ DƯ (BALANCE TRACKER)`)
+    .setTitle(`${beaconEmoji} HỆ THỐNG THEO DÕI SỐ DƯ (BALANCE TRACKER)`)
     .setColor('#10b981')
     .setThumbnail('https://mc-heads.net/head/BinhLH/3d')
     .setTimestamp()

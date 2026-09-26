@@ -3,6 +3,7 @@
  */
 
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { getCustomEmoji } = require('../helpers/utils');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -14,8 +15,14 @@ module.exports = {
       await interaction.deferReply();
     }
 
+    const enchantedBookEmoji = getCustomEmoji('enchanted_book');
+    const nameTagEmoji = getCustomEmoji('name_tag');
+    const enderChestEmoji = getCustomEmoji('ender_chest');
+    const compassEmoji = getCustomEmoji('compass');
+    const redstoneTorchEmoji = getCustomEmoji('redstone_torch');
+
     const embed = new EmbedBuilder()
-      .setTitle('📖 **HƯỚNG DẪN SỬ DỤNG BOT KINGMC** 📖')
+      .setTitle(`${enchantedBookEmoji} **HƯỚNG DẪN SỬ DỤNG BOT KINGMC** ${enchantedBookEmoji}`)
       .setColor('#2b2d31')
       .setThumbnail('https://mc-heads.net/head/BinhLH/3d')
       .setDescription(
@@ -24,7 +31,7 @@ module.exports = {
       )
       .addFields(
         {
-          name: '👤 **LỆNH KIỂM TRA NGƯỜI CHƠI**',
+          name: `${nameTagEmoji} **LỆNH KIỂM TRA NGƯỜI CHƠI**`,
           value: 
             `• \`?stats <tên>\` hoặc \`/stats <tên>\`\n` +
             `  └ *Xem thống kê (chỉ số) chi tiết của người chơi.*\n` +
@@ -33,7 +40,7 @@ module.exports = {
           inline: false
         },
         {
-          name: '🛒 **LỆNH THỊ TRƯỜNG & VẬT PHẨM**',
+          name: `${enderChestEmoji} **LỆNH THỊ TRƯỜNG & VẬT PHẨM**`,
           value: 
             `• \`?ah [tên vật phẩm]\` hoặc \`/ah [tên]\`\n` +
             `  └ *Tra cứu vật phẩm đang rao bán trên Chợ Đen (AH).*\n` +
@@ -42,7 +49,7 @@ module.exports = {
           inline: false
         },
         {
-          name: '🌐 **LỆNH HỆ THỐNG & TRẠNG THÁI**',
+          name: `${compassEmoji} **LỆNH HỆ THỐNG & TRẠNG THÁI**`,
           value: 
             `• \`?online [cụm server]\` hoặc \`/online [cụm]\`\n` +
             `  └ *Xem danh sách & số lượng người chơi đang online.*\n` +
@@ -53,7 +60,7 @@ module.exports = {
           inline: false
         },
         {
-          name: '💡 **MẸO SỬ DỤNG**',
+          name: `${redstoneTorchEmoji} **MẸO SỬ DỤNG**`,
           value: 
             `• Bạn có thể bấm trực tiếp nút **Báo lỗi** dưới các kết quả nếu gặp sự cố.\n` +
             `• Sử dụng cú pháp ví dụ: \`?stats BinhLH\` hoặc \`?ah kiem\``,

@@ -38,8 +38,13 @@ module.exports = {
       }
 
       // Trang trí giao diện hiển thị Embed
+      const netherStarEmoji = getCustomEmoji('nether_star');
+      const barrierEmoji = getCustomEmoji('barrier');
+      const bellEmoji = getCustomEmoji('bell');
+      const mapEmoji = getCustomEmoji('map');
+
       const embed = new EmbedBuilder()
-        .setTitle(`✨ Thống kê người chơi: **${targetPlayer}** ✨`)
+        .setTitle(`${netherStarEmoji} Thống kê người chơi: **${targetPlayer}** ${netherStarEmoji}`)
         .setColor('#2b2d31')
         .setThumbnail(skinHelper.getAvatarUrl(targetPlayer, 64, true))
         .setTimestamp()
@@ -48,7 +53,7 @@ module.exports = {
       const validItems = (result.items || []).filter(item => !isDecorationItem(item));
 
       if (validItems.length === 0) {
-        embed.setDescription(`⚠️ **Lưu ý:** Không tìm thấy stats nào hữu ích hoặc người chơi này chưa từng đăng nhập.`);
+        embed.setDescription(`${barrierEmoji} **Lưu ý:** Không tìm thấy stats nào hữu ích hoặc người chơi này chưa từng đăng nhập.`);
         embed.setColor('#ef4444');
       } else {
         const formattedItems = [];
@@ -96,14 +101,16 @@ module.exports = {
         row.addComponents(
           new ButtonBuilder()
             .setCustomId(`track_bal_${targetPlayer}`)
-            .setLabel('🔔 Theo dõi số dư')
+            .setLabel('Theo dõi số dư')
+            .setEmoji(bellEmoji)
             .setStyle(ButtonStyle.Primary)
         );
       } else {
         row.addComponents(
           new ButtonBuilder()
             .setCustomId(`track_bal_${targetPlayer}`)
-            .setLabel('📈 Xem biểu đồ biến động')
+            .setLabel('Xem biến động')
+            .setEmoji(mapEmoji)
             .setStyle(ButtonStyle.Success)
         );
       }
@@ -114,9 +121,10 @@ module.exports = {
       console.error(`[Discord-Bot] Lỗi khi xử lý lệnh stats cho ${targetPlayer}:`, error.message);
       recordError('stats', targetPlayer, error);
 
+      const barrierEmoji = getCustomEmoji('barrier');
       const errorEmbed = new EmbedBuilder()
-        .setTitle('❌ Lỗi kiểm tra stats')
-        .setDescription(`Không thể lấy stats của người chơi **${targetPlayer}**.\n\n⚠️ Đã có lỗi xảy ra trong quá trình xử lý yêu cầu. Vui lòng thử lại sau hoặc bấm nút **Báo lỗi** bên dưới để gửi thông báo tới Admin!`)
+        .setTitle(`${barrierEmoji} Lỗi kiểm tra stats`)
+        .setDescription(`Không thể lấy stats của người chơi **${targetPlayer}**.\n\n${barrierEmoji} Đã có lỗi xảy ra trong quá trình xử lý yêu cầu. Vui lòng thử lại sau hoặc bấm nút **Báo lỗi** bên dưới để gửi thông báo tới Admin!`)
         .setColor('#ef4444')
         .setTimestamp()
         .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });

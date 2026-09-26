@@ -3,6 +3,7 @@
  */
 
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { getCustomEmoji } = require('../helpers/utils');
 const { recordError } = require('../helpers/reportHelper');
 const skinHelper = require('../helpers/skinHelper');
 
@@ -31,14 +32,18 @@ module.exports = {
         skinHelper.saveSkin(targetPlayer, result.skin.url, result.skin.model);
       }
 
+      const barrierEmoji = getCustomEmoji('barrier');
+      const redstoneEmoji = getCustomEmoji('redstone');
+      const compassEmoji = getCustomEmoji('compass');
+
       if (result.online) {
         // Người chơi đang ONLINE (bỏ thanh màu bên trái theo yêu cầu)
         const embed = new EmbedBuilder()
           .setTitle(`🟢 Người chơi **${targetPlayer}** đang Online!`)
           .setThumbnail(skinHelper.getAvatarUrl(targetPlayer, 64, true))
           .addFields(
-            { name: '📶 Ping', value: `\`${result.ping || 'N/A'}\``, inline: true },
-            { name: '🌐 Thế giới', value: `\`${result.world || 'N/A'}\``, inline: true }
+            { name: `${redstoneEmoji} Ping`, value: `\`${result.ping || 'N/A'}\``, inline: true },
+            { name: `${compassEmoji} Thế giới`, value: `\`${result.world || 'N/A'}\``, inline: true }
           )
           .setTimestamp()
           .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
@@ -51,7 +56,7 @@ module.exports = {
         const embed = new EmbedBuilder()
           .setTitle(`🔴 Trạng thái người chơi: **${targetPlayer}**`)
           .setThumbnail(skinHelper.getAvatarUrl(targetPlayer, 64, true))
-          .setDescription(`⚠️ **${serverMessage}**`)
+          .setDescription(`${barrierEmoji} **${serverMessage}**`)
           .setTimestamp()
           .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
 
@@ -62,9 +67,10 @@ module.exports = {
       console.error(`[Discord-Bot] Lỗi khi xử lý lệnh online cho ${targetPlayer}:`, error.message);
       recordError('online', targetPlayer, error);
 
+      const barrierEmoji = getCustomEmoji('barrier');
       const errorEmbed = new EmbedBuilder()
-        .setTitle('❌ Lỗi kiểm tra Online')
-        .setDescription(`Không thể kiểm tra trạng thái của người chơi **${targetPlayer}**.\n\n⚠️ Đã có lỗi xảy ra trong quá trình xử lý yêu cầu. Vui lòng thử lại sau hoặc bấm nút **Báo lỗi** bên dưới để gửi thông báo tới Admin!`)
+        .setTitle(`${barrierEmoji} Lỗi kiểm tra Online`)
+        .setDescription(`Không thể kiểm tra trạng thái của người chơi **${targetPlayer}**.\n\n${barrierEmoji} Đã có lỗi xảy ra trong quá trình xử lý yêu cầu. Vui lòng thử lại sau hoặc bấm nút **Báo lỗi** bên dưới để gửi thông báo tới Admin!`)
         .setColor('#ef4444')
         .setTimestamp()
         .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });

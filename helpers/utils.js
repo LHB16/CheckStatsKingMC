@@ -30,18 +30,29 @@ if (fs.existsSync(DISCORD_EMOJI_FILE)) {
 
 // Từ điển Custom Emojis Discord để hiển thị icon Minecraft in-game (Dự phòng)
 const CUSTOM_EMOJIS = {
-  'emerald': '<:emerald:1526222843585757405>',
+  'emerald': '<:emerald:1553090824496222248>',
   'sunflower': '<:gold_ingot:1526222925349388298>', // Dùng gold ingot đỡ cho xu
-  'nether_star': '<:amethyst_shard:1526223433715810444>', // Dùng shard đỡ cho nether_star
+  'nether_star': '<:nether_star:1553097706606694472>',
+  'barrier': '<:barrier:1553093655495970897>',
+  'bell': '<:bell:1553093705462845542>',
+  'map': '<:map:1553097303231832147>',
+  'spyglass': '<:spyglass:1553099768153116743>',
+  'enchanted_book': '<:enchanted_book:1553095604786429973>',
+  'compass': '<:compass:1553094690406924302>',
+  'clock': '<:clock:1553094595020066927>',
+  'chest': '<:chest:1553094447237963796>',
+  'ender_chest': '<:ender_chest:1553095628488314910>',
+  'redstone': '<:redstone:1553098979078578289>',
+  'redstone_torch': '<:redstone_torch:1553098997311479842>',
+  'beacon': '<:beacon:1553093667319717922>',
+  'name_tag': '<:name_tag:1553097564360937553>',
   'diamond_sword': '<:netherite_sword:1526222996941967621>',
   'sword': '<:netherite_sword:1526222996941967621>',
   'skeleton_skull': '<:skeleton_skull:1526223042873655357>',
   'zombie_head': '<:zombie_head:1526223269437374464>',
-  'clock': '<:clockss:1526227967422890225>',
-  'chest': '<:chest:1526222711079174346>',
   'pickaxe': '<:diamond_pickaxe:1526222779287081040>',
   'gold': '<:gold_ingot:1526222925349388298>',
-  'amethyst': '<:amethyst_shard:1526223433715810444>',
+  'amethyst': '<:amethyst_shard:1553093457247993856>',
   'wheat': '<:wheat:1526223092974751766>',
   'brick': '<:brickss:1526227925865599130>'
 };

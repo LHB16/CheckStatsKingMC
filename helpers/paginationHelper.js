@@ -214,8 +214,9 @@ async function handlePaginationButtons(interaction) {
 
   // Phiên đã hết hạn (sau 5 phút)
   if (!session) {
+    const barrierEmoji = getCustomEmoji('barrier');
     await interaction.reply({
-      content: '⚠️ Phiên xem trang đã hết hạn (5 phút) để giải phóng tài nguyên. Vui lòng gõ lại lệnh nếu muốn tra cứu tiếp nhé!',
+      content: `${barrierEmoji} Phiên xem trang đã hết hạn (5 phút) để giải phóng tài nguyên. Vui lòng gõ lại lệnh nếu muốn tra cứu tiếp nhé!`,
       ephemeral: true
     }).catch(() => {});
     return true;
