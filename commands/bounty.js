@@ -6,6 +6,7 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { getCustomEmoji } = require('../helpers/utils');
 const { recordError } = require('../helpers/reportHelper');
+const { getRankOreEmoji } = require('../helpers/leaderboardHelper');
 const skinHelper = require('../helpers/skinHelper');
 
 module.exports = {
@@ -35,6 +36,7 @@ module.exports = {
       const emeraldEmoji = getCustomEmoji('emerald');
       const barrierEmoji = getCustomEmoji('barrier');
       const swordEmoji = getCustomEmoji('diamond_sword');
+      const writableBookEmoji = getCustomEmoji('writable_book');
 
       // -----------------------------------------------------------------
       // CHẾ ĐỘ 1: KIỂM TRA TIỀN THƯỞNG 1 NGƯỜI CHƠI (/bounty check <player>)
@@ -75,24 +77,20 @@ module.exports = {
       // CHẾ ĐỘ 2: TOP 5 TIỀN THƯỞNG (GUI /bounty)
       // -----------------------------------------------------------------
       const bounties = (result && result.bounties) ? result.bounties : [];
-      const rankEmojis = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
 
       const embed = new EmbedBuilder()
-        .setTitle(`${netherStarEmoji} **TOP 5 TIỀN THƯỞNG (BOUNTY) - KINGSMP** ${netherStarEmoji}`)
+        .setTitle(`${netherStarEmoji} **Top 5 Bounty** ${netherStarEmoji}`)
         .setColor('#2b2d31')
         .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
         .setTimestamp();
 
       if (bounties.length > 0) {
-        // Thumbnail lấy theo avatar của người đứng đầu Top 1
-        embed.setThumbnail(skinHelper.getAvatarUrl(bounties[0].player, 64, true));
-
         const descLines = bounties.map((b, idx) => {
-          const rankIcon = rankEmojis[idx] || `#${b.rank}`;
+          const oreIcon = getRankOreEmoji(idx);
           return (
-            `${rankIcon} **${b.player}**\n` +
+            `${oreIcon} **${b.player}**\n` +
             `┣ ${emeraldEmoji} **Tiền thưởng:** \`${b.amount}\`\n` +
-            `┗ 👤 **Người tạo:** \`${b.creators}\``
+            `┗ ${writableBookEmoji} **Người tạo:** \`${b.creators}\``
           );
         });
 

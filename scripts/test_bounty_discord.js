@@ -7,6 +7,7 @@ require('dotenv').config();
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const PersistentBot = require('../mc-bot');
 const { getCustomEmoji } = require('../helpers/utils');
+const { getRankOreEmoji } = require('../helpers/leaderboardHelper');
 const skinHelper = require('../helpers/skinHelper');
 
 const CHANNEL_ID = '1531198642055282768'; // #test_bot_mc
@@ -80,22 +81,21 @@ async function run() {
         const emeraldEmoji = getCustomEmoji('emerald');
         const swordEmoji = getCustomEmoji('diamond_sword');
         const barrierEmoji = getCustomEmoji('barrier');
-        const rankEmojis = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+        const writableBookEmoji = getCustomEmoji('writable_book');
 
         const embedTop = new EmbedBuilder()
-          .setTitle(`${netherStarEmoji} **TOP 5 TIỀN THƯỞNG (BOUNTY) - KINGSMP** ${netherStarEmoji}`)
+          .setTitle(`${netherStarEmoji} **Top 5 Bounty** ${netherStarEmoji}`)
           .setColor('#2b2d31')
           .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
           .setTimestamp();
 
         if (topResult.bounties && topResult.bounties.length > 0) {
-          embedTop.setThumbnail(skinHelper.getAvatarUrl(topResult.bounties[0].player, 64, true));
           const descLines = topResult.bounties.map((b, idx) => {
-            const rankIcon = rankEmojis[idx] || `#${b.rank}`;
+            const oreIcon = getRankOreEmoji(idx);
             return (
-              `${rankIcon} **${b.player}**\n` +
+              `${oreIcon} **${b.player}**\n` +
               `┣ ${emeraldEmoji} **Tiền thưởng:** \`${b.amount}\`\n` +
-              `┗ 👤 **Người tạo:** \`${b.creators}\``
+              `┗ ${writableBookEmoji} **Người tạo:** \`${b.creators}\``
             );
           });
           embedTop.setDescription(descLines.join('\n\n') + '\n\n\u200B');
@@ -106,56 +106,34 @@ async function run() {
         await channel.send({ embeds: [embedTop] });
 
         // ==============================================================
-        // TEST 2: CHẾ ĐỘ KIỂM TRA CÁ NHÂN VỚI TOP 1 VỪA LẤY ĐƯỢC
+        // TEST 2: KIỂM TRA TIỀN THƯỞNG CỦA lhbinh001 (/bounty check lhbinh001)
         // ==============================================================
-        if (topResult.bounties && topResult.bounties.length > 0) {
-          const top1Player = topResult.bounties[0].player;
-          console.log(`[Test-Bounty] Đang kiểm tra cá nhân cho Top 1: ${top1Player}...`);
-          await new Promise(r => setTimeout(r, 3500));
-
-          const checkResult = await mcBot.getBounty(top1Player, 20000);
-          console.log('[Test-Bounty] Kết quả check cá nhân:', JSON.stringify(checkResult, null, 2));
-
-          if (checkResult.success) {
-            const embedCheck = new EmbedBuilder()
-              .setTitle(`${swordEmoji} Tiền Thưởng: **${checkResult.player}** ${swordEmoji}`)
-              .setColor('#2b2d31')
-              .setThumbnail(skinHelper.getAvatarUrl(checkResult.player, 64, true))
-              .setDescription(
-                `👤 **Người chơi:** \`${checkResult.player}\`\n` +
-                `${emeraldEmoji} **Tiền thưởng hiện tại:** \`${checkResult.amount}\`\n\n\u200B`
-              )
-              .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
-              .setTimestamp();
-
-            await channel.send({ embeds: [embedCheck] });
-          } else {
-            const embedInvalid = new EmbedBuilder()
-              .setTitle(`${barrierEmoji} Không Hợp Lệ`)
-              .setColor('#ef4444')
-              .setDescription(`${barrierEmoji} **${checkResult.error || `Người chơi không hợp lệ: ${top1Player}`}**`)
-              .setThumbnail(skinHelper.getAvatarUrl(top1Player, 64, true))
-              .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
-              .setTimestamp();
-
-            await channel.send({ embeds: [embedInvalid] });
-          }
-        }
-
-        // ==============================================================
-        // TEST 3: CHẾ ĐỘ KIỂM TRA NGƯỜI CHƠI KHÔNG HỢP LỆ (mtien04)
-        // ==============================================================
-        console.log('[Test-Bounty] Đang kiểm tra người chơi không hợp lệ: mtien04...');
+        const testTarget = 'lhbinh001';
+        console.log(`[Test-Bounty] Đang kiểm tra cá nhân cho: ${testTarget}...`);
         await new Promise(r => setTimeout(r, 3500));
-        const invalidResult = await mcBot.getBounty('mtien04', 20000);
-        console.log('[Test-Bounty] Kết quả kiểm tra không hợp lệ:', JSON.stringify(invalidResult, null, 2));
 
-        if (!invalidResult.success) {
+        const checkResult = await mcBot.getBounty(testTarget, 20000);
+        console.log('[Test-Bounty] Kết quả check lhbinh001:', JSON.stringify(checkResult, null, 2));
+
+        if (checkResult.success) {
+          const embedCheck = new EmbedBuilder()
+            .setTitle(`${swordEmoji} Tiền Thưởng: **${checkResult.player}** ${swordEmoji}`)
+            .setColor('#2b2d31')
+            .setThumbnail(skinHelper.getAvatarUrl(checkResult.player, 64, true))
+            .setDescription(
+              `👤 **Người chơi:** \`${checkResult.player}\`\n` +
+              `${emeraldEmoji} **Tiền thưởng hiện tại:** \`${checkResult.amount}\`\n\n\u200B`
+            )
+            .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
+            .setTimestamp();
+
+          await channel.send({ embeds: [embedCheck] });
+        } else {
           const embedInvalid = new EmbedBuilder()
             .setTitle(`${barrierEmoji} Không Hợp Lệ`)
             .setColor('#ef4444')
-            .setDescription(`${barrierEmoji} **${invalidResult.error || 'Người chơi không hợp lệ: KhongHopLe999XYZ'}**`)
-            .setThumbnail(skinHelper.getAvatarUrl('KhongHopLe999XYZ', 64, true))
+            .setDescription(`${barrierEmoji} **${checkResult.error || `Người chơi không hợp lệ: ${testTarget}`}**`)
+            .setThumbnail(skinHelper.getAvatarUrl(testTarget, 64, true))
             .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
             .setTimestamp();
 
