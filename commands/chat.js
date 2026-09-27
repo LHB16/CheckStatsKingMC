@@ -66,7 +66,7 @@ module.exports = {
           .setTitle(`💬 Trả lời cho: "${question.length > 50 ? question.substring(0, 47) + '...' : question}"`)
           .setDescription(aiReply)
           .setColor(usedWebSearch ? '#10b981' : '#3b82f6')
-          .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+          .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
           .setTimestamp();
 
         await interaction.editReply({ embeds: [embed] });
@@ -79,7 +79,7 @@ module.exports = {
         .setTitle('❌ Lỗi kết nối AI')
         .setDescription(`Không thể nhận phản hồi từ AI lúc này.\n\n⚠️ **Chi tiết lỗi:** ${error.message}`)
         .setColor('#ef4444')
-        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+        .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
         .setTimestamp();
 
       await interaction.editReply({ embeds: [errorEmbed] });

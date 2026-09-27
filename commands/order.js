@@ -39,7 +39,7 @@ module.exports = {
           .setTitle(`${chestEmoji} Đơn hàng: **${itemQuery}**`)
           .setDescription(`${barrierEmoji} Không tìm thấy Order cho món đồ **${itemQuery}**.`)
           .setColor('#ef4444')
-          .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+          .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
           .setTimestamp();
 
         return await interaction.editReply({ embeds: [emptyEmbed] });
@@ -81,7 +81,7 @@ module.exports = {
           const embed = new EmbedBuilder()
             .setImage('attachment://order_table_p1.png')
             .setColor('#2b2d31')
-            .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+            .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
             .setTimestamp();
 
           // Nếu có từ 2 trang trở lên, tạo session phân trang (5 phút TTL) và gắn nút
@@ -112,7 +112,7 @@ module.exports = {
       const embed = new EmbedBuilder()
         .setTitle(textTitle)
         .setColor('#2b2d31')
-        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+        .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
         .setTimestamp();
 
       const descriptionText = formatOrderTextPage(page1Orders, itemQuery, 1, 9);
@@ -143,7 +143,7 @@ module.exports = {
         .setTitle(`${barrierEmoji} Lỗi kiểm tra đơn hàng`)
         .setDescription(`Không thể lấy danh sách đơn hàng cho **${itemQuery}**.\n\n${barrierEmoji} Đã có lỗi xảy ra trong quá trình xử lý yêu cầu. Vui lòng thử lại sau hoặc bấm nút **Báo lỗi** bên dưới để gửi thông báo tới Admin!`)
         .setColor('#ef4444')
-        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+        .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
         .setTimestamp();
         
       const row = new ActionRowBuilder()

@@ -129,7 +129,7 @@ async function handleTrackerButtons(interaction) {
         )
         .setImage(`attachment://balance_chart_${playerName}.png`)
         .setColor(isPositive ? '#10b981' : '#ef4444')
-        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+        .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
         .setTimestamp();
 
       const row = new ActionRowBuilder().addComponents(
@@ -189,7 +189,7 @@ async function handleTrackerButtons(interaction) {
         )
         .setImage(`attachment://balance_chart_${playerName}.png`)
         .setColor(isPositive ? '#10b981' : '#ef4444')
-        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+        .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
         .setTimestamp();
 
       const row = new ActionRowBuilder().addComponents(
@@ -240,7 +240,7 @@ async function handleTrackerButtons(interaction) {
           .setColor('#2b2d31')
           .setThumbnail(skinHelper.getAvatarUrl(playerName, 64, true))
           .setDescription(`${emeraldEmoji} **SỐ DƯ:** \`${latestBal}\`${timeAgoStr}\n\n\u200B`)
-          .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+          .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
           .setTimestamp();
         restoredEmbeds = [fallbackEmbed];
       }
@@ -344,7 +344,7 @@ function buildTrackerOverviewMessage(overview, page = 1, pageSize = 8) {
     .setColor('#10b981')
     .setThumbnail('https://mc-heads.net/head/BinhLH/3d')
     .setFooter({
-      text: `Trang ${currentPage}/${totalPages} • Tổng cộng: ${total} người chơi • KingMC.vn Stats Bot • Thiết kế bởi BinhLH`
+      text: `Trang ${currentPage}/${totalPages} • Tổng cộng: ${total} người chơi • CheckStatsKingMC • Thiết kế bởi BinhLH`
     })
     .setTimestamp();
 

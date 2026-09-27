@@ -69,8 +69,11 @@ function setupDonationConfigModel() {
 
   const DonationConfigSchema = new mongoose.Schema({
     key: { type: String, required: true, unique: true, index: true },
-    title: { type: String, default: 'Ủng hộ cho tôi:' },
-    description: { type: String, default: 'Cảm ơn bạn đã luôn tin tưởng và sử dụng KingMC Stats Bot!\nMọi đóng góp dù lớn hay nhỏ đều là nguồn hỗ trợ quý báu.' },
+    title: { type: String, default: 'Ủng hộ tôi' },
+    description: { 
+      type: String, 
+      default: 'Cảm ơn bạn đã luôn tin tưởng và sử dụng Bot CheckStatsKingMC!\nMọi đóng góp dù lớn hay nhỏ đều là nguồn hỗ trợ quý báu.\n\n:emerald: **Money KingSMP:**\n└ IGN: `lhbinh001`\n\n:diamond: **VND:**\n└ Quét mã QR đính kèm bên dưới' 
+    },
     accountName: { type: String, default: 'LUU HUU BINH' },
     bankName: { type: String, default: 'VietQR (Hỗ trợ tất cả ngân hàng & ví điện tử)' },
     imageBuffer: { type: Buffer, required: true },
@@ -185,8 +188,8 @@ async function seedDonationImage(filePath, customData = {}) {
     { key },
     {
       key,
-      title: customData.title || 'Ủng hộ cho tôi:',
-      description: customData.description || 'Cảm ơn bạn đã luôn tin tưởng và sử dụng KingMC Stats Bot!\nMọi đóng góp dù lớn hay nhỏ đều là nguồn hỗ trợ quý báu.',
+      title: customData.title || 'Ủng hộ tôi',
+      description: customData.description || 'Cảm ơn bạn đã luôn tin tưởng và sử dụng Bot CheckStatsKingMC!\nMọi đóng góp dù lớn hay nhỏ đều là nguồn hỗ trợ quý báu.\n\n:emerald: **Money KingSMP:**\n└ IGN: `lhbinh001`\n\n:diamond: **VND:**\n└ Quét mã QR đính kèm bên dưới',
       accountName: customData.accountName || 'LUU HUU BINH',
       bankName: customData.bankName || 'VietQR (Mọi ứng dụng ngân hàng & ví điện tử)',
       imageBuffer,

@@ -40,7 +40,7 @@ async function sendBanAlert(client, username, reason) {
           { name: '🤖 Tài khoản Bot', value: `\`${username}\``, inline: true },
           { name: '📝 Lý do / Nội dung từ Server', value: `\`\`\`${reason || 'Không rõ lý do'}\`\`\`` }
         )
-        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+        .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
         .setTimestamp();
 
       await admin.send({ embeds: [banEmbed] });
@@ -116,7 +116,7 @@ async function handleReportButtons(interaction, client) {
             { name: '⚙️ Loại lỗi', value: typeName, inline: true },
             { name: '🚨 Full Chi tiết Lỗi (Admin Debug)', value: `\`\`\`${errorDetail}\`\`\`` }
           )
-          .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+          .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
           .setTimestamp();
 
         await admin.send({ embeds: [reportEmbed] });

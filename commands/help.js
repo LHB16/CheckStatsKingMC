@@ -55,7 +55,7 @@ module.exports = {
             `  └ *Xem danh sách & số lượng người chơi đang online.*\n` +
             `• \`?ping\` hoặc \`/ping\`\n` +
             `  └ *Kiểm tra độ trễ Discord Bot & trạng thái máy chủ KingMC.*\n` +
-            `• \`/donate\`\n` +
+            `• \`?donate\` hoặc \`/donate\`\n` +
             `  └ *Xem thông tin & mã QR ủng hộ kinh phí duy trì bot.*\n` +
             `• \`?help\` hoặc \`/help\`\n` +
             `  └ *Hiển thị bảng trợ giúp này.*`,
@@ -69,7 +69,7 @@ module.exports = {
           inline: false
         }
       )
-      .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+      .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
       .setTimestamp();
 
     if (interaction.editReply) {

@@ -45,7 +45,7 @@ module.exports = {
             { name: `${redstoneEmoji} Ping`, value: `\`${result.ping || 'N/A'}\``, inline: true },
             { name: `${compassEmoji} Thế giới`, value: `\`${result.world || 'N/A'}\``, inline: true }
           )
-          .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+          .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
           .setTimestamp();
 
         await interaction.editReply({ embeds: [embed] });
@@ -57,7 +57,7 @@ module.exports = {
           .setTitle(`🔴 Trạng thái người chơi: **${targetPlayer}**`)
           .setThumbnail(skinHelper.getAvatarUrl(targetPlayer, 64, true))
           .setDescription(`${barrierEmoji} **${serverMessage}**`)
-          .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+          .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
           .setTimestamp();
 
         await interaction.editReply({ embeds: [embed] });
@@ -72,7 +72,7 @@ module.exports = {
         .setTitle(`${barrierEmoji} Lỗi kiểm tra Online`)
         .setDescription(`Không thể kiểm tra trạng thái của người chơi **${targetPlayer}**.\n\n${barrierEmoji} Đã có lỗi xảy ra trong quá trình xử lý yêu cầu. Vui lòng thử lại sau hoặc bấm nút **Báo lỗi** bên dưới để gửi thông báo tới Admin!`)
         .setColor('#ef4444')
-        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+        .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
         .setTimestamp();
 
       const row = new ActionRowBuilder()

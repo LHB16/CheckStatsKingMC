@@ -91,7 +91,7 @@ function buildLeaderboardEmbed(categoryConfig, players) {
     .setTitle(titleText)
     .setColor(categoryConfig.color || '#2b2d31')
     .setDescription(lines.length > 0 ? lines.join('\n') : 'Chưa có dữ liệu người chơi.')
-    .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+    .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
     .setTimestamp();
 }
 

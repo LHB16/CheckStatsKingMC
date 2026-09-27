@@ -70,7 +70,7 @@ module.exports = {
       .setTitle(`${redstoneEmoji} Độ trễ hệ thống (Ping KingMC)`)
       .setColor('#2b2d31')
       .setDescription(`\`\`\`text\n${lines}\n\`\`\``)
-      .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+      .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
       .setTimestamp();
 
     if (interaction.editReply) {

@@ -45,16 +45,22 @@ module.exports = {
       const qrAttachment = new AttachmentBuilder(rawBuffer, { name: fileName });
 
       const netherStarEmoji = getCustomEmoji('nether_star');
+      const emeraldEmoji = getCustomEmoji('emerald');
+      const diamondEmoji = getCustomEmoji('diamond');
 
       const embed = new EmbedBuilder()
-        .setTitle(`${netherStarEmoji} **${donationData.title || 'Ủng hộ cho tôi:'}**`)
+        .setTitle(`${netherStarEmoji} **Ủng hộ tôi**`)
         .setColor('#2b2d31')
         .setDescription(
-          donationData.description ||
-          `Cảm ơn bạn đã luôn tin tưởng và sử dụng KingMC Stats Bot!\nMọi đóng góp dù lớn hay nhỏ đều là nguồn hỗ trợ quý báu.`
+          `Cảm ơn bạn đã luôn tin tưởng và sử dụng Bot CheckStatsKingMC!\n` +
+          `Mọi đóng góp dù lớn hay nhỏ đều là nguồn hỗ trợ quý báu.\n\n` +
+          `${emeraldEmoji} **Money KingSMP:**\n` +
+          `└ IGN: \`lhbinh001\`\n\n` +
+          `${diamondEmoji} **VND:**\n` +
+          `└ Quét mã QR đính kèm bên dưới`
         )
         .setImage(`attachment://${fileName}`)
-        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+        .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
         .setTimestamp();
 
       const responsePayload = {
