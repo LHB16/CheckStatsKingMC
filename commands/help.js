@@ -36,7 +36,9 @@ module.exports = {
             `• \`?stats <tên>\` hoặc \`/stats <tên>\`\n` +
             `  └ *Xem thống kê (chỉ số) chi tiết của người chơi.*\n` +
             `• \`?bal <tên>\` hoặc \`/bal <tên>\`\n` +
-            `  └ *Xem số dư tài khoản (tiền/xu) của người chơi.*`,
+            `  └ *Xem số dư tài khoản (tiền/xu) của người chơi.*\n` +
+            `• \`?bounty [tên]\` hoặc \`/bounty [tên]\`\n` +
+            `  └ *Xem Top 5 tiền thưởng hoặc kiểm tra tiền thưởng của người chơi.*`,
           inline: false
         },
         {

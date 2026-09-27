@@ -33,6 +33,7 @@ Dưới đây là danh sách toàn bộ các câu lệnh đã được xác minh
 | `/pay` | `/pay <tên_player> <số_tiền>` | Tin nhắn chat xác nhận chuyển tiền | Chuyển tiền từ ví của mình sang tài khoản người chơi khác. |
 | `/ah` | `/ah [từ_khóa]` | GUI Chợ Đấu Giá 54 slots | Chợ Đấu Giá (Auction House): Xem, tìm kiếm và mua vật phẩm đang được người chơi rao bán. |
 | `/order` | `/order [từ_khóa]` | GUI Đơn Hàng 54 slots | Hệ thống đặt mua tự động (Market Order): Người chơi treo tiền và số lượng để thu gom vật phẩm. |
+| `/bounty` | `/bounty` hoặc `/bounty check <player>` | GUI Tiền Thưởng 54 slots / Chat | Hệ thống Tiền Thưởng (Bounty): Xem Top 5 tiền thưởng hoặc kiểm tra tiền thưởng của người chơi. |
 | `/shop` | `/shop` | GUI Cửa Hàng 63 slots (`sʜᴏᴘ`) | Cửa hàng máy chủ với các gian hàng: **Shop End, Shop Nether, Shop Gear, Shop Food, Shop Shard**. |
 
 ### 🏆 Nhóm 2: Xếp Hạng & Chỉ Số Người Chơi (Stats & Leaderboard)

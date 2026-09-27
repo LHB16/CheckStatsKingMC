@@ -350,6 +350,8 @@ const server = http.createServer(async (req, res) => {
           result = await localMcBot.getOnline(player, timeoutMs || 15000);
         } else if (action === 'leaderboard' || action === 'lb') {
           result = await localMcBot.getLeaderboard(player, timeoutMs || 20000);
+        } else if (action === 'bounty') {
+          result = await localMcBot.getBounty(player, timeoutMs || 15000);
         } else {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           return res.end(JSON.stringify({ success: false, error: 'Hành động không hợp lệ' }));
@@ -679,7 +681,7 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
       const commandName = args.shift().toLowerCase();
 
       // Chỉ cho phép một số lệnh cụ thể qua tiền tố '?'
-      const allowedCommands = ['stats', 'order', 'bal', 'ah', 'online', 'ping', 'help', 'lb', 'donate'];
+      const allowedCommands = ['stats', 'order', 'bal', 'ah', 'online', 'ping', 'help', 'lb', 'donate', 'bounty'];
       if (!allowedCommands.includes(commandName)) return;
 
       const command = client.commands.get(commandName);
@@ -695,7 +697,7 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
       }
 
       const argStr = args.join(' ').trim();
-      const noArgRequiredCommands = ['ping', 'help', 'lb', 'donate'];
+      const noArgRequiredCommands = ['ping', 'help', 'lb', 'donate', 'bounty'];
       if (!noArgRequiredCommands.includes(commandName) && !argStr) {
          return message.channel.send(`${barrierEmoji} Lệnh \`?${commandName}\` cần có tham số (tên người chơi hoặc vật phẩm). VD: \`?${commandName} BinhLH\``);
       }

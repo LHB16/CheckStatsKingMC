@@ -425,6 +425,8 @@ class QueueDispatcher {
           return await this.localBot.getOnline(player, timeoutMs);
         } else if (action === 'leaderboard' || action === 'lb') {
           return await this.localBot.getLeaderboard(player, timeoutMs);
+        } else if (action === 'bounty') {
+          return await this.localBot.getBounty(player, timeoutMs);
         } else {
           throw new Error(`Hành động không hợp lệ: ${action}`);
         }

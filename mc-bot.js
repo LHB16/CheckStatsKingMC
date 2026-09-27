@@ -502,7 +502,7 @@ class PersistentBot extends EventEmitter {
       const title = parseMinecraftJSON(window.title || '');
       
       if (!this.targetPlayer) return;
-      if (this.currentAction === 'leaderboard') return;
+      if (this.currentAction === 'leaderboard' || this.currentAction === 'bounty') return;
 
       console.log(`[MC-Bot] GUI Mở: "${title}" (Action: ${this.currentAction}), Đang trích xuất dữ liệu...`);
 
@@ -1664,6 +1664,225 @@ class PersistentBot extends EventEmitter {
     });
   }
 
+  getBounty(player = null, timeoutMs = 15000) {
+    return new Promise(async (resolve, reject) => {
+      if (!this.bot || !this.isBotOnline || !this.isReady) {
+        return reject(new Error('Bot Minecraft hiện đang kết nối lại hoặc chưa sẵn sàng. Vui lòng thử lại sau.'));
+      }
+
+      if (this.targetPlayer) {
+        return reject(new Error('Bot đang bận xử lý một yêu cầu khác.'));
+      }
+
+      const target = player ? String(player).trim() : null;
+
+      // ----------------------------------------------------
+      // CHẾ ĐỘ 1: KIỂM TRA TIỀN THƯỞNG CỦA 1 NGƯỜI CHƠI CỤ THỂ (/bounty check <player>)
+      // ----------------------------------------------------
+      if (target) {
+        this.targetPlayer = target;
+        this.currentAction = 'bounty_check';
+
+        let isCleanedUp = false;
+        const cleanup = () => {
+          if (isCleanedUp) return;
+          isCleanedUp = true;
+          if (this.statsTimeout) {
+            clearTimeout(this.statsTimeout);
+            this.statsTimeout = null;
+          }
+          if (this.onBountyMessageListener && this.bot) {
+            this.bot.removeListener('messagestr', this.onBountyMessageListener);
+            this.onBountyMessageListener = null;
+          }
+          this.cleanupStatsState();
+        };
+
+        this.statsTimeout = setTimeout(() => {
+          if (!isCleanedUp) {
+            cleanup();
+            reject(new Error(`Timeout! Không nhận được phản hồi tiền thưởng của ${target} sau ${timeoutMs / 1000}s.`));
+          }
+        }, timeoutMs);
+
+        this.onBountyMessageListener = (message) => {
+          const cleanMsg = cleanMinecraftText(message).trim();
+          const lowerMsg = cleanMsg.toLowerCase();
+
+          // Bỏ qua tin nhắn chat của người chơi thường trong server
+          if (cleanMsg.includes('<') && cleanMsg.includes('>')) return;
+
+          // 1. Phản hồi thành công: "<player> có tiền thưởng $ 0" hoặc "<player> có tiền thưởng $ 200M"
+          if (lowerMsg.includes('có tiền thưởng') || lowerMsg.includes('co tien thuong')) {
+            const lowerTarget = target.toLowerCase();
+            if (lowerMsg.includes(lowerTarget)) {
+              let bountyAmount = '$0';
+              const match = cleanMsg.match(/c[oó]\s+ti[eề]n\s+th[uư][oở]ng\s+(.+)$/i);
+              if (match) {
+                bountyAmount = match[1].trim();
+              } else {
+                const parts = cleanMsg.split(/tiền thưởng|tien thuong/i);
+                if (parts.length > 1) {
+                  bountyAmount = parts[1].trim();
+                }
+              }
+
+              cleanup();
+              const skin = skinHelper.getSkin(target);
+              return resolve({
+                mode: 'check',
+                success: true,
+                player: target,
+                amount: bountyAmount,
+                rawMessage: cleanMsg,
+                skin: skin || null
+              });
+            }
+          }
+
+          // 2. Phản hồi thất bại: "Người chơi không hợp lệ: <player>"
+          if (lowerMsg.includes('người chơi không hợp lệ') || lowerMsg.includes('nguoi choi khong hop le') || lowerMsg.includes('không hợp lệ') || lowerMsg.includes('khong hop le')) {
+            const lowerTarget = target.toLowerCase();
+            if (lowerMsg.includes(lowerTarget)) {
+              cleanup();
+              return resolve({
+                mode: 'check',
+                success: false,
+                player: target,
+                error: cleanMsg
+              });
+            }
+          }
+        };
+
+        this.bot.on('messagestr', this.onBountyMessageListener);
+
+        console.log(`[MC-Bot] 🎯 Thực thi lệnh: /bounty check ${target}...`);
+        this.bot.chat(`/bounty check ${target}`);
+        return;
+      }
+
+      // ----------------------------------------------------
+      // CHẾ ĐỘ 2: LẤY TOP 5 TIỀN THƯỞNG TỪ GUI /bounty
+      // ----------------------------------------------------
+      this.targetPlayer = 'bounty_top';
+      this.currentAction = 'bounty';
+
+      let isCleanedUp = false;
+      const cleanup = () => {
+        if (isCleanedUp) return;
+        isCleanedUp = true;
+        if (this.statsTimeout) {
+          clearTimeout(this.statsTimeout);
+          this.statsTimeout = null;
+        }
+        this.cleanupStatsState();
+      };
+
+      this.statsTimeout = setTimeout(() => {
+        if (!isCleanedUp) {
+          cleanup();
+          reject(new Error(`Timeout! Quá thời gian mở GUI tiền thưởng (${timeoutMs / 1000}s).`));
+        }
+      }, timeoutMs);
+
+      try {
+        if (this.bot.currentWindow) {
+          try { this.bot.closeWindow(this.bot.currentWindow); } catch (_) {}
+          await new Promise(r => setTimeout(r, 300));
+        }
+
+        console.log(`[MC-Bot] ⚡ Mở GUI Tiền Thưởng: /bounty...`);
+        this.bot.chat('/bounty');
+
+        const activeWin = await waitForGuiUpdate(this.bot, 3500);
+        if (!activeWin) {
+          cleanup();
+          return reject(new Error('Không mở được GUI /bounty từ server.'));
+        }
+
+        const rawTitle = parseMinecraftJSON(activeWin.title || '');
+        const cleanTitle = cleanMinecraftText(rawTitle);
+        // Quét các ô chứa đầu người chơi (hàng 1-5, slot 0 đến 44)
+        const maxSlots = Math.min(45, activeWin.inventoryStart || 45, activeWin.slots.length);
+        const bounties = [];
+
+        for (let s = 0; s < maxSlots; s++) {
+          const item = activeWin.slots[s];
+          if (!item) continue;
+
+          let customName = item.customName ? cleanMinecraftText(parseMinecraftJSON(item.customName)) : null;
+          let displayName = item.displayName ? cleanMinecraftText(item.displayName) : null;
+          let playerName = customName || displayName || item.name;
+
+          let loreArray = [];
+          if (item.customLore) {
+            loreArray = item.customLore.map(l => parseMinecraftJSON(l));
+          } else {
+            loreArray = extractLoreFromNbt(item.nbt);
+          }
+
+          let amount = '';
+          let creators = '';
+
+          for (const line of loreArray) {
+            const cleanLine = cleanMinecraftText(line).trim();
+            const lowerLine = cleanLine.toLowerCase();
+
+            if (lowerLine.includes('tiền thưởng:') || lowerLine.includes('tien thuong:')) {
+              const parts = cleanLine.split(/:\s*/);
+              amount = parts.slice(1).join(':').trim();
+            } else if (lowerLine.includes('người tạo:') || lowerLine.includes('nguoi tao:')) {
+              const parts = cleanLine.split(/:\s*/);
+              creators = parts.slice(1).join(':').trim();
+            }
+          }
+
+          // Trích xuất skin từ NBT của head nếu có
+          if (item.nbt && playerName) {
+            try {
+              const skinData = skinHelper.extractSkinDataFromNbt(item.nbt);
+              if (skinData && skinData.url) {
+                skinHelper.saveSkin(playerName, skinData.url, skinData.model);
+              }
+            } catch (_) {}
+          }
+
+          if (item.name.includes('head') || item.name.includes('skull') || amount) {
+            bounties.push({
+              rank: bounties.length + 1,
+              player: playerName,
+              amount: amount || '$0',
+              creators: creators || 'Không rõ',
+              avatarUrl: skinHelper.getAvatarUrl(playerName, 64, true)
+            });
+
+            if (bounties.length >= 5) break;
+          }
+        }
+
+        console.log(`[MC-Bot] ✅ Đã lấy được thông tin ${bounties.length} người chơi trong Top Tiền Thưởng. Đóng GUI...`);
+
+        try {
+          this.bot.closeWindow(activeWin);
+        } catch (_) {}
+
+        cleanup();
+
+        resolve({
+          mode: 'top',
+          success: true,
+          title: cleanTitle || 'Tiền Thưởng',
+          bounties: bounties,
+          scrapedAt: new Date().toISOString()
+        });
+      } catch (err) {
+        cleanup();
+        reject(err);
+      }
+    });
+  }
+
   cleanupStatsState() {
     this.targetPlayer = null;
     this.currentAction = null;
@@ -1677,6 +1896,10 @@ class PersistentBot extends EventEmitter {
     if (this.onAhMessageListener && this.bot) {
       this.bot.removeListener('messagestr', this.onAhMessageListener);
       this.onAhMessageListener = null;
+    }
+    if (this.onBountyMessageListener && this.bot) {
+      this.bot.removeListener('messagestr', this.onBountyMessageListener);
+      this.onBountyMessageListener = null;
     }
     if (this.statsTimeout) {
       clearTimeout(this.statsTimeout);
