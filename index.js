@@ -677,7 +677,7 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
       const commandName = args.shift().toLowerCase();
 
       // Chỉ cho phép một số lệnh cụ thể qua tiền tố '?'
-      const allowedCommands = ['stats', 'order', 'bal', 'ah', 'online', 'ping', 'help'];
+      const allowedCommands = ['stats', 'order', 'bal', 'ah', 'online', 'ping', 'help', 'lb'];
       if (!allowedCommands.includes(commandName)) return;
 
       const command = client.commands.get(commandName);
@@ -693,7 +693,7 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
       }
 
       const argStr = args.join(' ').trim();
-      const noArgRequiredCommands = ['ping', 'help'];
+      const noArgRequiredCommands = ['ping', 'help', 'lb'];
       if (!noArgRequiredCommands.includes(commandName) && !argStr) {
          return message.channel.send(`${barrierEmoji} Lệnh \`?${commandName}\` cần có tham số (tên người chơi hoặc vật phẩm). VD: \`?${commandName} BinhLH\``);
       }
