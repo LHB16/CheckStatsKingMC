@@ -300,8 +300,8 @@ async function handlePaginationButtons(interaction) {
         const embed = new EmbedBuilder()
           .setImage(`attachment://${fileName}`)
           .setColor('#2b2d31')
-          .setTimestamp()
-          .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
+          .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+          .setTimestamp();
 
         const row = buildPaginationRow(sessionId, newPage, session.totalPages);
         await interaction.editReply({ embeds: [embed], files: [attachment], components: [row] });
@@ -316,8 +316,8 @@ async function handlePaginationButtons(interaction) {
     const embed = new EmbedBuilder()
       .setTitle(`${chestEmoji} ${titlePrefix}: **${session.itemQuery}** (Trang ${newPage}/${session.totalPages})`)
       .setColor('#2b2d31')
-      .setTimestamp()
-      .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
+      .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+      .setTimestamp();
 
     const descText = session.type === 'ah'
       ? formatAhTextPage(pageItems, session.itemQuery, newPage, 9)

@@ -129,8 +129,8 @@ async function handleTrackerButtons(interaction) {
         )
         .setImage(`attachment://balance_chart_${playerName}.png`)
         .setColor(isPositive ? '#10b981' : '#ef4444')
-        .setTimestamp()
-        .setFooter({ text: 'KingMC.vn Stats Bot • Tự động kiểm tra mỗi 1h • Thiết kế bởi BinhLH' });
+        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+        .setTimestamp();
 
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
@@ -189,8 +189,8 @@ async function handleTrackerButtons(interaction) {
         )
         .setImage(`attachment://balance_chart_${playerName}.png`)
         .setColor(isPositive ? '#10b981' : '#ef4444')
-        .setTimestamp()
-        .setFooter({ text: 'KingMC.vn Stats Bot • Tự động kiểm tra mỗi 1h • Thiết kế bởi BinhLH' });
+        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+        .setTimestamp();
 
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
@@ -240,8 +240,8 @@ async function handleTrackerButtons(interaction) {
           .setColor('#2b2d31')
           .setThumbnail(skinHelper.getAvatarUrl(playerName, 64, true))
           .setDescription(`${emeraldEmoji} **SỐ DƯ:** \`${latestBal}\`${timeAgoStr}\n\n\u200B`)
-          .setTimestamp()
-          .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
+          .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+          .setTimestamp();
         restoredEmbeds = [fallbackEmbed];
       }
 
@@ -343,10 +343,10 @@ function buildTrackerOverviewMessage(overview, page = 1, pageSize = 8) {
     .setTitle(`${beaconEmoji} HỆ THỐNG THEO DÕI SỐ DƯ (BALANCE TRACKER)`)
     .setColor('#10b981')
     .setThumbnail('https://mc-heads.net/head/BinhLH/3d')
-    .setTimestamp()
     .setFooter({
-      text: `Trang ${currentPage}/${totalPages} • Tổng cộng: ${total} người chơi • KingMC.vn Stats Bot`
-    });
+      text: `Trang ${currentPage}/${totalPages} • Tổng cộng: ${total} người chơi • KingMC.vn Stats Bot • Thiết kế bởi BinhLH`
+    })
+    .setTimestamp();
 
   let desc = `• Kết nối CSDL: ${overview.isMongoConnected ? '🟢 **MongoDB Atlas (Đám mây)**' : '🟡 **Dự phòng file JSON**'}\n`;
   desc += `• Tổng số người chơi đang theo dõi: **${total}**\n\n`;

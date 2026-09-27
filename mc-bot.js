@@ -1500,21 +1500,27 @@ class PersistentBot extends EventEmitter {
         return reject(new Error('Bot đang bận xử lý một yêu cầu khác.'));
       }
 
-      const slotMap = {
-        'money': 0,
-        'shards': 1,
-        'kills': 2,
-        'deaths': 3,
-        'played': 4,
-        'blocks_placed': 5,
-        'blocks_mined': 6,
-        'mob_kills': 7,
-        'shop_buy_total': 8,
-        'shop_sell_total': 9,
-        'animals_breed': 10
+      const categoryCmdMap = {
+        'money': { cmdArg: 'money', slot: 0 },
+        'shard': { cmdArg: 'shards', slot: 1 },
+        'shards': { cmdArg: 'shards', slot: 1 },
+        'kills': { cmdArg: 'kills', slot: 2 },
+        'deaths': { cmdArg: 'deaths', slot: 3 },
+        'played': { cmdArg: 'played', slot: 4 },
+        'blocks_placed': { cmdArg: 'blocks_placed', slot: 5 },
+        'blocks_mined': { cmdArg: 'blocks_mined', slot: 6 },
+        'mob_kills': { cmdArg: 'mob_kills', slot: 7 },
+        'shop_buy': { cmdArg: 'buy_total', slot: 8 },
+        'shop_buy_total': { cmdArg: 'buy_total', slot: 8 },
+        'buy_total': { cmdArg: 'buy_total', slot: 8 },
+        'shop_sell': { cmdArg: 'sell_total', slot: 9 },
+        'shop_sell_total': { cmdArg: 'sell_total', slot: 9 },
+        'sell_total': { cmdArg: 'sell_total', slot: 9 },
+        'breed': { cmdArg: 'breed', slot: 10 },
+        'animals_breed': { cmdArg: 'breed', slot: 10 }
       };
 
-      const slot = slotMap[categoryKey] !== undefined ? slotMap[categoryKey] : 0;
+      const info = categoryCmdMap[categoryKey] || { cmdArg: categoryKey, slot: 0 };
 
       this.targetPlayer = categoryKey || 'money';
       this.currentAction = 'leaderboard';
@@ -1538,35 +1544,59 @@ class PersistentBot extends EventEmitter {
       try {
         if (this.bot.currentWindow) {
           try { this.bot.closeWindow(this.bot.currentWindow); } catch (_) {}
-          await new Promise(r => setTimeout(r, 400));
+          await new Promise(r => setTimeout(r, 300));
         }
 
-        console.log(`[MC-Bot] Yêu cầu quét Leaderboard: ${categoryKey} (Slot #${slot}). Gõ /leaderboard...`);
-        this.bot.chat('/leaderboard');
-
-        const mainWin = await waitForGuiUpdate(this.bot, 3500);
-        if (!mainWin) {
-          cleanup();
-          return reject(new Error('Không mở được GUI /leaderboard từ server.'));
+        let activeWin = null;
+        if (info.cmdArg) {
+          console.log(`[MC-Bot] ⚡ Mở trực tiếp GUI Leaderboard: /leaderboard ${info.cmdArg}...`);
+          this.bot.chat(`/leaderboard ${info.cmdArg}`);
+          activeWin = await waitForGuiUpdate(this.bot, 2500);
         }
 
-        console.log(`[MC-Bot] Đã mở /leaderboard. Nhấp Slot #${slot} (${categoryKey})...`);
-        this.bot.clickWindow(slot, 0, 0);
-
-        const subWin = await waitForGuiUpdate(this.bot, 3500);
-        if (!subWin) {
-          cleanup();
-          return reject(new Error(`Không nhận được sub-GUI sau khi click slot #${slot}`));
+        // Kiểm tra xem GUI mở ra có phải là GUI Top Players trực tiếp không
+        let isDirectSubGui = false;
+        if (activeWin) {
+          const rawTitle = parseMinecraftJSON(activeWin.title || '');
+          const cleanTitle = cleanMinecraftText(rawTitle).toLowerCase();
+          // Nếu tiêu đề chứa "top" hoặc slot có chứa player_head
+          const hasHeads = activeWin.slots.slice(0, 15).some(item => item && (item.name.includes('head') || item.name.includes('skull')));
+          if (cleanTitle.includes('top') || hasHeads) {
+            isDirectSubGui = true;
+            console.log(`[MC-Bot] 🎯 Đã mở thẳng GUI Top Players: "${cleanTitle}" trong 1 bước!`);
+          }
         }
 
-        const rawTitle = parseMinecraftJSON(subWin.title || '');
+        // Nếu không mở thẳng được GUI Top, fallback về quy trình click slot trong Menu tổng
+        if (!isDirectSubGui) {
+          if (!activeWin) {
+            console.log(`[MC-Bot] ⚠️ Lệnh trực tiếp không phản hồi. Gõ /leaderboard để mở menu tổng...`);
+            this.bot.chat('/leaderboard');
+            activeWin = await waitForGuiUpdate(this.bot, 3500);
+          }
+          if (!activeWin) {
+            cleanup();
+            return reject(new Error('Không mở được GUI /leaderboard từ server.'));
+          }
+
+          console.log(`[MC-Bot] Đã ở Menu tổng. Nhấp Slot #${info.slot} (${categoryKey})...`);
+          this.bot.clickWindow(info.slot, 0, 0);
+
+          activeWin = await waitForGuiUpdate(this.bot, 3500);
+          if (!activeWin) {
+            cleanup();
+            return reject(new Error(`Không nhận được sub-GUI sau khi click slot #${info.slot}`));
+          }
+        }
+
+        const rawTitle = parseMinecraftJSON(activeWin.title || '');
         const cleanTitle = cleanMinecraftText(rawTitle);
-        const maxSlots = subWin.inventoryStart || 54;
+        const maxSlots = activeWin.inventoryStart || 54;
 
         const players = [];
 
         for (let s = 0; s < maxSlots; s++) {
-          const item = subWin.slots[s];
+          const item = activeWin.slots[s];
           if (!item) continue;
 
           let customName = item.customName ? cleanMinecraftText(parseMinecraftJSON(item.customName)) : null;
@@ -1616,7 +1646,7 @@ class PersistentBot extends EventEmitter {
         console.log(`[MC-Bot] ✅ Đã cào được ${players.length} người chơi trong ${cleanTitle}. Đóng GUI...`);
 
         try {
-          this.bot.closeWindow(subWin);
+          this.bot.closeWindow(activeWin);
         } catch (_) {}
 
         cleanup();

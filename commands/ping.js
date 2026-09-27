@@ -70,8 +70,8 @@ module.exports = {
       .setTitle(`${redstoneEmoji} Độ trễ hệ thống (Ping KingMC)`)
       .setColor('#2b2d31')
       .setDescription(`\`\`\`text\n${lines}\n\`\`\``)
-      .setTimestamp()
-      .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
+      .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+      .setTimestamp();
 
     if (interaction.editReply) {
       await interaction.editReply({ embeds: [embed] });

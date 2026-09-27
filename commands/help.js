@@ -69,8 +69,8 @@ module.exports = {
           inline: false
         }
       )
-      .setTimestamp()
-      .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
+      .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+      .setTimestamp();
 
     if (interaction.editReply) {
       await interaction.editReply({ embeds: [embed] });

@@ -1,75 +1,53 @@
 /**
  * commands/lb.js - Slash Command /lb & /leaderboard
  * @description Hiển thị Top 9 Bảng Xếp Hạng in-game trên KingMC (Cụm KingSMP) với Emoji 9 loại Quặng,
- * hỗ trợ bot quét live in-game khi gõ lệnh và Dropdown Select Menu với Custom Emoji 3D của Bot.
+ * hỗ trợ bot quét trực tiếp in-game khi gõ lệnh.
  */
 
-const { 
-  SlashCommandBuilder, 
-  EmbedBuilder, 
-  ActionRowBuilder, 
-  StringSelectMenuBuilder, 
-  StringSelectMenuOptionBuilder, 
-  ComponentType 
-} = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { 
   LEADERBOARD_CATEGORIES, 
+  resolveCategoryConfig,
   getLeaderboardCategory, 
   saveLeaderboardToMongo, 
   getRankOreEmoji 
 } = require('../helpers/leaderboardHelper');
 const { getCustomEmoji } = require('../helpers/utils');
 
-// Cấu hình 11 lựa chọn cho Slash Command theo chuẩn item in-game
-const categoryChoices = Object.values(LEADERBOARD_CATEGORIES).map(c => ({
-  name: c.choiceName || c.name,
-  value: c.key
-}));
-
-// Tạo Menu Dropdown với Custom Emoji 3D của Bot
-function buildCategorySelectMenu(currentKey) {
-  const selectMenu = new StringSelectMenuBuilder()
-    .setCustomId('lb_select_category')
-    .setPlaceholder('🎮 Chọn hạng mục Bảng Xếp Hạng khác...');
-
-  const options = Object.values(LEADERBOARD_CATEGORIES).map(c => {
-    const opt = new StringSelectMenuOptionBuilder()
-      .setLabel(c.name)
-      .setValue(c.key)
-      .setDescription(c.description.substring(0, 50))
-      .setDefault(c.key === currentKey);
-
-    if (c.emojiId) {
-      opt.setEmoji(c.emojiId);
-    }
-    return opt;
-  });
-
-  selectMenu.addOptions(options);
-  return new ActionRowBuilder().addComponents(selectMenu);
-}
+// Cấu hình 11 lựa chọn ngắn gọn không emoji cho Slash Command
+const categoryChoices = [
+  { name: 'money', value: 'money' },
+  { name: 'shard', value: 'shard' },
+  { name: 'kills', value: 'kills' },
+  { name: 'deaths', value: 'deaths' },
+  { name: 'played', value: 'played' },
+  { name: 'blocks_placed', value: 'blocks_placed' },
+  { name: 'blocks_mined', value: 'blocks_mined' },
+  { name: 'mob_kills', value: 'mob_kills' },
+  { name: 'shop_buy', value: 'shop_buy' },
+  { name: 'shop_sell', value: 'shop_sell' },
+  { name: 'breed', value: 'breed' }
+];
 
 // Helper tạo Embed Top 9
-function buildLeaderboardEmbed(categoryConfig, players, isLive = false) {
+function buildLeaderboardEmbed(categoryConfig, players) {
   const top9 = (players || []).slice(0, 9);
   const catEmoji = getCustomEmoji(categoryConfig.emojiKey) || '🏆';
 
   const lines = top9.map((p, idx) => {
     const oreEmoji = getRankOreEmoji(idx);
     const unitText = categoryConfig.unit ? ` ${categoryConfig.unit}` : '';
-    return `${oreEmoji} **${p.username}** ➔ \`${p.value}${unitText}\``;
+    return `${oreEmoji} ${p.username} ➔ ${p.value}${unitText}`;
   });
 
-  const footerText = isLive 
-    ? 'Cụm KingSMP • Top 9 Server • Vừa quét trực tiếp in-game 🟢' 
-    : 'Cụm KingSMP • Top 9 Server • Dữ liệu từ cơ sở dữ liệu';
+  const titleText = `${catEmoji} Leaderboard: ${(categoryConfig.titleName || categoryConfig.name).toUpperCase()}`;
 
   return new EmbedBuilder()
-    .setTitle(`${catEmoji} ${categoryConfig.name.toUpperCase()} • KINGMC`)
+    .setTitle(titleText)
     .setColor(categoryConfig.color || '#2b2d31')
     .setDescription(lines.length > 0 ? lines.join('\n') : 'Chưa có dữ liệu người chơi.')
-    .setTimestamp()
-    .setFooter({ text: footerText });
+    .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+    .setTimestamp();
 }
 
 module.exports = {
@@ -87,9 +65,8 @@ module.exports = {
     let currentType = interaction.options ? (interaction.options.getString('type') || 'money') : 'money';
     await interaction.deferReply();
 
-    const categoryConfig = LEADERBOARD_CATEGORIES[currentType] || LEADERBOARD_CATEGORIES.money;
+    const categoryConfig = resolveCategoryConfig(currentType);
     let players = null;
-    let isLive = false;
 
     // 1. Thử cho bot in-game đi quét trực tiếp nếu có QueueDispatcher
     if (queueDispatcher) {
@@ -98,7 +75,6 @@ module.exports = {
         const liveResult = await queueDispatcher.enqueueTask('leaderboard', currentType, 25000);
         if (liveResult && Array.isArray(liveResult.players) && liveResult.players.length > 0) {
           players = liveResult.players;
-          isLive = true;
           // Lưu vào MongoDB để phục vụ các lần xem tiếp theo
           await saveLeaderboardToMongo(currentType, liveResult.title, players);
         }
@@ -123,79 +99,10 @@ module.exports = {
       });
     }
 
-    const embed = buildLeaderboardEmbed(categoryConfig, players, isLive);
-    const row = buildCategorySelectMenu(currentType);
+    const embed = buildLeaderboardEmbed(categoryConfig, players);
 
-    const replyMsg = await interaction.editReply({
-      embeds: [embed],
-      components: [row]
-    });
-
-    // 4. Lắng nghe tương tác Dropdown Menu để người dùng có thể đổi sang xem các hạng mục khác
-    const collector = replyMsg.createMessageComponentCollector({
-      componentType: ComponentType.StringSelect,
-      time: 180000 // 3 phút
-    });
-
-    collector.on('collect', async (selectInteraction) => {
-      if (selectInteraction.user.id !== interaction.user.id) {
-        return selectInteraction.reply({
-          content: '⚠️ Chỉ người dùng lệnh này mới có thể thao tác menu!',
-          ephemeral: true
-        });
-      }
-
-      const newType = selectInteraction.values[0];
-      const newConfig = LEADERBOARD_CATEGORIES[newType];
-      if (!newConfig) return;
-
-      currentType = newType;
-      await selectInteraction.deferUpdate();
-
-      let newPlayers = null;
-      let newIsLive = false;
-
-      // Quét live cho hạng mục mới được chọn
-      if (queueDispatcher) {
-        try {
-          const liveResult = await queueDispatcher.enqueueTask('leaderboard', newType, 25000);
-          if (liveResult && Array.isArray(liveResult.players) && liveResult.players.length > 0) {
-            newPlayers = liveResult.players;
-            newIsLive = true;
-            await saveLeaderboardToMongo(newType, liveResult.title, newPlayers);
-          }
-        } catch (_) {}
-      }
-
-      if (!newPlayers || newPlayers.length === 0) {
-        const cached = await getLeaderboardCategory(newType);
-        if (cached && cached.players) {
-          newPlayers = cached.players;
-        }
-      }
-
-      if (newPlayers && newPlayers.length > 0) {
-        const newEmbed = buildLeaderboardEmbed(newConfig, newPlayers, newIsLive);
-        const newRow = buildCategorySelectMenu(newType);
-        await selectInteraction.editReply({
-          embeds: [newEmbed],
-          components: [newRow]
-        });
-      } else {
-        const barrierEmoji = getCustomEmoji('barrier') || '⚠️';
-        await selectInteraction.followUp({
-          content: `${barrierEmoji} Hiện không thể tải dữ liệu cho mục **${newConfig.name}**. Vui lòng thử lại sau!`,
-          ephemeral: true
-        });
-      }
-    });
-
-    collector.on('end', async () => {
-      try {
-        const disabledMenu = buildCategorySelectMenu(currentType);
-        disabledMenu.components[0].setDisabled(true);
-        await interaction.editReply({ components: [disabledMenu] });
-      } catch (_) {}
+    return interaction.editReply({
+      embeds: [embed]
     });
   }
 };

@@ -66,8 +66,8 @@ module.exports = {
           .setTitle(`💬 Trả lời cho: "${question.length > 50 ? question.substring(0, 47) + '...' : question}"`)
           .setDescription(aiReply)
           .setColor(usedWebSearch ? '#10b981' : '#3b82f6')
-          .setTimestamp()
-          .setFooter({ text: `Powered by Groq AI ${usedWebSearch ? '• 🌐 Đã tra cứu Internet' : ''} • Thiết kế bởi BinhLH` });
+          .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+          .setTimestamp();
 
         await interaction.editReply({ embeds: [embed] });
       } else {
@@ -78,7 +78,9 @@ module.exports = {
       const errorEmbed = new EmbedBuilder()
         .setTitle('❌ Lỗi kết nối AI')
         .setDescription(`Không thể nhận phản hồi từ AI lúc này.\n\n⚠️ **Chi tiết lỗi:** ${error.message}`)
-        .setColor('#ef4444');
+        .setColor('#ef4444')
+        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+        .setTimestamp();
 
       await interaction.editReply({ embeds: [errorEmbed] });
     }

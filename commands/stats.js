@@ -47,8 +47,8 @@ module.exports = {
         .setTitle(`${netherStarEmoji} Stats: **${targetPlayer}** ${netherStarEmoji}`)
         .setColor('#2b2d31')
         .setThumbnail(skinHelper.getAvatarUrl(targetPlayer, 64, true))
-        .setTimestamp()
-        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
+        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+        .setTimestamp();
 
       const validItems = (result.items || []).filter(item => !isDecorationItem(item));
 
@@ -126,8 +126,8 @@ module.exports = {
         .setTitle(`${barrierEmoji} Lỗi kiểm tra stats`)
         .setDescription(`Không thể lấy stats của người chơi **${targetPlayer}**.\n\n${barrierEmoji} Đã có lỗi xảy ra trong quá trình xử lý yêu cầu. Vui lòng thử lại sau hoặc bấm nút **Báo lỗi** bên dưới để gửi thông báo tới Admin!`)
         .setColor('#ef4444')
-        .setTimestamp()
-        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' });
+        .setFooter({ text: 'KingMC.vn Stats Bot • Thiết kế bởi BinhLH' })
+        .setTimestamp();
         
       const row = new ActionRowBuilder()
         .addComponents(
