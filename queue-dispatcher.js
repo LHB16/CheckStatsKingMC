@@ -423,6 +423,8 @@ class QueueDispatcher {
           return await this.localBot.getAh(player, timeoutMs);
         } else if (action === 'online') {
           return await this.localBot.getOnline(player, timeoutMs);
+        } else if (action === 'leaderboard' || action === 'lb') {
+          return await this.localBot.getLeaderboard(player, timeoutMs);
         } else {
           throw new Error(`Hành động không hợp lệ: ${action}`);
         }

@@ -84,6 +84,34 @@ function setupDonationConfigModel() {
   return DonationConfigModel;
 }
 
+let LeaderboardModel = null;
+
+// Khởi tạo Leaderboard Cache Schema
+function setupLeaderboardModel() {
+  if (LeaderboardModel) return LeaderboardModel;
+
+  const LeaderboardSchema = new mongoose.Schema({
+    categoryKey: { type: String, required: true, unique: true, index: true },
+    title: { type: String, default: '' },
+    players: [{
+      rank: { type: Number, required: true },
+      username: { type: String, required: true },
+      value: { type: String, default: '0' },
+      skinUrl: { type: String, default: null }
+    }],
+    scrapedAt: { type: Date, default: Date.now }
+  }, {
+    timestamps: true
+  });
+
+  LeaderboardModel = mongoose.models.Leaderboard || mongoose.model('Leaderboard', LeaderboardSchema);
+  return LeaderboardModel;
+}
+
+function getLeaderboardModel() {
+  return setupLeaderboardModel();
+}
+
 // Kết nối MongoDB tập trung
 async function connectMongo() {
   const mongoUri = process.env.MONGODB_URI;
@@ -97,6 +125,7 @@ async function connectMongo() {
     setupWorkerModel();
     setupDiscordGuildModel();
     setupDonationConfigModel();
+    setupLeaderboardModel();
     return true;
   }
 
@@ -109,6 +138,7 @@ async function connectMongo() {
     setupWorkerModel();
     setupDiscordGuildModel();
     setupDonationConfigModel();
+    setupLeaderboardModel();
     console.log('✅ [MongoHelper] Kết nối MongoDB Atlas THÀNH CÔNG!');
     return true;
   } catch (err) {
@@ -209,9 +239,11 @@ module.exports = {
   getWorkerModel,
   getDiscordGuildModel,
   getDonationConfigModel,
+  getLeaderboardModel,
   setupWorkerModel,
   setupDiscordGuildModel,
   setupDonationConfigModel,
+  setupLeaderboardModel,
   seedDonationImage,
   getDonationConfig
 };

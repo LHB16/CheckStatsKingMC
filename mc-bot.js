@@ -502,6 +502,7 @@ class PersistentBot extends EventEmitter {
       const title = parseMinecraftJSON(window.title || '');
       
       if (!this.targetPlayer) return;
+      if (this.currentAction === 'leaderboard') return;
 
       console.log(`[MC-Bot] GUI Mở: "${title}" (Action: ${this.currentAction}), Đang trích xuất dữ liệu...`);
 
@@ -1486,6 +1487,150 @@ class PersistentBot extends EventEmitter {
           this.cleanupStatsState();
         }
       }, timeoutMs);
+    });
+  }
+
+  getLeaderboard(categoryKey = 'money', timeoutMs = 20000) {
+    return new Promise(async (resolve, reject) => {
+      if (!this.bot || !this.isBotOnline || !this.isReady) {
+        return reject(new Error('Bot Minecraft hiện đang kết nối lại hoặc chưa sẵn sàng. Vui lòng thử lại sau.'));
+      }
+
+      if (this.targetPlayer) {
+        return reject(new Error('Bot đang bận xử lý một yêu cầu khác.'));
+      }
+
+      const slotMap = {
+        'money': 0,
+        'shards': 1,
+        'kills': 2,
+        'deaths': 3,
+        'played': 4,
+        'blocks_placed': 5,
+        'blocks_mined': 6,
+        'mob_kills': 7,
+        'shop_buy_total': 8,
+        'shop_sell_total': 9,
+        'animals_breed': 10
+      };
+
+      const slot = slotMap[categoryKey] !== undefined ? slotMap[categoryKey] : 0;
+
+      this.targetPlayer = categoryKey || 'money';
+      this.currentAction = 'leaderboard';
+      this.statsPromiseResolve = resolve;
+      this.statsPromiseReject = reject;
+
+      let isCleanedUp = false;
+      const cleanup = () => {
+        if (isCleanedUp) return;
+        isCleanedUp = true;
+        this.cleanupStatsState();
+      };
+
+      this.statsTimeout = setTimeout(() => {
+        if (!isCleanedUp) {
+          cleanup();
+          reject(new Error(`Timeout! Quá thời gian quét bảng xếp hạng (${timeoutMs / 1000}s).`));
+        }
+      }, timeoutMs);
+
+      try {
+        if (this.bot.currentWindow) {
+          try { this.bot.closeWindow(this.bot.currentWindow); } catch (_) {}
+          await new Promise(r => setTimeout(r, 400));
+        }
+
+        console.log(`[MC-Bot] Yêu cầu quét Leaderboard: ${categoryKey} (Slot #${slot}). Gõ /leaderboard...`);
+        this.bot.chat('/leaderboard');
+
+        const mainWin = await waitForGuiUpdate(this.bot, 3500);
+        if (!mainWin) {
+          cleanup();
+          return reject(new Error('Không mở được GUI /leaderboard từ server.'));
+        }
+
+        console.log(`[MC-Bot] Đã mở /leaderboard. Nhấp Slot #${slot} (${categoryKey})...`);
+        this.bot.clickWindow(slot, 0, 0);
+
+        const subWin = await waitForGuiUpdate(this.bot, 3500);
+        if (!subWin) {
+          cleanup();
+          return reject(new Error(`Không nhận được sub-GUI sau khi click slot #${slot}`));
+        }
+
+        const rawTitle = parseMinecraftJSON(subWin.title || '');
+        const cleanTitle = cleanMinecraftText(rawTitle);
+        const maxSlots = subWin.inventoryStart || 54;
+
+        const players = [];
+
+        for (let s = 0; s < maxSlots; s++) {
+          const item = subWin.slots[s];
+          if (!item) continue;
+
+          let customName = item.customName ? cleanMinecraftText(parseMinecraftJSON(item.customName)) : null;
+          let displayName = item.displayName ? cleanMinecraftText(item.displayName) : null;
+          let lore = extractLoreFromNBT(item.nbt);
+
+          let fullName = customName || displayName || item.name;
+
+          const hasRankLore = lore.some(line => {
+            const l = line.toLowerCase();
+            return l.includes('top') || l.includes('#') || l.includes('hạng') || l.includes('điểm') || l.includes('$');
+          });
+
+          if (item.name.includes('head') || item.name.includes('skull') || hasRankLore) {
+            let rank = players.length + 1;
+            let username = fullName;
+            const rankMatch = username.match(/^#(\d+)\s*(.*)$/);
+            if (rankMatch) {
+              rank = parseInt(rankMatch[1], 10);
+              username = rankMatch[2].trim();
+            }
+
+            let value = '0';
+            for (const line of lore) {
+              if (typeof line === 'string' && line.trim().startsWith('{')) {
+                try {
+                  const obj = JSON.parse(line);
+                  if (obj.text) { value = cleanMinecraftText(obj.text); break; }
+                } catch (_) {}
+              }
+              const cl = cleanMinecraftText(line);
+              if (cl && !cl.toLowerCase().includes('click') && !cl.toLowerCase().includes('trang')) {
+                value = cl;
+                break;
+              }
+            }
+
+            players.push({
+              rank,
+              username: username || `Người chơi #${rank}`,
+              value: value,
+              skinUrl: skinHelper.getAvatarUrl(username, 64, true)
+            });
+          }
+        }
+
+        console.log(`[MC-Bot] ✅ Đã cào được ${players.length} người chơi trong ${cleanTitle}. Đóng GUI...`);
+
+        try {
+          this.bot.closeWindow(subWin);
+        } catch (_) {}
+
+        cleanup();
+
+        resolve({
+          categoryKey,
+          title: cleanTitle,
+          players: players.slice(0, 9),
+          scrapedAt: new Date().toISOString()
+        });
+      } catch (err) {
+        cleanup();
+        reject(err);
+      }
     });
   }
 

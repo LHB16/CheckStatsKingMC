@@ -348,6 +348,8 @@ const server = http.createServer(async (req, res) => {
           result = await localMcBot.getAh(player, timeoutMs || 15000);
         } else if (action === 'online') {
           result = await localMcBot.getOnline(player, timeoutMs || 15000);
+        } else if (action === 'leaderboard' || action === 'lb') {
+          result = await localMcBot.getLeaderboard(player, timeoutMs || 20000);
         } else {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           return res.end(JSON.stringify({ success: false, error: 'Hành động không hợp lệ' }));
