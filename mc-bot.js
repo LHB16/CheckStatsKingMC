@@ -233,7 +233,7 @@ function waitForGuiUpdate(bot, timeoutMs = 1500) {
       if (isResolved) return;
       isResolved = true;
       cleanup();
-      resolve();
+      resolve(bot.currentWindow);
     };
 
     timeoutTimer = setTimeout(() => {
@@ -874,39 +874,49 @@ class PersistentBot extends EventEmitter {
   startAfkRoutine() {
     this.afkRoutineRunning = true;
     this.isReady = false;
-    console.log(`[MC-Bot] Đang khởi động kịch bản AFK. Sẽ gõ lệnh /menu sau 6 giây nữa...`);
+    console.log(`[MC-Bot] Đang khởi động kịch bản AFK. Sẽ gõ lệnh /menu sau 7 giây nữa...`);
+
+    const openMenuAndJoin = async () => {
+      if (!this.afkRoutineRunning || !this.bot || !this.isBotOnline) return;
+
+      let menuWindow = this.bot.currentWindow;
+      let retries = 0;
+
+      while (!menuWindow && retries < 5 && this.afkRoutineRunning && this.isBotOnline) {
+        retries++;
+        console.log(`[MC-Bot] Đang gõ /menu (Lần ${retries})...`);
+        this.bot.chat('/menu');
+        menuWindow = await waitForGuiUpdate(this.bot, 2500);
+        if (!menuWindow) menuWindow = this.bot.currentWindow;
+        if (!menuWindow) {
+          console.log(`[MC-Bot] Chưa thấy menu mở, đợi 2.5 giây rồi thử lại...`);
+          await new Promise(r => setTimeout(r, 2500));
+        }
+      }
+
+      if (!menuWindow) {
+        console.error(`[MC-Bot] ❌ Không thể mở /menu sau 5 lần thử!`);
+        return;
+      }
+
+      console.log(`[MC-Bot] 🎯 Đã mở GUI menu. Đang click slot 24 (KingSMP)...`);
+      try {
+        this.bot.clickWindow(24, 0, 0);
+      } catch (e) {
+        console.error(`[MC-Bot] Lỗi click menu: ${e.message}`);
+      }
+
+      const delay3 = setTimeout(() => {
+        if (!this.afkRoutineRunning || !this.bot || !this.isBotOnline) return;
+        this.scanTablistSkins();
+        this.performRtp();
+      }, 6000);
+      this.afkTimers.push(delay3);
+    };
 
     const delay1 = setTimeout(() => {
-      if (!this.afkRoutineRunning || !this.bot || !this.isBotOnline) return;
-      console.log(`[MC-Bot] Đang gõ /menu...`);
-      this.bot.chat('/menu');
-      
-      const delay2 = setTimeout(() => {
-        if (!this.afkRoutineRunning || !this.bot || !this.isBotOnline) return;
-        console.log(`[MC-Bot] Đang click slot 24...`);
-        
-        try {
-          const currentWindow = this.bot.currentWindow;
-          if (currentWindow) {
-             this.bot.clickWindow(24, 0, 0);
-          } else {
-             console.log(`[MC-Bot] Không có window /menu nào đang mở để click!`);
-          }
-        } catch(e) {
-          console.error(`[MC-Bot] Lỗi click menu: ${e.message}`);
-        }
-
-        const delay3 = setTimeout(() => {
-          if (!this.afkRoutineRunning || !this.bot || !this.isBotOnline) return;
-          this.scanTablistSkins();
-          this.performRtp();
-        }, 6000);
-        this.afkTimers.push(delay3);
-
-      }, 4000);
-      this.afkTimers.push(delay2);
-
-    }, 6000);
+      openMenuAndJoin();
+    }, 7000);
     this.afkTimers.push(delay1);
   }
 
@@ -1708,14 +1718,15 @@ class PersistentBot extends EventEmitter {
         this.onBountyMessageListener = (message) => {
           const cleanMsg = cleanMinecraftText(message).trim();
           const lowerMsg = cleanMsg.toLowerCase();
+          const normMsg = normalizeSmallCaps(cleanMsg);
 
           // Bỏ qua tin nhắn chat của người chơi thường trong server
           if (cleanMsg.includes('<') && cleanMsg.includes('>')) return;
 
           // 1. Phản hồi thành công: "<player> có tiền thưởng $ 0" hoặc "<player> có tiền thưởng $ 200M"
-          if (lowerMsg.includes('có tiền thưởng') || lowerMsg.includes('co tien thuong')) {
+          if (normMsg.includes('co tien thuong') || lowerMsg.includes('có tiền thưởng')) {
             const lowerTarget = target.toLowerCase();
-            if (lowerMsg.includes(lowerTarget)) {
+            if (lowerMsg.includes(lowerTarget) || normMsg.includes(lowerTarget)) {
               let bountyAmount = '$0';
               const match = cleanMsg.match(/c[oó]\s+ti[eề]n\s+th[uư][oở]ng\s+(.+)$/i);
               if (match) {
@@ -1741,9 +1752,9 @@ class PersistentBot extends EventEmitter {
           }
 
           // 2. Phản hồi thất bại: "Người chơi không hợp lệ: <player>"
-          if (lowerMsg.includes('người chơi không hợp lệ') || lowerMsg.includes('nguoi choi khong hop le') || lowerMsg.includes('không hợp lệ') || lowerMsg.includes('khong hop le')) {
+          if (normMsg.includes('khong hop le') || lowerMsg.includes('không hợp lệ')) {
             const lowerTarget = target.toLowerCase();
-            if (lowerMsg.includes(lowerTarget)) {
+            if (lowerMsg.includes(lowerTarget) || normMsg.includes(lowerTarget)) {
               cleanup();
               return resolve({
                 mode: 'check',
@@ -1795,7 +1806,8 @@ class PersistentBot extends EventEmitter {
         console.log(`[MC-Bot] ⚡ Mở GUI Tiền Thưởng: /bounty...`);
         this.bot.chat('/bounty');
 
-        const activeWin = await waitForGuiUpdate(this.bot, 3500);
+        await waitForGuiUpdate(this.bot, 4000);
+        const activeWin = this.bot.currentWindow;
         if (!activeWin) {
           cleanup();
           return reject(new Error('Không mở được GUI /bounty từ server.'));
@@ -1827,12 +1839,12 @@ class PersistentBot extends EventEmitter {
 
           for (const line of loreArray) {
             const cleanLine = cleanMinecraftText(line).trim();
-            const lowerLine = cleanLine.toLowerCase();
+            const normLine = normalizeSmallCaps(cleanLine);
 
-            if (lowerLine.includes('tiền thưởng:') || lowerLine.includes('tien thuong:')) {
+            if (normLine.includes('tien thuong:') || normLine.includes('tien thuong')) {
               const parts = cleanLine.split(/:\s*/);
               amount = parts.slice(1).join(':').trim();
-            } else if (lowerLine.includes('người tạo:') || lowerLine.includes('nguoi tao:')) {
+            } else if (normLine.includes('nguoi tao:') || normLine.includes('nguoi tao')) {
               const parts = cleanLine.split(/:\s*/);
               creators = parts.slice(1).join(':').trim();
             }
