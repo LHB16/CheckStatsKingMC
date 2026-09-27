@@ -80,8 +80,8 @@ function formatAhTextPage(items, itemQuery, pageIndex, pageSize = 9) {
 
     // Lấy đúng Emoji 3D cho vật phẩm này
     const itemEmoji = getCustomEmoji(rawName || itemQuery || cleanDisplay);
-    const line1 = `${itemEmoji} **#${stt} ${nameToShow}** | Số lượng: \`${quantity}\``;
-    const line2 = `   └─ Người bán: **${seller}** | Giá: **${priceText}**`;
+    const line1 = `${itemEmoji} **#${stt} ${nameToShow}** | Giá: **${priceText}**`;
+    const line2 = `   └─ Người bán: **${seller}** | Số lượng: \`${quantity}\``;
 
     return `${line1}\n${line2}`;
   });
@@ -129,8 +129,8 @@ function formatOrderTextPage(orders, itemQuery, pageIndex, pageSize = 9) {
 
     // Lấy đúng Emoji 3D cho vật phẩm order này
     const itemEmoji = getCustomEmoji(itemQueryId || rawName || itemQuery || cleanDisplay);
-    const line1 = `${itemEmoji} **#${stt} ${nameToShow}** | ${progressInfo}`;
-    const line2 = `   └─ Người mua: **${buyerName}** | Giá: **${priceText}**`;
+    const line1 = `${itemEmoji} **#${stt} ${nameToShow}** | Giá: **${priceText}**`;
+    const line2 = `   └─ Người mua: **${buyerName}** | ${progressInfo}`;
 
     return `${line1}\n${line2}`;
   });
