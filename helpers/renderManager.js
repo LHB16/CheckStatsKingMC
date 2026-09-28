@@ -299,13 +299,206 @@ async function notifyGoogleAppsScript(action, workerUrl) {
 }
 
 /**
+ * Thực hiện xoay Worker cho 1 tài khoản Render cụ thể
+ */
+async function rotateSingleAccount(targetAccount, {
+  workerUrl = '',
+  reason = 'Manual Rotation',
+  queueDispatcher = null,
+  discordClient = null,
+  adminId = ''
+} = {}) {
+  console.log(`\n-------------------------------------------------------------`);
+  console.log(`🔄 [RenderManager] Xoay Worker cho tài khoản: [${targetAccount.name || targetAccount.accountId}]`);
+  console.log(`-------------------------------------------------------------`);
+
+  // 1. Xóa Service cũ nếu có
+  const oldServiceId = targetAccount.activeServiceId;
+  const oldRegion = targetAccount.currentRegion || 'singapore';
+  const oldUrl = targetAccount.activeServiceUrl || workerUrl;
+
+  if (oldServiceId) {
+    await deleteService(targetAccount.apiKey, oldServiceId);
+    await new Promise(r => setTimeout(r, 1500));
+  }
+
+  // Quét dọn dẹp các service worker cũ tồn đọng trên tài khoản này
+  try {
+    console.log(`[RenderManager] 🔍 Đang quét dọn dẹp Worker cũ trên tài khoản [${targetAccount.name || targetAccount.accountId}]...`);
+    const existingServices = await listServices(targetAccount.apiKey, targetAccount.ownerId);
+    const matchedWorkers = existingServices.filter(s => {
+      if (s.id === oldServiceId) return false;
+      const sUrl = s?.serviceDetails?.url || s?.url || '';
+      const isUrlMatch = (workerUrl && sUrl && (sUrl.includes(workerUrl) || workerUrl.includes(sUrl))) ||
+                         (oldUrl && sUrl && (sUrl.includes(oldUrl) || oldUrl.includes(sUrl)));
+      const isNameMatch = s?.name && s.name.startsWith('kingmc-worker-');
+      return isUrlMatch || isNameMatch;
+    });
+
+    for (const w of matchedWorkers) {
+      console.log(`[RenderManager] 🗑️ Dọn dẹp Worker cũ tồn đọng: [${w.id}] (${w.name})...`);
+      await deleteService(targetAccount.apiKey, w.id);
+      await new Promise(r => setTimeout(r, 1500));
+    }
+  } catch (cleanErr) {
+    console.warn(`[RenderManager] ⚠️ Cảnh báo quét dọn dẹp worker cũ: ${cleanErr.message}`);
+  }
+
+  // Gỡ Worker cũ khỏi QueueDispatcher & MongoDB Worker
+  if (oldUrl) {
+    if (queueDispatcher) {
+      const allW = await queueDispatcher.getAllWorkers();
+      const found = allW.find(w => w.url === oldUrl || oldUrl.includes(w.url));
+      if (found) {
+        await queueDispatcher.removeWorker(found._id).catch(() => {});
+        console.log(`[RenderManager] Đã gỡ Worker cũ khỏi QueueDispatcher: ${oldUrl}`);
+      }
+    } else if (isMongoAvailable()) {
+      const WorkerModel = getWorkerModel();
+      await WorkerModel.deleteMany({ url: { $regex: oldUrl } });
+    }
+
+    await notifyGoogleAppsScript('remove', oldUrl);
+  }
+
+  // 2. Chọn Region mới ngẫu nhiên (khác Region cũ)
+  const newRegion = getRandomRegion(targetAccount.allowedRegions, oldRegion);
+  console.log(`[RenderManager] Đổi khu vực [${targetAccount.name || targetAccount.accountId}]: [${oldRegion}] ➔ [${newRegion}]`);
+
+  // 3. Tạo Service mới trên Render
+  const masterUrl = (await getSystemConfig('master_url', null)) || process.env.RENDER_EXTERNAL_URL || process.env.MASTER_URL || '';
+  const newService = await createWorkerService(targetAccount, {
+    region: newRegion,
+    masterUrl,
+    workerSecret: process.env.WORKER_SECRET,
+    mcServerHosts: process.env.MC_SERVER_HOSTS,
+    mcServerPort: process.env.MC_SERVER_PORT
+  });
+
+  const newServiceId = newService.id;
+  console.log(`[RenderManager] Đã tạo Service mới trên Render. ID: [${newServiceId}]`);
+
+  // 4. Lấy Public URL của Service mới
+  let newUrl = newService?.serviceDetails?.url || newService?.url;
+  if (!newUrl) {
+    newUrl = await waitForServiceUrl(targetAccount.apiKey, newServiceId);
+  }
+  if (!newUrl && newService.slug) {
+    newUrl = `https://${newService.slug}.onrender.com`;
+  }
+
+  console.log(`[RenderManager] 🌐 Public URL của Worker mới: [${newUrl || 'Đang cấp phát...'}]`);
+
+  // 5. Cập nhật trạng thái vào MongoDB (Collection: render_accounts)
+  await saveRenderAccount({
+    accountId: targetAccount.accountId,
+    activeServiceId: newServiceId,
+    activeServiceUrl: newUrl || '',
+    currentRegion: newRegion,
+    lastRotatedAt: new Date(),
+    rotationCount: (targetAccount.rotationCount || 0) + 1
+  });
+
+  // 6. Thêm Worker mới vào QueueDispatcher / MongoDB WorkerModel
+  if (newUrl) {
+    if (queueDispatcher) {
+      await queueDispatcher.addWorker({
+        name: `Worker-${targetAccount.name || targetAccount.accountId}-${newRegion.toUpperCase()}`,
+        url: newUrl,
+        secret: process.env.WORKER_SECRET || ''
+      }).catch(e => console.warn('[RenderManager] Lỗi thêm worker vào QueueDispatcher:', e.message));
+    }
+
+    await notifyGoogleAppsScript('add', newUrl);
+  }
+
+  // 7. Gửi thông báo đến Admin Discord
+  if (discordClient && adminId) {
+    try {
+      const adminUser = await discordClient.users.fetch(adminId);
+      if (adminUser) {
+        const alertMessage = 
+          `🔄 **[Render Auto-Rotation] Đã Xoay Worker Thành Công!**\n` +
+          `• **Lý do kích hoạt:** \`${reason}\`\n` +
+          `• **Tài khoản Render:** \`${targetAccount.name || targetAccount.accountId}\`\n` +
+          `• **Đổi Region:** \`${oldRegion}\` ➔ \`${newRegion}\` (Đã nhận dải IP mới)\n` +
+          `• **Worker cũ (Đã xóa):** \`${oldUrl || 'N/A'}\`\n` +
+          `• **Worker mới (Đang deploy):** \`${newUrl || 'Đang tạo'}\`\n` +
+          `• **Google Apps Script:** Đã cập nhật URL ping giữ Online\n` +
+          `• **MongoDB Atlas:** Đã đồng bộ trạng thái vĩnh viễn.`;
+        await adminUser.send(alertMessage);
+      }
+    } catch (err) {
+      console.warn('[RenderManager] Không thể gửi thông báo Discord Admin:', err.message);
+    }
+  }
+
+  console.log(`[RenderManager] ✅ Hoàn tất xoay tài khoản [${targetAccount.name || targetAccount.accountId}]!\n`);
+  return {
+    success: true,
+    accountId: targetAccount.accountId,
+    name: targetAccount.name,
+    serviceId: newServiceId,
+    url: newUrl,
+    region: newRegion,
+    oldRegion
+  };
+}
+
+/**
+ * Xoay Vòng Toàn Bộ Worker trên tất cả các tài khoản Render đang kích hoạt
+ */
+async function rotateAllWorkers(options = {}) {
+  const accounts = await getAccounts();
+  if (accounts.length === 0) {
+    throw new Error('Không tìm thấy tài khoản Render nào đang kích hoạt trong MongoDB.');
+  }
+
+  console.log(`\n=============================================================`);
+  console.log(`🔄 [RenderManager] BẮT ĐẦU XOAY TOÀN BỘ WORKER (${accounts.length} TÀI KHOẢN)`);
+  console.log(`• Danh sách tài khoản: ${accounts.map(a => a.name || a.accountId).join(', ')}`);
+  console.log(`=============================================================\n`);
+
+  const results = [];
+  for (const acc of accounts) {
+    try {
+      const res = await rotateSingleAccount(acc, options);
+      results.push(res);
+    } catch (err) {
+      console.error(`[RenderManager] ❌ Lỗi xoay tài khoản [${acc.name || acc.accountId}]: ${err.message}`);
+      results.push({
+        success: false,
+        accountId: acc.accountId,
+        name: acc.name,
+        error: err.message
+      });
+    }
+    // Nghỉ 2 giây giữa các tài khoản để đảm bảo ổn định
+    await new Promise(r => setTimeout(r, 2000));
+  }
+
+  console.log(`\n=============================================================`);
+  console.log(`🎉 [RenderManager] ĐÃ HOÀN TẤT XOAY TOÀN BỘ WORKER! (${results.filter(r => r.success).length}/${accounts.length} thành công)`);
+  console.log(`=============================================================\n`);
+
+  return {
+    success: true,
+    total: accounts.length,
+    successful: results.filter(r => r.success).length,
+    results
+  };
+}
+
+/**
  * Điều phối toàn bộ quy trình Xoay Vòng Worker (Auto Rotation Pipeline)
- * @param {Object} params - Thông tin worker bị limit: { workerUrl, reason, username, queueDispatcher, discordClient, adminId }
+ * @param {Object} params - { workerUrl, reason, username, rotateAll, accountId, queueDispatcher, discordClient, adminId }
  */
 async function rotateWorker({
   workerUrl = '',
   reason = 'IP Limit',
   username = '',
+  rotateAll = false,
+  accountId = null,
   queueDispatcher = null,
   discordClient = null,
   adminId = ''
@@ -328,163 +521,46 @@ async function rotateWorker({
   isRotating = true;
   lastRotationTime = now;
 
-  console.log(`\n=============================================================`);
-  console.log(`🔄 [RenderManager] KÍCH HOẠT TIẾN TRÌNH TỰ ĐỘNG XOAY RENDER WORKER`);
-  console.log(`• Worker cũ: ${workerUrl || 'N/A'}`);
-  console.log(`• Username: ${username || 'N/A'}`);
-  console.log(`• Lý do: ${reason}`);
-  console.log(`=============================================================\n`);
-
   try {
-    // 1. Tìm tài khoản Render tương ứng
+    // 1. Trường hợp xoay đồng loạt TẤT CẢ Worker
+    if (rotateAll) {
+      return await rotateAllWorkers({
+        reason,
+        queueDispatcher,
+        discordClient,
+        adminId
+      });
+    }
+
+    // 2. Tìm tài khoản Render cụ thể
     const accounts = await getAccounts();
     if (accounts.length === 0) {
       throw new Error('Không tìm thấy tài khoản Render nào trong MongoDB (Collection: render_accounts).');
     }
 
-    // Tìm tài khoản đang chạy URL này, nếu không thấy thì chọn tài khoản tiếp theo
-    let targetAccount = accounts.find(a => 
-      (a.activeServiceUrl && workerUrl && a.activeServiceUrl.includes(workerUrl)) ||
-      (a.activeServiceUrl && workerUrl && workerUrl.includes(a.activeServiceUrl))
-    );
+    let targetAccount = null;
+    if (accountId) {
+      targetAccount = accounts.find(a => a.accountId === accountId);
+    }
+
+    if (!targetAccount && workerUrl) {
+      targetAccount = accounts.find(a => 
+        (a.activeServiceUrl && a.activeServiceUrl.includes(workerUrl)) ||
+        (a.activeServiceUrl && workerUrl.includes(a.activeServiceUrl))
+      );
+    }
 
     if (!targetAccount) {
       targetAccount = await getNextAvailableAccount();
     }
 
-    console.log(`[RenderManager] Sử dụng tài khoản Render: [${targetAccount.name || targetAccount.accountId}]`);
-
-    // 2. Xóa Service cũ nếu có
-    const oldServiceId = targetAccount.activeServiceId;
-    const oldRegion = targetAccount.currentRegion || 'singapore';
-    const oldUrl = targetAccount.activeServiceUrl || workerUrl;
-
-    if (oldServiceId) {
-      await deleteService(targetAccount.apiKey, oldServiceId);
-      // Chờ 1.5s để Render API cập nhật trạng thái
-      await new Promise(r => setTimeout(r, 1500));
-    }
-
-    // Tự động quét và dọn dẹp các service worker cũ tồn đọng (có tiền tố kingmc-worker- hoặc trùng URL)
-    try {
-      console.log(`[RenderManager] 🔍 Đang quét dọn dẹp Worker Service cũ trên tài khoản [${targetAccount.name || targetAccount.accountId}]...`);
-      const existingServices = await listServices(targetAccount.apiKey, targetAccount.ownerId);
-      const matchedWorkers = existingServices.filter(s => {
-        if (s.id === oldServiceId) return false;
-        const sUrl = s?.serviceDetails?.url || s?.url || '';
-        const isUrlMatch = (workerUrl && sUrl && (sUrl.includes(workerUrl) || workerUrl.includes(sUrl))) ||
-                           (oldUrl && sUrl && (sUrl.includes(oldUrl) || oldUrl.includes(sUrl)));
-        const isNameMatch = s?.name && s.name.startsWith('kingmc-worker-');
-        return isUrlMatch || isNameMatch;
-      });
-
-      for (const w of matchedWorkers) {
-        console.log(`[RenderManager] 🗑️ Dọn dẹp Worker cũ tồn đọng: [${w.id}] (${w.name})...`);
-        await deleteService(targetAccount.apiKey, w.id);
-        await new Promise(r => setTimeout(r, 1500));
-      }
-    } catch (cleanErr) {
-      console.warn(`[RenderManager] ⚠️ Cảnh báo quét dọn dẹp worker cũ: ${cleanErr.message}`);
-    }
-
-    // Gỡ Worker cũ khỏi QueueDispatcher & MongoDB Worker
-    if (oldUrl) {
-      if (queueDispatcher) {
-        const allW = await queueDispatcher.getAllWorkers();
-        const found = allW.find(w => w.url === oldUrl || oldUrl.includes(w.url));
-        if (found) {
-          await queueDispatcher.removeWorker(found._id).catch(() => {});
-          console.log(`[RenderManager] Đã gỡ Worker cũ khỏi QueueDispatcher: ${oldUrl}`);
-        }
-      } else if (isMongoAvailable()) {
-        const WorkerModel = getWorkerModel();
-        await WorkerModel.deleteMany({ url: { $regex: oldUrl } });
-      }
-
-      // Thông báo Google Apps Script gỡ URL cũ
-      await notifyGoogleAppsScript('remove', oldUrl);
-    }
-
-    // 3. Chọn ngẫu nhiên Region mới (khác với Region cũ)
-    const newRegion = getRandomRegion(targetAccount.allowedRegions, oldRegion);
-    console.log(`[RenderManager] Đổi khu vực: [${oldRegion}] ➔ [${newRegion}]`);
-
-    // 4. Tạo Service mới trên Render
-    const masterUrl = (await getSystemConfig('master_url', null)) || process.env.RENDER_EXTERNAL_URL || process.env.MASTER_URL || '';
-    const newService = await createWorkerService(targetAccount, {
-      region: newRegion,
-      masterUrl,
-      workerSecret: process.env.WORKER_SECRET,
-      mcServerHosts: process.env.MC_SERVER_HOSTS,
-      mcServerPort: process.env.MC_SERVER_PORT
+    return await rotateSingleAccount(targetAccount, {
+      workerUrl,
+      reason,
+      queueDispatcher,
+      discordClient,
+      adminId
     });
-
-    const newServiceId = newService.id;
-    console.log(`[RenderManager] Đã tạo Service mới trên Render. ID: [${newServiceId}]`);
-
-    // 5. Lấy Public URL của Service mới
-    let newUrl = newService?.serviceDetails?.url || newService?.url;
-    if (!newUrl) {
-      newUrl = await waitForServiceUrl(targetAccount.apiKey, newServiceId);
-    }
-    if (!newUrl && newService.slug) {
-      newUrl = `https://${newService.slug}.onrender.com`;
-    }
-
-    console.log(`[RenderManager] 🌐 Public URL của Worker mới: [${newUrl || 'Đang cấp phát...'}]`);
-
-    // 6. Cập nhật trạng thái vào MongoDB (Collection: render_accounts)
-    await saveRenderAccount({
-      accountId: targetAccount.accountId,
-      activeServiceId: newServiceId,
-      activeServiceUrl: newUrl || '',
-      currentRegion: newRegion,
-      lastRotatedAt: new Date(),
-      rotationCount: (targetAccount.rotationCount || 0) + 1
-    });
-
-    // 7. Thêm Worker mới vào QueueDispatcher / MongoDB WorkerModel
-    if (newUrl) {
-      if (queueDispatcher) {
-        await queueDispatcher.addWorker({
-          name: `Worker-${newRegion.toUpperCase()}`,
-          url: newUrl,
-          secret: process.env.WORKER_SECRET || ''
-        }).catch(e => console.warn('[RenderManager] Lỗi thêm worker vào QueueDispatcher:', e.message));
-      }
-
-      // 8. Đăng ký URL mới sang Google Apps Script để kích hoạt ping 5 phút/lần
-      await notifyGoogleAppsScript('add', newUrl);
-    }
-
-    // 9. Gửi thông báo đến Admin Discord
-    if (discordClient && adminId) {
-      try {
-        const adminUser = await discordClient.users.fetch(adminId);
-        if (adminUser) {
-          const alertMessage = 
-            `🔄 **[Render Auto-Rotation] Đã Xoay Worker Thành Công!**\n` +
-            `• **Lý do kích hoạt:** \`${reason}\`\n` +
-            `• **Tài khoản Render:** \`${targetAccount.name || targetAccount.accountId}\`\n` +
-            `• **Đổi Region:** \`${oldRegion}\` ➔ \`${newRegion}\` (Đã nhận dải IP mới)\n` +
-            `• **Worker cũ (Đã xóa):** \`${oldUrl || 'N/A'}\`\n` +
-            `• **Worker mới (Đang deploy):** \`${newUrl || 'Đang tạo'}\`\n` +
-            `• **Google Apps Script:** Đã cập nhật URL ping giữ Online\n` +
-            `• **MongoDB Atlas:** Đã đồng bộ trạng thái vĩnh viễn.`;
-          await adminUser.send(alertMessage);
-        }
-      } catch (err) {
-        console.warn('[RenderManager] Không thể gửi thông báo Discord Admin:', err.message);
-      }
-    }
-
-    console.log(`[RenderManager] 🎉 Quy trình Xoay Vòng Worker hoàn tất thành công!\n`);
-    return {
-      success: true,
-      serviceId: newServiceId,
-      url: newUrl,
-      region: newRegion
-    };
 
   } catch (err) {
     console.error(`[RenderManager] ❌ Lỗi nghiêm trọng trong quá trình xoay Worker: ${err.message}`);
@@ -504,5 +580,8 @@ module.exports = {
   createWorkerService,
   waitForServiceUrl,
   notifyGoogleAppsScript,
+  rotateSingleAccount,
+  rotateAllWorkers,
   rotateWorker
 };
+

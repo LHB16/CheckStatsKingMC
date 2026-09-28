@@ -614,9 +614,14 @@ async function handleDashboardRequest(req, res, context) {
       try {
         const body = await parseJsonBody(req);
         const reason = body.reason || 'Kích hoạt kiểm thử thủ công từ Master Web UI';
+        const rotateAll = body.rotateAll ?? (!body.accountId && !body.workerUrl);
+        const accountId = body.accountId || null;
+
         renderManager.rotateWorker({
           workerUrl: body.workerUrl || '',
           reason,
+          rotateAll,
+          accountId,
           username: body.username || 'WebUITest',
           queueDispatcher,
           discordClient,
@@ -627,9 +632,13 @@ async function handleDashboardRequest(req, res, context) {
           console.error('[Dashboard] Lỗi xoay thủ công:', e.message);
         });
 
+        const msg = rotateAll 
+          ? 'Đã kích hoạt tiến trình xoay TẤT CẢ Worker trong nền! Hệ thống đang làm mới toàn bộ các tài khoản.'
+          : 'Đã kích hoạt tiến trình xoay Worker trong nền! Hệ thống đang tạo service mới và cập nhật dải IP.';
+
         return sendJson(res, 200, {
           success: true,
-          message: 'Đã kích hoạt tiến trình xoay Worker trong nền! Hệ thống đang tạo service mới và cập nhật dải IP.'
+          message: msg
         });
       } catch (err) {
         return sendJson(res, 500, { success: false, error: err.message });

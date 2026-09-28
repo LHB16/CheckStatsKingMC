@@ -37,6 +37,8 @@ export default function RenderRotationPage() {
   const [loading, setLoading] = useState(true);
   const [savingSettings, setSavingSettings] = useState(false);
   const [rotating, setRotating] = useState(false);
+  const [rotatingId, setRotatingId] = useState(null);
+  const [refreshingList, setRefreshingList] = useState(false);
   const [rotationMsg, setRotationMsg] = useState(null);
 
   // Modal State
@@ -82,6 +84,16 @@ export default function RenderRotationPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Refresh Worker List
+  const handleRefreshList = async () => {
+    setRefreshingList(true);
+    try {
+      await fetchData();
+    } finally {
+      setRefreshingList(false);
+    }
+  };
 
   // Save Settings
   const handleSaveSettings = async (e) => {
@@ -200,16 +212,17 @@ export default function RenderRotationPage() {
     }
   };
 
-  // Manual Test Rotation Trigger
-  const handleManualRotate = async () => {
-    if (!window.confirm('Bạn có muốn kích hoạt thử nghiệm quy trình Xoay Vòng Worker ngay bây giờ? Master sẽ tạo 1 Worker mới tại Region khác và cập nhật danh sách.')) return;
+  // Xoay đồng loạt TẤT CẢ Worker
+  const handleManualRotateAll = async () => {
+    if (!window.confirm('Bạn có chắc chắn muốn xoay đồng loạt TẤT CẢ Worker trong hệ thống? Hệ thống sẽ tạo Worker mới tại Region mới cho từng tài khoản và dọn dẹp các service cũ.')) return;
     setRotating(true);
-    setRotationMsg('Đang gửi tín hiệu kích hoạt xoay vòng tới Master...');
+    setRotationMsg('Đang gửi tín hiệu xoay toàn bộ Worker tới Master...');
     try {
       const res = await api.triggerManualRotation({
-        reason: 'Thử nghiệm kích hoạt xoay Worker thủ công từ Web UI Dashboard'
+        rotateAll: true,
+        reason: 'Xoay đồng loạt tất cả Worker từ Web UI Dashboard'
       });
-      setRotationMsg(res.message || 'Đã kích hoạt thành công tiến trình xoay Worker!');
+      setRotationMsg(res.message || 'Đã kích hoạt tiến trình xoay toàn bộ Worker!');
       setTimeout(() => {
         fetchData();
       }, 5000);
@@ -217,6 +230,28 @@ export default function RenderRotationPage() {
       setRotationMsg(`❌ Lỗi: ${err.message}`);
     } finally {
       setRotating(false);
+    }
+  };
+
+  // Xoay riêng 1 Worker của tài khoản cụ thể
+  const handleRotateSingle = async (acc) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn xoay Worker cho tài khoản "${acc.name || acc.accountId}"? Service cũ sẽ bị xóa và Worker mới được tạo ở Region khác.`)) return;
+    setRotatingId(acc.accountId);
+    setRotationMsg(`Đang kích hoạt xoay Worker cho [${acc.name || acc.accountId}]...`);
+    try {
+      const res = await api.triggerManualRotation({
+        rotateAll: false,
+        accountId: acc.accountId,
+        reason: `Xoay riêng tài khoản ${acc.name || acc.accountId} từ Web UI Dashboard`
+      });
+      setRotationMsg(res.message || `Đã kích hoạt xoay Worker cho [${acc.name || acc.accountId}]!`);
+      setTimeout(() => {
+        fetchData();
+      }, 5000);
+    } catch (err) {
+      setRotationMsg(`❌ Lỗi xoay [${acc.name || acc.accountId}]: ${err.message}`);
+    } finally {
+      setRotatingId(null);
     }
   };
 
@@ -281,14 +316,15 @@ export default function RenderRotationPage() {
               </span>
             </div>
 
-            {/* Manual Rotate Button */}
+            {/* Rotate All Workers Button */}
             <button
-              onClick={handleManualRotate}
+              onClick={handleManualRotateAll}
               disabled={rotating}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium text-xs shadow-lg shadow-orange-950/30 transition-all disabled:opacity-50"
+              title="Xoay đồng loạt tất cả các Worker trên toàn bộ tài khoản"
             >
               <RefreshCw className={`w-4 h-4 ${rotating ? 'animate-spin' : ''}`} strokeWidth={1.75} />
-              <span>{rotating ? 'Đang kích hoạt...' : 'Thử nghiệm xoay ngay'}</span>
+              <span>{rotating ? 'Đang xoay tất cả...' : 'Xoay Tất Cả Worker'}</span>
             </button>
 
             {/* Add Account Button */}
@@ -385,9 +421,19 @@ export default function RenderRotationPage() {
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-semibold text-sm text-white flex items-center gap-2">
               <Server className="w-4 h-4 text-emerald-400" strokeWidth={1.75} />
-              Danh Sách Tài Khoản Render Pool ({accounts.length})
+              <span>Danh Sách Worker Quản Lý ({accounts.length})</span>
             </h3>
-            <span className="text-xs text-slate-400">Được lưu trữ bền vững trên MongoDB Atlas</span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleRefreshList}
+                disabled={refreshingList}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white text-xs font-medium border border-slate-700/60 shadow-sm transition-all disabled:opacity-50"
+                title="Làm mới trạng thái danh sách worker"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${refreshingList ? 'animate-spin text-emerald-400' : 'text-slate-400'}`} strokeWidth={1.75} />
+                <span>{refreshingList ? 'Đang tải...' : 'Làm mới'}</span>
+              </button>
+            </div>
           </div>
 
           {accounts.length === 0 ? (
@@ -491,15 +537,26 @@ export default function RenderRotationPage() {
                     </div>
                   </div>
 
-                  {/* Footer / Test Connection Button */}
-                  <div className="pt-3 border-t border-slate-800/60 flex items-center justify-between gap-2">
+                  {/* Footer / Actions Button */}
+                  <div className="pt-3 border-t border-slate-800/60 flex items-center gap-2">
                     <button
                       onClick={() => handleTestConnection(acc)}
                       disabled={testingId === acc.accountId}
-                      className="w-full py-1.5 px-3 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-xs font-medium text-slate-200 transition-colors flex items-center justify-center gap-1.5"
+                      className="flex-1 py-1.5 px-2.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-xs font-medium text-slate-200 transition-colors flex items-center justify-center gap-1.5"
+                      title="Kiểm tra kết nối Render API"
                     >
                       <Activity className={`w-3.5 h-3.5 text-sky-400 ${testingId === acc.accountId ? 'animate-spin' : ''}`} strokeWidth={1.75} />
-                      <span>{testingId === acc.accountId ? 'Đang kiểm tra...' : 'Kiểm tra Render API'}</span>
+                      <span className="truncate">{testingId === acc.accountId ? 'Đang test...' : 'Test API'}</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleRotateSingle(acc)}
+                      disabled={rotating || rotatingId === acc.accountId}
+                      className="flex-1 py-1.5 px-2.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-medium transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+                      title="Xoay Worker của riêng tài khoản này ngay lập tức"
+                    >
+                      <RotateCcw className={`w-3.5 h-3.5 text-amber-400 ${rotatingId === acc.accountId ? 'animate-spin' : ''}`} strokeWidth={1.75} />
+                      <span className="truncate">{rotatingId === acc.accountId ? 'Đang xoay...' : 'Xoay Worker'}</span>
                     </button>
                   </div>
 
