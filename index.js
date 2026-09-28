@@ -22,6 +22,7 @@ const skinHelper = require('./helpers/skinHelper');
 const { getCustomEmoji } = require('./helpers/utils');
 const { connectMongo, isMongoAvailable } = require('./helpers/mongoHelper');
 const { handleDashboardRequest, syncDiscordGuilds } = require('./handlers/dashboardHandler');
+const renderManager = require('./helpers/renderManager');
 
 
 // Cấu hình từ .env
@@ -133,6 +134,43 @@ if (BOT_ROLE === 'worker' || BOT_ROLE === 'standalone') {
     }
   });
 
+  localMcBot.on('ipLimitDetected', async ({ username, reason }) => {
+    console.warn(`[Worker] 🚨 Nhận tín hiệu ipLimitDetected: [${username}] - Lý do: [${reason}]`);
+    const MASTER_URL = process.env.MASTER_URL;
+    if (MASTER_URL) {
+      try {
+        const targetUrl = new URL('/api/worker-ip-limit', MASTER_URL);
+        const transport = targetUrl.protocol === 'https:' ? require('https') : require('http');
+        const payload = JSON.stringify({
+          username,
+          reason,
+          workerUrl: process.env.RENDER_EXTERNAL_URL || process.env.WORKER_URL || ''
+        });
+        const reqLimit = transport.request(targetUrl.href, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-worker-secret': WORKER_SECRET || ''
+          }
+        });
+        reqLimit.on('error', (err) => console.error(`[Worker] Lỗi gửi ipLimitDetected về Master: ${err.message}`));
+        reqLimit.write(payload);
+        reqLimit.end();
+      } catch (err) {
+        console.error(`[Worker] Lỗi gửi ipLimitDetected: ${err.message}`);
+      }
+    } else if (BOT_ROLE === 'standalone') {
+      renderManager.rotateWorker({
+        workerUrl: process.env.RENDER_EXTERNAL_URL || 'standalone',
+        reason,
+        username,
+        queueDispatcher,
+        discordClient: global.globalDiscordClient,
+        adminId: ADMIN_ID
+      }).catch(e => console.error('[Standalone] Lỗi xoay worker:', e.message));
+    }
+  });
+
   localMcBot.connect();
 }
 
@@ -147,8 +185,11 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
 
 // Kết nối MongoDB tập trung sớm và nạp Worker
 connectMongo().then(async (connected) => {
-  if (connected && queueDispatcher) {
-    await queueDispatcher.initWorkers();
+  if (connected) {
+    await configHelper.syncFromMongo();
+    if (queueDispatcher) {
+      await queueDispatcher.initWorkers();
+    }
   }
 }).catch(err => {
   console.warn('[MongoHelper] Lỗi khởi tạo MongoDB ban đầu:', err.message);
@@ -302,6 +343,50 @@ const server = http.createServer(async (req, res) => {
         }
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // Endpoint API nhận báo cáo Worker bị giới hạn IP / Ban IP -> Kích hoạt xoay Worker trên Render
+  if (url.pathname === '/api/worker-ip-limit' && req.method === 'POST') {
+    if (WORKER_SECRET) {
+      const authHeader = req.headers['x-worker-secret'];
+      if (authHeader !== WORKER_SECRET) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ success: false, error: 'Unauthorized: Sai WORKER_SECRET' }));
+      }
+    }
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body);
+        const { username, reason, workerUrl } = payload;
+        console.warn(`[Master API] 🚨 Nhận báo cáo IP Limit từ Worker [${username || 'N/A'}]: ${reason}`);
+        
+        // Kích hoạt tiến trình Xoay Render Worker bất đồng bộ
+        renderManager.rotateWorker({
+          workerUrl,
+          reason,
+          username,
+          queueDispatcher,
+          discordClient: global.globalDiscordClient,
+          adminId: ADMIN_ID
+        }).then(result => {
+          console.log('[Master API] Kết quả xoay Render Worker:', result);
+        }).catch(err => {
+          console.error('[Master API] Lỗi khi xoay Render Worker:', err.message);
+        });
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({
+          success: true,
+          message: 'Đã nhận báo cáo giới hạn IP và bắt đầu tiến trình xoay Worker.'
+        }));
       } catch (err) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: false, error: err.message }));

@@ -1,0 +1,24 @@
+[
+  {
+    "accountId": "render_acc_01",
+    "name": "Tài khoản Render 1 (Cá nhân)",
+    "apiKey": "rnd_xxxxxxxxxxxxxxxxxxxxxxxx",
+    "ownerId": "usr_xxxxxxxxxxxxxxxxxxxxxxxx",
+    "repo": "https://github.com/luuhuubinh/botCheckStatsKingMC",
+    "branch": "main",
+    "allowedRegions": ["singapore", "oregon", "ohio", "frankfurt", "virginia"],
+    "maxServices": 1,
+    "isActive": true
+  },
+  {
+    "accountId": "render_acc_02",
+    "name": "Tài khoản Render 2 (Dự phòng)",
+    "apiKey": "rnd_yyyyyyyyyyyyyyyyyyyyyyyy",
+    "ownerId": "usr_yyyyyyyyyyyyyyyyyyyyyyyy",
+    "repo": "https://github.com/luuhuubinh/botCheckStatsKingMC",
+    "branch": "main",
+    "allowedRegions": ["singapore", "oregon", "ohio", "frankfurt", "virginia"],
+    "maxServices": 1,
+    "isActive": true
+  }
+]

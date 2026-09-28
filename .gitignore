@@ -7,3 +7,5 @@ debug/
 netlify-pages/
 data/
 .vscode/
+config/render_accounts.json
+config/*.local.json

@@ -88,6 +88,54 @@ function setupDonationConfigModel() {
 }
 
 let LeaderboardModel = null;
+let RenderAccountModel = null;
+let SystemConfigModel = null;
+
+// Khởi tạo Render Account Schema (Lưu trữ cấu hình xoay Render trên MongoDB)
+function setupRenderAccountModel() {
+  if (RenderAccountModel) return RenderAccountModel;
+
+  const RenderAccountSchema = new mongoose.Schema({
+    accountId: { type: String, required: true, unique: true, index: true },
+    name: { type: String, default: '' },
+    apiKey: { type: String, required: true },
+    ownerId: { type: String, default: '' },
+    repo: { type: String, default: '' },
+    branch: { type: String, default: 'main' },
+    allowedRegions: { 
+      type: [String], 
+      default: ['singapore', 'oregon', 'ohio', 'frankfurt', 'virginia'] 
+    },
+    currentRegion: { type: String, default: '' },
+    activeServiceId: { type: String, default: '' },
+    activeServiceUrl: { type: String, default: '' },
+    maxServices: { type: Number, default: 1 },
+    isActive: { type: Boolean, default: true, index: true },
+    lastRotatedAt: { type: Date, default: null },
+    rotationCount: { type: Number, default: 0 }
+  }, {
+    timestamps: true
+  });
+
+  RenderAccountModel = mongoose.models.RenderAccount || mongoose.model('RenderAccount', RenderAccountSchema);
+  return RenderAccountModel;
+}
+
+// Khởi tạo System Config Schema (Cấu hình động cho Bot, GAS Webhook, Rotation)
+function setupSystemConfigModel() {
+  if (SystemConfigModel) return SystemConfigModel;
+
+  const SystemConfigSchema = new mongoose.Schema({
+    key: { type: String, required: true, unique: true, index: true },
+    value: { type: mongoose.Schema.Types.Mixed, required: true },
+    description: { type: String, default: '' }
+  }, {
+    timestamps: true
+  });
+
+  SystemConfigModel = mongoose.models.SystemConfig || mongoose.model('SystemConfig', SystemConfigSchema);
+  return SystemConfigModel;
+}
 
 // Khởi tạo Leaderboard Cache Schema
 function setupLeaderboardModel() {
@@ -115,6 +163,14 @@ function getLeaderboardModel() {
   return setupLeaderboardModel();
 }
 
+function getRenderAccountModel() {
+  return setupRenderAccountModel();
+}
+
+function getSystemConfigModel() {
+  return setupSystemConfigModel();
+}
+
 // Kết nối MongoDB tập trung
 async function connectMongo() {
   const mongoUri = process.env.MONGODB_URI;
@@ -129,6 +185,8 @@ async function connectMongo() {
     setupDiscordGuildModel();
     setupDonationConfigModel();
     setupLeaderboardModel();
+    setupRenderAccountModel();
+    setupSystemConfigModel();
     return true;
   }
 
@@ -142,6 +200,8 @@ async function connectMongo() {
     setupDiscordGuildModel();
     setupDonationConfigModel();
     setupLeaderboardModel();
+    setupRenderAccountModel();
+    setupSystemConfigModel();
     console.log('✅ [MongoHelper] Kết nối MongoDB Atlas THÀNH CÔNG!');
     return true;
   } catch (err) {
@@ -236,6 +296,94 @@ async function getDonationConfig(key = 'donate_qr') {
   return doc;
 }
 
+/**
+ * Lấy cấu hình hệ thống từ MongoDB theo key (có giá trị mặc định)
+ */
+async function getSystemConfig(key, defaultValue = null) {
+  try {
+    if (!isMongoAvailable()) return defaultValue;
+    const Model = setupSystemConfigModel();
+    const doc = await Model.findOne({ key }).lean();
+    return doc ? doc.value : defaultValue;
+  } catch (err) {
+    console.warn(`[MongoHelper] Lỗi lấy SystemConfig [${key}]:`, err.message);
+    return defaultValue;
+  }
+}
+
+/**
+ * Lưu/Cập nhật cấu hình hệ thống vào MongoDB
+ */
+async function setSystemConfig(key, value, description = '') {
+  try {
+    if (!isMongoAvailable()) return false;
+    const Model = setupSystemConfigModel();
+    await Model.findOneAndUpdate(
+      { key },
+      { key, value, description },
+      { upsert: true, returnDocument: 'after' }
+    );
+    return true;
+  } catch (err) {
+    console.error(`[MongoHelper] Lỗi lưu SystemConfig [${key}]:`, err.message);
+    return false;
+  }
+}
+
+/**
+ * Lấy danh sách toàn bộ Render Account từ MongoDB
+ */
+async function getAllRenderAccounts() {
+  try {
+    if (!isMongoAvailable()) return [];
+    const Model = setupRenderAccountModel();
+    return await Model.find().sort({ createdAt: 1 }).lean();
+  } catch (err) {
+    console.warn('[MongoHelper] Lỗi lấy danh sách RenderAccount:', err.message);
+    return [];
+  }
+}
+
+/**
+ * Lưu hoặc cập nhật Render Account vào MongoDB
+ */
+async function saveRenderAccount(accountData) {
+  try {
+    if (!isMongoAvailable()) return null;
+    const Model = setupRenderAccountModel();
+    const accountId = accountData.accountId || accountData.id;
+    if (!accountId) throw new Error('Thiếu accountId khi lưu RenderAccount');
+
+    const updatePayload = { ...accountData, accountId };
+    delete updatePayload.id;
+
+    const doc = await Model.findOneAndUpdate(
+      { accountId },
+      updatePayload,
+      { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
+    ).lean();
+    return doc;
+  } catch (err) {
+    console.error('[MongoHelper] Lỗi lưu RenderAccount:', err.message);
+    throw err;
+  }
+}
+
+/**
+ * Xóa Render Account khỏi MongoDB
+ */
+async function deleteRenderAccount(accountId) {
+  try {
+    if (!isMongoAvailable()) return false;
+    const Model = setupRenderAccountModel();
+    const res = await Model.findOneAndDelete({ accountId });
+    return !!res;
+  } catch (err) {
+    console.error('[MongoHelper] Lỗi xóa RenderAccount:', err.message);
+    return false;
+  }
+}
+
 module.exports = {
   connectMongo,
   isMongoAvailable,
@@ -243,10 +391,19 @@ module.exports = {
   getDiscordGuildModel,
   getDonationConfigModel,
   getLeaderboardModel,
+  getRenderAccountModel,
+  getSystemConfigModel,
   setupWorkerModel,
   setupDiscordGuildModel,
   setupDonationConfigModel,
   setupLeaderboardModel,
+  setupRenderAccountModel,
+  setupSystemConfigModel,
   seedDonationImage,
-  getDonationConfig
+  getDonationConfig,
+  getSystemConfig,
+  setSystemConfig,
+  getAllRenderAccounts,
+  saveRenderAccount,
+  deleteRenderAccount
 };

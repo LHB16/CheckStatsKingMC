@@ -259,6 +259,22 @@ function waitForGuiUpdate(bot, timeoutMs = 1500) {
   });
 }
 
+function checkIpLimit(text) {
+  if (!text || typeof text !== 'string') return false;
+  const t = text.toLowerCase();
+  return t.includes('vượt quá giới hạn tối đa đăng ký') ||
+         t.includes('vuot qua gioi han toi da dang ky') ||
+         (t.includes('vượt quá giới hạn') && t.includes('đăng ký')) ||
+         (t.includes('vuot qua gioi han') && t.includes('dang ky')) ||
+         (t.includes('giới hạn') && t.includes('đăng ký') && t.includes('tài khoản')) ||
+         (t.includes('gioi han') && t.includes('dang ky') && t.includes('tai khoan')) ||
+         t.includes('your ip is banned') ||
+         t.includes('địa chỉ ip của bạn đã bị') ||
+         t.includes('dia chi ip cua ban da bi') ||
+         t.includes('ip bị cấm') ||
+         t.includes('ip bi cam');
+}
+
 class PersistentBot extends EventEmitter {
   constructor(credentials, hosts, port) {
     super();
@@ -329,7 +345,11 @@ class PersistentBot extends EventEmitter {
       console.warn(`[MC-Bot] Bị kick: ${cleanReason}`);
 
       const lowerReason = cleanReason.toLowerCase();
-      if (lowerReason.includes('ban') || lowerReason.includes('banned') || lowerReason.includes('bị cấm') || lowerReason.includes('bi cam') || lowerReason.includes('bị ban') || lowerReason.includes('bi ban')) {
+      if (checkIpLimit(lowerReason)) {
+        console.warn(`[MC-Bot] 🚨 ĐÃ PHÁT HIỆN BỊ KICK DO GIỚI HẠN IP: ${cleanReason}`);
+        this.emit('ipLimitDetected', { username: this.credentials.username, reason: cleanReason });
+        this.emit('notifyAdmin', `🚨 **Worker [\`${this.credentials.username}\`]** bị kick do giới hạn IP KingMC: \`${cleanReason}\``);
+      } else if (lowerReason.includes('ban') || lowerReason.includes('banned') || lowerReason.includes('bị cấm') || lowerReason.includes('bi cam') || lowerReason.includes('bị ban') || lowerReason.includes('bi ban')) {
         this.emit('banDetected', { username: this.credentials.username, reason: cleanReason });
       } else {
         this.emit('notifyAdmin', `⚠️ **Worker [\`${this.credentials.username}\`]** bị kick khỏi server! Lý do: \`${cleanReason}\``);
@@ -413,7 +433,19 @@ class PersistentBot extends EventEmitter {
                              lowerMsg.includes('điều này bị cấm') || 
                              lowerMsg.includes('dieu nay bi cam');
       
-      // Kiểm tra xem có tin nhắn báo bị ban hay không
+      // 1. Kiểm tra xem có phải thông báo giới hạn IP hoặc cấm IP không
+      if (checkIpLimit(lowerMsg)) {
+        console.warn(`[MC-Bot] 🚨 ĐÃ PHÁT HIỆN GIỚI HẠN IP HOẶC BỊ CẤM IP: ${cleanMsg}`);
+        this.emit('ipLimitDetected', { 
+          username: this.credentials.username, 
+          reason: cleanMsg 
+        });
+        this.emit('notifyAdmin', `🚨 **Worker [\`${this.credentials.username}\`]** đạt giới hạn đăng ký IP KingMC: \`${cleanMsg}\``);
+        if (this.bot) this.bot.end('Reconnecting due to IP Limit');
+        return;
+      }
+
+      // 2. Kiểm tra xem có tin nhắn báo bị ban hay không
       if (!isSystemNotice && (lowerMsg.includes('ban') || lowerMsg.includes('banned') || lowerMsg.includes('bị cấm') || lowerMsg.includes('bi cam') || lowerMsg.includes('bị ban') || lowerMsg.includes('bi ban'))) {
         if (lowerMsg.includes('permanently') || lowerMsg.includes('bị cấm') || lowerMsg.includes('bị ban') || lowerMsg.includes('phạt cấm') || lowerMsg.includes('you are banned')) {
           console.warn(`[MC-Bot] 🚨 ĐÃ PHÁT HIỆN THÔNG BÁO BỊ BAN: ${cleanMsg}`);
