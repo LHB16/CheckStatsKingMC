@@ -15,10 +15,11 @@ const {
 const RENDER_API_BASE = 'https://api.render.com/v1';
 const DEFAULT_REGIONS = ['singapore', 'oregon', 'ohio', 'frankfurt', 'virginia'];
 
-// Lock chống xoay dồn dập (Cooldown)
-let isRotating = false;
-let lastRotationTime = 0;
-const ROTATION_COOLDOWN_MS = 60000; // 60 giây giữa các lần xoay
+// Quản lý Lock và Cooldown theo từng tài khoản riêng biệt để không chặn lẫn nhau
+const activeAccountRotations = new Set();
+const accountCooldownMap = new Map();
+const ACCOUNT_COOLDOWN_MS = 25000; // 25 giây giữa các lần xoay cho cùng 1 tài khoản
+let isRotatingAll = false;
 
 /**
  * Gọi Render API với fetch
@@ -192,6 +193,7 @@ async function createWorkerService(account, options = {}) {
   // Chuẩn bị biến môi trường cho Worker (Chuẩn Render API: mảng các { key, value } chuỗi)
   const envVars = [
     { key: 'BOT_ROLE', value: 'worker' },
+    { key: 'RENDER_ACCOUNT_ID', value: String(account.accountId || '') },
     { key: 'MASTER_URL', value: String(masterUrl || process.env.RENDER_EXTERNAL_URL || process.env.MASTER_URL || '') },
     { key: 'WORKER_SECRET', value: String(workerSecret || process.env.WORKER_SECRET || '') },
     { key: 'MC_SERVER_HOSTS', value: String(mcServerHosts || process.env.MC_SERVER_HOSTS || 'sgp.kingmc.vn,kingmc.vn') },
@@ -499,6 +501,7 @@ async function rotateWorker({
   username = '',
   rotateAll = false,
   accountId = null,
+  serviceId = null,
   queueDispatcher = null,
   discordClient = null,
   adminId = ''
@@ -512,61 +515,95 @@ async function rotateWorker({
     return { success: false, reason: 'Auto-Rotation is disabled' };
   }
 
-  // Kiểm tra Cooldown
-  if (isRotating || (now - lastRotationTime < ROTATION_COOLDOWN_MS)) {
-    console.log(`[RenderManager] ⏳ Đang trong thời gian cooldown xoay vòng (còn ${Math.ceil((ROTATION_COOLDOWN_MS - (now - lastRotationTime)) / 1000)}s). Bỏ qua request.`);
-    return { success: false, reason: 'Cooldown active' };
-  }
-
-  isRotating = true;
-  lastRotationTime = now;
-
-  try {
-    // 1. Trường hợp xoay đồng loạt TẤT CẢ Worker
-    if (rotateAll) {
+  // 1. Trường hợp xoay đồng loạt TẤT CẢ Worker
+  if (rotateAll) {
+    if (isRotatingAll) {
+      console.log('[RenderManager] ⏳ Đang có tiến trình xoay toàn bộ Worker đang chạy. Bỏ qua request.');
+      return { success: false, reason: 'Rotate all already in progress' };
+    }
+    isRotatingAll = true;
+    try {
       return await rotateAllWorkers({
         reason,
         queueDispatcher,
         discordClient,
         adminId
       });
+    } finally {
+      isRotatingAll = false;
     }
+  }
 
+  try {
     // 2. Tìm tài khoản Render cụ thể
     const accounts = await getAccounts();
     if (accounts.length === 0) {
       throw new Error('Không tìm thấy tài khoản Render nào trong MongoDB (Collection: render_accounts).');
     }
 
+    const cleanUrl = (u) => (u || '').replace(/^https?:\/\//, '').replace(/\/+$/, '').toLowerCase();
+
     let targetAccount = null;
+
+    // Ưu tiên 1: Theo accountId
     if (accountId) {
       targetAccount = accounts.find(a => a.accountId === accountId);
     }
 
-    if (!targetAccount && workerUrl) {
-      targetAccount = accounts.find(a => 
-        (a.activeServiceUrl && a.activeServiceUrl.includes(workerUrl)) ||
-        (a.activeServiceUrl && workerUrl.includes(a.activeServiceUrl))
-      );
+    // Ưu tiên 2: Theo serviceId
+    if (!targetAccount && serviceId) {
+      targetAccount = accounts.find(a => a.activeServiceId === serviceId);
     }
 
+    // Ưu tiên 3: Theo Worker URL
+    if (!targetAccount && workerUrl) {
+      const cWorker = cleanUrl(workerUrl);
+      targetAccount = accounts.find(a => {
+        if (!a.activeServiceUrl) return false;
+        const cActive = cleanUrl(a.activeServiceUrl);
+        return cActive === cWorker || cActive.includes(cWorker) || cWorker.includes(cActive);
+      });
+    }
+
+    // Ưu tiên 4: Fallback tài khoản tiếp theo
     if (!targetAccount) {
       targetAccount = await getNextAvailableAccount();
     }
 
-    return await rotateSingleAccount(targetAccount, {
-      workerUrl,
-      reason,
-      queueDispatcher,
-      discordClient,
-      adminId
-    });
+    const targetId = targetAccount.accountId;
+
+    // Kiểm tra nếu tài khoản này đang trong tiến trình xoay
+    if (activeAccountRotations.has(targetId)) {
+      console.log(`[RenderManager] ⏳ Tài khoản [${targetAccount.name || targetId}] đang trong quá trình xoay. Bỏ qua request trùng lặp.`);
+      return { success: false, reason: 'Account rotation already in progress' };
+    }
+
+    // Kiểm tra Cooldown riêng của tài khoản này
+    const lastRotatedTime = accountCooldownMap.get(targetId) || 0;
+    if (now - lastRotatedTime < ACCOUNT_COOLDOWN_MS) {
+      const remainingSec = Math.ceil((ACCOUNT_COOLDOWN_MS - (now - lastRotatedTime)) / 1000);
+      console.log(`[RenderManager] ⏳ Tài khoản [${targetAccount.name || targetId}] đang trong cooldown (còn ${remainingSec}s). Bỏ qua request.`);
+      return { success: false, reason: 'Account cooldown active' };
+    }
+
+    activeAccountRotations.add(targetId);
+    accountCooldownMap.set(targetId, now);
+
+    try {
+      return await rotateSingleAccount(targetAccount, {
+        workerUrl,
+        reason,
+        queueDispatcher,
+        discordClient,
+        adminId
+      });
+    } finally {
+      activeAccountRotations.delete(targetId);
+    }
 
   } catch (err) {
     console.error(`[RenderManager] ❌ Lỗi nghiêm trọng trong quá trình xoay Worker: ${err.message}`);
     return { success: false, error: err.message };
-  } finally {
-    isRotating = false;
   }
 }
 

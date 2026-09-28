@@ -142,6 +142,9 @@ if (BOT_ROLE === 'worker' || BOT_ROLE === 'standalone') {
         const targetUrl = new URL('/api/worker-ip-limit', MASTER_URL);
         const transport = targetUrl.protocol === 'https:' ? require('https') : require('http');
         const payload = JSON.stringify({
+          accountId: process.env.RENDER_ACCOUNT_ID || '',
+          serviceId: process.env.RENDER_SERVICE_ID || '',
+          serviceName: process.env.RENDER_SERVICE_NAME || '',
           username,
           reason,
           workerUrl: process.env.RENDER_EXTERNAL_URL || process.env.WORKER_URL || ''
@@ -152,6 +155,12 @@ if (BOT_ROLE === 'worker' || BOT_ROLE === 'standalone') {
             'Content-Type': 'application/json',
             'x-worker-secret': WORKER_SECRET || ''
           }
+        }, (resLimit) => {
+          let resBody = '';
+          resLimit.on('data', chunk => resBody += chunk);
+          resLimit.on('end', () => {
+            console.log(`[Worker] 📡 Kết quả gửi ipLimitDetected về Master: HTTP ${resLimit.statusCode} - ${resBody}`);
+          });
         });
         reqLimit.on('error', (err) => console.error(`[Worker] Lỗi gửi ipLimitDetected về Master: ${err.message}`));
         reqLimit.write(payload);
@@ -212,24 +221,6 @@ setInterval(() => {
 }, 10000);
 
 const server = http.createServer(async (req, res) => {
-  // 1. Phục vụ Web UI Dashboard & Dashboard REST API nếu là Master hoặc Standalone
-  if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
-    try {
-      const handled = await handleDashboardRequest(req, res, {
-        queueDispatcher,
-        discordClient: global.globalDiscordClient,
-        runCheckCycle: () => {
-          if (typeof global.runTrackerCheckCycle === 'function') {
-            return global.runTrackerCheckCycle();
-          }
-          return Promise.reject(new Error('Tiến trình kiểm tra chưa khởi động'));
-        }
-      });
-      if (handled) return;
-    } catch (err) {
-      console.error('[DashboardHandler] Lỗi xử lý request:', err.message);
-    }
-  }
 
   // --- IP Rate Limiting (Chống Spam/DDoS Lớp 7) ---
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
@@ -356,7 +347,7 @@ const server = http.createServer(async (req, res) => {
     if (WORKER_SECRET) {
       const authHeader = req.headers['x-worker-secret'];
       if (authHeader !== WORKER_SECRET) {
-        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.writeHead(401, { 'Content-Type': 'application/json; charset=utf-8' });
         return res.end(JSON.stringify({ success: false, error: 'Unauthorized: Sai WORKER_SECRET' }));
       }
     }
@@ -364,12 +355,14 @@ const server = http.createServer(async (req, res) => {
     req.on('data', chunk => body += chunk);
     req.on('end', async () => {
       try {
-        const payload = JSON.parse(body);
-        const { username, reason, workerUrl } = payload;
-        console.warn(`[Master API] 🚨 Nhận báo cáo IP Limit từ Worker [${username || 'N/A'}]: ${reason}`);
+        const payload = JSON.parse(body || '{}');
+        const { username, reason, workerUrl, accountId, serviceId } = payload;
+        console.warn(`[Master API] 🚨 Nhận báo cáo IP Limit từ Worker [${username || 'N/A'}] (Account: ${accountId || 'N/A'}, Service: ${serviceId || 'N/A'}, URL: ${workerUrl || 'N/A'}): ${reason}`);
         
         // Kích hoạt tiến trình Xoay Render Worker bất đồng bộ
         renderManager.rotateWorker({
+          accountId,
+          serviceId,
           workerUrl,
           reason,
           username,
@@ -388,7 +381,7 @@ const server = http.createServer(async (req, res) => {
           message: 'Đã nhận báo cáo giới hạn IP và bắt đầu tiến trình xoay Worker.'
         }));
       } catch (err) {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
         res.end(JSON.stringify({ success: false, error: err.message }));
       }
     });
@@ -452,8 +445,27 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  res.writeHead(404);
-  res.end();
+  // 2. Phục vụ Web UI Dashboard & Dashboard REST API nếu là Master hoặc Standalone
+  if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
+    try {
+      const handled = await handleDashboardRequest(req, res, {
+        queueDispatcher,
+        discordClient: global.globalDiscordClient,
+        runCheckCycle: () => {
+          if (typeof global.runTrackerCheckCycle === 'function') {
+            return global.runTrackerCheckCycle();
+          }
+          return Promise.reject(new Error('Tiến trình kiểm tra chưa khởi động'));
+        }
+      });
+      if (handled) return;
+    } catch (err) {
+      console.error('[DashboardHandler] Lỗi xử lý request:', err.message);
+    }
+  }
+
+  res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
+  res.end(JSON.stringify({ success: false, error: 'Endpoint không tồn tại' }));
 });
 
 server.listen(PORT, () => {

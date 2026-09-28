@@ -645,8 +645,8 @@ async function handleDashboardRequest(req, res, context) {
       }
     }
 
-    // API không tồn tại
-    return sendJson(res, 404, { success: false, error: 'Endpoint API không tồn tại' });
+    // Không thuộc các route API của Dashboard, nhường quyền cho index.js xử lý tiếp
+    return false;
   }
 
   // ==========================================
@@ -654,6 +654,14 @@ async function handleDashboardRequest(req, res, context) {
   // ==========================================
   const distDir = path.join(__dirname, '../dashboard/dist');
   if (fs.existsSync(distDir)) {
+    // Chỉ phục vụ static file cho method GET hoặc HEAD, tuyệt đối không phục vụ cho /api/* hay /health
+    if (method !== 'GET' && method !== 'HEAD') {
+      return false;
+    }
+    if (pathname.startsWith('/api/') || pathname === '/health') {
+      return false;
+    }
+
     // Chuẩn hóa đường dẫn file tĩnh
     let relativePath = pathname;
     if (relativePath === '/' || relativePath === '/dashboard') {

@@ -299,12 +299,14 @@ class PersistentBot extends EventEmitter {
     this.targetPlayer = null;
     this.currentAction = null; // 'stats' | 'bal' | 'order'
     this.isProcessingOrder = false;
+    this.isIpLimited = false;
   }
 
   connect() {
     this.clearAllTimers();
     this.isBotOnline = false;
     this.isReady = false;
+    this.isIpLimited = false;
 
     const host = this.hosts[this.currentHostIndex];
     console.log(`[MC-Bot] Đang kết nối tới ${host}:${this.port}...`);
@@ -347,6 +349,7 @@ class PersistentBot extends EventEmitter {
       const lowerReason = cleanReason.toLowerCase();
       if (checkIpLimit(lowerReason)) {
         console.warn(`[MC-Bot] 🚨 ĐÃ PHÁT HIỆN BỊ KICK DO GIỚI HẠN IP: ${cleanReason}`);
+        this.isIpLimited = true;
         this.emit('ipLimitDetected', { username: this.credentials.username, reason: cleanReason });
         this.emit('notifyAdmin', `🚨 **Worker [\`${this.credentials.username}\`]** bị kick do giới hạn IP KingMC: \`${cleanReason}\``);
       } else if (lowerReason.includes('ban') || lowerReason.includes('banned') || lowerReason.includes('bị cấm') || lowerReason.includes('bi cam') || lowerReason.includes('bị ban') || lowerReason.includes('bi ban')) {
@@ -436,6 +439,7 @@ class PersistentBot extends EventEmitter {
       // 1. Kiểm tra xem có phải thông báo giới hạn IP hoặc cấm IP không
       if (checkIpLimit(lowerMsg)) {
         console.warn(`[MC-Bot] 🚨 ĐÃ PHÁT HIỆN GIỚI HẠN IP HOẶC BỊ CẤM IP: ${cleanMsg}`);
+        this.isIpLimited = true;
         this.emit('ipLimitDetected', { 
           username: this.credentials.username, 
           reason: cleanMsg 
@@ -885,14 +889,19 @@ class PersistentBot extends EventEmitter {
     });
   }
 
-  scheduleReconnect() {
+  scheduleReconnect(delay = 10000) {
     this.clearAllTimers();
     this.isReady = false;
     if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
     
+    if (this.isIpLimited) {
+      console.warn(`[MC-Bot] 🛑 Bot đang bị giới hạn IP, tạm hoãn reconnect dồn dập (chờ 60s để Render tạo container mới)...`);
+      delay = 60000;
+    }
+
     this.reconnectTimeout = setTimeout(() => {
       this.connect();
-    }, 10000);
+    }, delay);
   }
 
   clearAllTimers() {
