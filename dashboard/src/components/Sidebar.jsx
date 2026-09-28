@@ -7,7 +7,8 @@ import {
   LogOut, 
   Database, 
   Radio,
-  Layers
+  Layers,
+  RotateCcw
 } from 'lucide-react';
 
 export default function Sidebar({ activeTab, setActiveTab, onLogout, stats = {} }) {
@@ -24,6 +25,13 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, stats = {} 
       icon: Server,
       badge: stats.onlineWorkers !== undefined ? `${stats.onlineWorkers}/${stats.totalWorkers || 0}` : null,
       badgeColor: stats.onlineWorkers > 0 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-slate-800 text-slate-400 border-slate-700'
+    },
+    {
+      id: 'render',
+      label: 'Render Rotation',
+      icon: RotateCcw,
+      badge: 'AUTO',
+      badgeColor: 'bg-sky-500/10 text-sky-400 border-sky-500/30'
     },
     {
       id: 'trackers',

@@ -6,6 +6,7 @@ import OverviewPage from './pages/OverviewPage';
 import WorkersPage from './pages/WorkersPage';
 import TrackerPage from './pages/TrackerPage';
 import GuildsPage from './pages/GuildsPage';
+import RenderRotationPage from './pages/RenderRotationPage';
 import { api, authStorage } from './api';
 
 export default function App() {
@@ -64,6 +65,11 @@ export default function App() {
         return {
           title: 'Quản Lý Worker Node',
           subtitle: 'Giám sát, thêm/xóa và phân phối tải giữa các Minecraft Bot'
+        };
+      case 'render':
+        return {
+          title: 'Quản Lý Render Rotation',
+          subtitle: 'Cấu hình tự động đổi IP & xoay vòng Worker trên hạ tầng Render'
         };
       case 'trackers':
         return {
@@ -128,6 +134,10 @@ export default function App() {
 
           {activeTab === 'workers' && (
             <WorkersPage />
+          )}
+
+          {activeTab === 'render' && (
+            <RenderRotationPage />
           )}
 
           {activeTab === 'trackers' && (

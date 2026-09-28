@@ -95,5 +95,28 @@ export const api = {
   }),
 
   // Guilds
-  getGuilds: () => apiFetch('/api/guilds')
+  getGuilds: () => apiFetch('/api/guilds'),
+
+  // Render Rotation
+  getRenderAccounts: () => apiFetch('/api/render/accounts'),
+  saveRenderAccount: (accountData) => apiFetch('/api/render/accounts', {
+    method: 'POST',
+    body: JSON.stringify(accountData)
+  }),
+  deleteRenderAccount: (id) => apiFetch(`/api/render/accounts/${encodeURIComponent(id)}`, {
+    method: 'DELETE'
+  }),
+  testRenderConnection: (data) => apiFetch('/api/render/test-connection', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }),
+  getRenderSettings: () => apiFetch('/api/render/settings'),
+  saveRenderSettings: (settings) => apiFetch('/api/render/settings', {
+    method: 'POST',
+    body: JSON.stringify(settings)
+  }),
+  triggerManualRotation: (data = {}) => apiFetch('/api/render/rotate-now', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  })
 };

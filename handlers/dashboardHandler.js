@@ -6,7 +6,16 @@ const fs = require('fs');
 const path = require('path');
 const { URL } = require('url');
 const trackerHelper = require('../helpers/trackerHelper');
-const { getDiscordGuildModel, isMongoAvailable } = require('../helpers/mongoHelper');
+const {
+  getDiscordGuildModel,
+  isMongoAvailable,
+  getAllRenderAccounts,
+  saveRenderAccount,
+  deleteRenderAccount,
+  getSystemConfig,
+  setSystemConfig
+} = require('../helpers/mongoHelper');
+const renderManager = require('../helpers/renderManager');
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -432,6 +441,196 @@ async function handleDashboardRequest(req, res, context) {
           guilds = await GuildModel.find({ isActive: true }).sort({ memberCount: -1 }).lean();
         }
         return sendJson(res, 200, { success: true, data: guilds });
+      } catch (err) {
+        return sendJson(res, 500, { success: false, error: err.message });
+      }
+    }
+
+    // ==========================================
+    // 6. RENDER ROTATION API ROUTES
+    // ==========================================
+    // GET /api/render/accounts
+    if (pathname === '/api/render/accounts' && method === 'GET') {
+      try {
+        const accounts = await getAllRenderAccounts();
+        const safeAccounts = accounts.map(a => ({
+          ...a,
+          apiKeyMasked: a.apiKey ? `${a.apiKey.substring(0, 8)}...${a.apiKey.substring(a.apiKey.length - 4)}` : '',
+          hasApiKey: !!a.apiKey
+        }));
+        return sendJson(res, 200, { success: true, data: safeAccounts });
+      } catch (err) {
+        return sendJson(res, 500, { success: false, error: err.message });
+      }
+    }
+
+    // POST /api/render/accounts (Thêm hoặc Sửa)
+    if (pathname === '/api/render/accounts' && method === 'POST') {
+      try {
+        const body = await parseJsonBody(req);
+        const accountId = (body.accountId || body.id || '').trim();
+        if (!accountId) {
+          return sendJson(res, 400, { success: false, error: 'Vui lòng nhập Account ID (ví dụ: render_acc_01).' });
+        }
+
+        let apiKey = (body.apiKey || '').trim();
+        // Nếu không gửi apiKey mới (chỉnh sửa giữ nguyên key cũ), lấy key cũ trong DB
+        if (!apiKey) {
+          const list = await getAllRenderAccounts();
+          const existing = list.find(a => a.accountId === accountId);
+          if (existing && existing.apiKey) {
+            apiKey = existing.apiKey;
+          } else {
+            return sendJson(res, 400, { success: false, error: 'Vui lòng cung cấp API Key của Render.' });
+          }
+        }
+
+        let ownerId = (body.ownerId || '').trim();
+        if (!ownerId && apiKey) {
+          try {
+            const owners = await renderManager.callRenderApi('/owners', apiKey, { method: 'GET' });
+            if (Array.isArray(owners) && owners.length > 0) {
+              ownerId = owners[0].owner?.id || owners[0].id || '';
+            }
+          } catch (e) {
+            console.warn('[Dashboard] Không thể tự fetch ownerId:', e.message);
+          }
+        }
+
+        const allowedRegions = Array.isArray(body.allowedRegions) && body.allowedRegions.length > 0
+          ? body.allowedRegions
+          : ['singapore', 'oregon', 'ohio', 'frankfurt', 'virginia'];
+
+        const payload = {
+          accountId,
+          name: (body.name || '').trim() || accountId,
+          apiKey,
+          ownerId,
+          repo: (body.repo || '').trim() || process.env.GITHUB_REPO || 'https://github.com/luuhuubinh/botCheckStatsKingMC',
+          branch: (body.branch || 'main').trim(),
+          allowedRegions,
+          maxServices: parseInt(body.maxServices) || 1,
+          isActive: body.isActive !== undefined ? Boolean(body.isActive) : true
+        };
+
+        const saved = await saveRenderAccount(payload);
+        return sendJson(res, 200, {
+          success: true,
+          message: `Đã lưu tài khoản [${accountId}] thành công!`,
+          data: {
+            ...saved,
+            apiKeyMasked: `${apiKey.substring(0, 8)}...${apiKey.substring(apiKey.length - 4)}`
+          }
+        });
+      } catch (err) {
+        return sendJson(res, 400, { success: false, error: err.message });
+      }
+    }
+
+    // DELETE /api/render/accounts/:id
+    const renderSubMatch = pathname.match(/^\/api\/render\/accounts\/([^/]+)$/);
+    if (renderSubMatch && method === 'DELETE') {
+      try {
+        const targetId = decodeURIComponent(renderSubMatch[1]);
+        const ok = await deleteRenderAccount(targetId);
+        return sendJson(res, 200, {
+          success: ok,
+          message: ok ? `Đã xóa tài khoản [${targetId}] khỏi MongoDB.` : `Không tìm thấy tài khoản [${targetId}].`
+        });
+      } catch (err) {
+        return sendJson(res, 400, { success: false, error: err.message });
+      }
+    }
+
+    // POST /api/render/test-connection
+    if (pathname === '/api/render/test-connection' && method === 'POST') {
+      try {
+        const body = await parseJsonBody(req);
+        let apiKey = (body.apiKey || '').trim();
+        if (!apiKey && body.accountId) {
+          const list = await getAllRenderAccounts();
+          const acc = list.find(a => a.accountId === body.accountId);
+          if (acc) apiKey = acc.apiKey;
+        }
+
+        if (!apiKey) {
+          return sendJson(res, 400, { success: false, error: 'Vui lòng cung cấp API Key để kiểm tra.' });
+        }
+
+        const owners = await renderManager.callRenderApi('/owners', apiKey, { method: 'GET' });
+        return sendJson(res, 200, {
+          success: true,
+          message: 'Kết nối Render API THÀNH CÔNG!',
+          data: { owners }
+        });
+      } catch (err) {
+        return sendJson(res, 400, { success: false, error: `Kết nối thất bại: ${err.message}` });
+      }
+    }
+
+    // GET /api/render/settings
+    if (pathname === '/api/render/settings' && method === 'GET') {
+      try {
+        const gasKeepaliveUrl = await getSystemConfig('gas_keepalive_url', '');
+        const autoRotateEnabled = await getSystemConfig('auto_rotate_enabled', true);
+        const masterUrl = await getSystemConfig('master_url', process.env.RENDER_EXTERNAL_URL || process.env.MASTER_URL || '');
+        return sendJson(res, 200, {
+          success: true,
+          data: {
+            gasKeepaliveUrl,
+            autoRotateEnabled,
+            masterUrl
+          }
+        });
+      } catch (err) {
+        return sendJson(res, 500, { success: false, error: err.message });
+      }
+    }
+
+    // POST /api/render/settings
+    if (pathname === '/api/render/settings' && method === 'POST') {
+      try {
+        const body = await parseJsonBody(req);
+        if (body.gasKeepaliveUrl !== undefined) {
+          await setSystemConfig('gas_keepalive_url', String(body.gasKeepaliveUrl || '').trim(), 'Webhook Google Apps Script');
+        }
+        if (body.autoRotateEnabled !== undefined) {
+          await setSystemConfig('auto_rotate_enabled', Boolean(body.autoRotateEnabled), 'Trạng thái Auto Rotate');
+        }
+        if (body.masterUrl !== undefined) {
+          await setSystemConfig('master_url', String(body.masterUrl || '').trim(), 'Master Node Public URL');
+        }
+        return sendJson(res, 200, {
+          success: true,
+          message: 'Đã lưu cấu hình xoay Worker thành công!'
+        });
+      } catch (err) {
+        return sendJson(res, 400, { success: false, error: err.message });
+      }
+    }
+
+    // POST /api/render/rotate-now (Kích hoạt xoay thủ công từ Web UI)
+    if (pathname === '/api/render/rotate-now' && method === 'POST') {
+      try {
+        const body = await parseJsonBody(req);
+        const reason = body.reason || 'Kích hoạt kiểm thử thủ công từ Master Web UI';
+        renderManager.rotateWorker({
+          workerUrl: body.workerUrl || '',
+          reason,
+          username: body.username || 'WebUITest',
+          queueDispatcher,
+          discordClient,
+          adminId: process.env.ADMIN_ID || ''
+        }).then(result => {
+          console.log('[Dashboard] Kết quả xoay thủ công:', result);
+        }).catch(e => {
+          console.error('[Dashboard] Lỗi xoay thủ công:', e.message);
+        });
+
+        return sendJson(res, 200, {
+          success: true,
+          message: 'Đã kích hoạt tiến trình xoay Worker trong nền! Hệ thống đang tạo service mới và cập nhật dải IP.'
+        });
       } catch (err) {
         return sendJson(res, 500, { success: false, error: err.message });
       }
