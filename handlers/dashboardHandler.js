@@ -591,18 +591,31 @@ async function handleDashboardRequest(req, res, context) {
     if (pathname === '/api/render/settings' && method === 'POST') {
       try {
         const body = await parseJsonBody(req);
+        let shouldSyncMaster = false;
+
         if (body.gasKeepaliveUrl !== undefined) {
           await setSystemConfig('gas_keepalive_url', String(body.gasKeepaliveUrl || '').trim(), 'Webhook Google Apps Script');
+          shouldSyncMaster = true;
         }
         if (body.autoRotateEnabled !== undefined) {
           await setSystemConfig('auto_rotate_enabled', Boolean(body.autoRotateEnabled), 'Trạng thái Auto Rotate');
         }
         if (body.masterUrl !== undefined) {
           await setSystemConfig('master_url', String(body.masterUrl || '').trim(), 'Master Node Public URL');
+          shouldSyncMaster = true;
         }
+
+        // Tự động đồng bộ Master URL tới Google Apps Script Keep-Alive
+        if (shouldSyncMaster) {
+          const masterUrl = (await getSystemConfig('master_url', null)) || process.env.RENDER_EXTERNAL_URL || process.env.MASTER_URL || '';
+          if (masterUrl && masterUrl.startsWith('http')) {
+            renderManager.notifyGoogleAppsScript('add', masterUrl, { isMaster: true }).catch(() => {});
+          }
+        }
+
         return sendJson(res, 200, {
           success: true,
-          message: 'Đã lưu cấu hình xoay Worker thành công!'
+          message: 'Đã lưu cấu hình xoay Worker và đồng bộ keep-alive thành công!'
         });
       } catch (err) {
         return sendJson(res, 400, { success: false, error: err.message });

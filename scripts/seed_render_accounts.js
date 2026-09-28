@@ -16,10 +16,13 @@
  * 4. Cài đặt Webhook Google Apps Script:
  *    node scripts/seed_render_accounts.js --set-gas "https://script.google.com/macros/s/.../exec"
  * 
- * 5. Bật/Tắt tính năng Auto Rotate:
+ * 5. Cài đặt URL Public của Master Node:
+ *    node scripts/seed_render_accounts.js --set-master "https://kingmc-master-bot.onrender.com"
+ * 
+ * 6. Bật/Tắt tính năng Auto Rotate:
  *    node scripts/seed_render_accounts.js --set-rotate true
  * 
- * 6. Xóa tài khoản Render:
+ * 7. Xóa tài khoản Render:
  *    node scripts/seed_render_accounts.js --delete <accountId>
  */
 
@@ -34,7 +37,7 @@ const {
   setSystemConfig,
   getSystemConfig
 } = require('../helpers/mongoHelper');
-const { callRenderApi } = require('../helpers/renderManager');
+const { callRenderApi, notifyGoogleAppsScript } = require('../helpers/renderManager');
 
 async function main() {
   const args = process.argv.slice(2);
@@ -72,7 +75,9 @@ async function main() {
     // Hiển thị thêm system config
     const gasUrl = await getSystemConfig('gas_keepalive_url', 'Chưa cấu hình');
     const autoRotate = await getSystemConfig('auto_rotate_enabled', true);
+    const masterUrl = await getSystemConfig('master_url', process.env.RENDER_EXTERNAL_URL || process.env.MASTER_URL || 'Chưa cấu hình');
     console.log(`⚙️ Cấu hình hệ thống:`);
+    console.log(`    • Master Node Public URL: ${masterUrl}`);
     console.log(`    • Google Apps Script URL: ${gasUrl}`);
     console.log(`    • Tự động xoay (Auto-Rotate): ${autoRotate ? 'BẬT' : 'TẮT'}\n`);
     process.exit(0);
@@ -88,6 +93,26 @@ async function main() {
     }
     await setSystemConfig('gas_keepalive_url', url.trim(), 'Webhook Google Apps Script để ping keep-alive');
     console.log(`✅ Đã lưu Google Apps Script Webhook URL thành công: ${url.trim()}`);
+
+    // Tự động đồng bộ Master URL tới GAS vừa cấu hình nếu có
+    const masterUrl = (await getSystemConfig('master_url', null)) || process.env.RENDER_EXTERNAL_URL || process.env.MASTER_URL;
+    if (masterUrl && masterUrl.startsWith('http')) {
+      await notifyGoogleAppsScript('add', masterUrl, { isMaster: true });
+    }
+    process.exit(0);
+  }
+
+  // --- LỆNH: Cài đặt URL Public của Master Node (--set-master <url>) ---
+  if (command === '--set-master') {
+    const url = args[1];
+    if (!url || !url.startsWith('http')) {
+      console.error('❌ Vui lòng nhập đúng định dạng URL Master Node. Ví dụ:');
+      console.error('node scripts/seed_render_accounts.js --set-master "https://kingmc-master-bot.onrender.com"');
+      process.exit(1);
+    }
+    await setSystemConfig('master_url', url.trim(), 'Master Node Public URL');
+    console.log(`✅ Đã lưu Master Node Public URL thành công: ${url.trim()}`);
+    await notifyGoogleAppsScript('add', url.trim(), { isMaster: true });
     process.exit(0);
   }
 

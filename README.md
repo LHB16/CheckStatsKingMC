@@ -81,33 +81,21 @@ Tài liệu này hướng dẫn bạn cách triển khai bot theo mô hình **Ma
 
 ---
 
-## ⏰ Cấu Hình Google Apps Script Keep-Alive (Cho tất cả các Render)
+## ⏰ Cấu Hình Google Apps Script Keep-Alive (Tự động giữ Master & Workers Online 24/7)
 
-Để giữ cho Master và các Workers không bị Render "ngủ đông" (Spin down) sau 15 phút:
+Hệ thống cung cấp mã nguồn Google Apps Script đồng bộ tự động qua Webhook tại file [`scripts/gas_keepalive_template.js`](./scripts/gas_keepalive_template.js). Script này tự động nhận URL của **Master Bot** và các **Worker Bots** (cả khi tạo mới hoặc xoay IP) và ping `/health` định kỳ mỗi 5 phút để chống sleep trên Render:
 
-1. Truy cập [Google Apps Script](https://script.google.com/).
-2. Tạo dự án mới, dán code sau vào:
-
-```javascript
-const RENDER_URLS = [
-  "https://kingmc-master-bot.onrender.com/health",
-  "https://kingmc-worker-1.onrender.com/health",
-  "https://kingmc-worker-2.onrender.com/health"
-];
-
-function keepAllBotsAlive() {
-  RENDER_URLS.forEach(url => {
-    try {
-      const response = UrlFetchApp.fetch(url);
-      Logger.log("Ping success [" + url + "]: " + response.getResponseCode());
-    } catch (e) {
-      Logger.log("Ping error [" + url + "]: " + e.toString());
-    }
-  });
-}
-```
-
-3. Đặt Trigger tự động chạy hàm `keepAllBotsAlive` **mỗi 5 phút**.
+1. Truy cập [Google Apps Script](https://script.google.com/) và tạo dự án mới.
+2. Copy toàn bộ code trong file [`scripts/gas_keepalive_template.js`](./scripts/gas_keepalive_template.js) và dán vào file `Code.gs`.
+3. Nhấn chạy hàm `setupTrigger()` một lần duy nhất để tạo Trigger tự động chạy mỗi 5 phút.
+4. Triển khai (Deploy) dưới dạng **Web App** (Execute as: *Me*, Who has access: *Anyone*).
+5. Copy Web App URL và lưu vào hệ thống:
+   - Qua Web UI Dashboard: Truy cập tab **Auto-Rotation Worker** -> Cài đặt Webhook Google Apps Script.
+   - Hoặc qua lệnh CLI:
+     ```bash
+     node scripts/seed_render_accounts.js --set-gas "https://script.google.com/macros/s/.../exec"
+     ```
+6. Master Bot sẽ tự động gửi URL của Master và tất cả URL Worker sang Google Apps Script để ping liên tục.
 
 ---
 

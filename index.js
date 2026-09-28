@@ -20,7 +20,7 @@ const { handleTrackerButtons, buildTrackerOverviewMessage } = require('./handler
 const { handlePaginationButtons } = require('./helpers/paginationHelper');
 const skinHelper = require('./helpers/skinHelper');
 const { getCustomEmoji } = require('./helpers/utils');
-const { connectMongo, isMongoAvailable } = require('./helpers/mongoHelper');
+const { connectMongo, isMongoAvailable, getSystemConfig } = require('./helpers/mongoHelper');
 const { handleDashboardRequest, syncDiscordGuilds } = require('./handlers/dashboardHandler');
 const renderManager = require('./helpers/renderManager');
 
@@ -192,6 +192,19 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   }
 }
 
+// Tự động đồng bộ Master URL tới Google Apps Script Keep-Alive
+async function syncMasterKeepalive() {
+  if (BOT_ROLE !== 'master' && BOT_ROLE !== 'standalone') return;
+  try {
+    const masterUrl = (await getSystemConfig('master_url', null)) || process.env.RENDER_EXTERNAL_URL || process.env.MASTER_URL || '';
+    if (masterUrl && masterUrl.startsWith('http')) {
+      await renderManager.notifyGoogleAppsScript('add', masterUrl, { isMaster: true });
+    }
+  } catch (err) {
+    console.warn('[KeepAlive] Không thể tự động đồng bộ Master URL với Google Apps Script:', err.message);
+  }
+}
+
 // Kết nối MongoDB tập trung sớm và nạp Worker
 connectMongo().then(async (connected) => {
   if (connected) {
@@ -199,6 +212,7 @@ connectMongo().then(async (connected) => {
     if (queueDispatcher) {
       await queueDispatcher.initWorkers();
     }
+    syncMasterKeepalive().catch(() => {});
   }
 }).catch(err => {
   console.warn('[MongoHelper] Lỗi khởi tạo MongoDB ban đầu:', err.message);
@@ -470,6 +484,9 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`[HTTP-Server] Đang lắng nghe trên cổng ${PORT} (${BOT_ROLE.toUpperCase()}).`);
+  setTimeout(() => {
+    syncMasterKeepalive().catch(() => {});
+  }, 3000);
 });
 
 /**

@@ -267,8 +267,11 @@ async function waitForServiceUrl(apiKey, serviceId, maxAttempts = 6) {
 
 /**
  * Gửi Webhook cập nhật URL sang Google Apps Script
+ * @param {'add'|'remove'} action
+ * @param {string} targetUrl
+ * @param {{ isMaster?: boolean, role?: string, type?: string }} [options]
  */
-async function notifyGoogleAppsScript(action, workerUrl) {
+async function notifyGoogleAppsScript(action, targetUrl, options = {}) {
   try {
     const gasUrl = (await getSystemConfig('gas_keepalive_url', null)) || process.env.GAS_KEEPALIVE_URL;
     if (!gasUrl || !gasUrl.startsWith('http')) {
@@ -276,19 +279,24 @@ async function notifyGoogleAppsScript(action, workerUrl) {
       return false;
     }
 
-    console.log(`[RenderManager] 📡 Đang gửi Webhook sang Google Apps Script (Action: ${action}, URL: ${workerUrl})...`);
+    const isMaster = Boolean(options.isMaster || options.role === 'master' || options.type === 'master');
+    const roleTag = isMaster ? 'Master' : 'Worker';
+
+    console.log(`[RenderManager] 📡 Đang gửi Webhook sang Google Apps Script (${roleTag} Action: ${action}, URL: ${targetUrl})...`);
     const res = await fetch(gasUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action, // 'add' | 'remove'
-        url: workerUrl,
+        url: targetUrl,
+        isMaster,
+        role: isMaster ? 'master' : 'worker',
         timestamp: new Date().toISOString()
       })
     });
 
     if (res.ok) {
-      console.log(`[RenderManager] ✅ Đồng bộ Google Apps Script thành công (${action}).`);
+      console.log(`[RenderManager] ✅ Đồng bộ Google Apps Script thành công (${roleTag} Action: ${action}).`);
       return true;
     } else {
       console.warn(`[RenderManager] ⚠️ Apps Script trả về mã: ${res.status}`);
