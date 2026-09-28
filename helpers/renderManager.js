@@ -100,18 +100,61 @@ async function getNextAvailableAccount() {
 }
 
 /**
- * Lấy danh sách các Service trên Render của tài khoản
+ * Lấy Environment ID mặc định của tài khoản (từ Project đầu tiên nếu có)
  */
-async function listServices(apiKey, ownerId) {
+async function getDefaultEnvironmentId(apiKey, ownerId) {
+  try {
+    const endpoint = ownerId ? `/projects?ownerId=${ownerId}&limit=10` : `/projects?limit=10`;
+    const res = await callRenderApi(endpoint, apiKey, { method: 'GET' });
+    if (Array.isArray(res) && res.length > 0) {
+      for (const item of res) {
+        const proj = item.project || item;
+        if (Array.isArray(proj.environmentIds) && proj.environmentIds.length > 0) {
+          console.log(`[RenderManager] 📁 Tìm thấy Project [${proj.name}] (Env: ${proj.environmentIds[0]})`);
+          return proj.environmentIds[0];
+        }
+      }
+    }
+    return null;
+  } catch (err) {
+    console.warn(`[RenderManager] Không thể lấy Project Environment: ${err.message}`);
+    return null;
+  }
+}
+
+/**
+ * Lấy danh sách các Service trên Render của tài khoản (gộp cả Ungrouped và trong Project)
+ */
+async function listServices(apiKey, ownerId, environmentId = null) {
+  const serviceMap = new Map();
   try {
     const endpoint = ownerId ? `/services?ownerId=${ownerId}&limit=50` : `/services?limit=50`;
     const res = await callRenderApi(endpoint, apiKey, { method: 'GET' });
-    if (!Array.isArray(res)) return [];
-    return res.map(item => item.service || item).filter(Boolean);
+    if (Array.isArray(res)) {
+      for (const item of res) {
+        const s = item.service || item;
+        if (s && s.id) serviceMap.set(s.id, s);
+      }
+    }
   } catch (err) {
-    console.warn(`[RenderManager] ⚠️ Không thể lấy danh sách Services từ Render: ${err.message}`);
-    return [];
+    console.warn(`[RenderManager] ⚠️ Không thể lấy Services theo ownerId từ Render: ${err.message}`);
   }
+
+  // Quét thêm các service nằm trong Environment của Project (nếu có)
+  const targetEnvId = environmentId || await getDefaultEnvironmentId(apiKey, ownerId);
+  if (targetEnvId) {
+    try {
+      const envRes = await callRenderApi(`/services?environmentId=${targetEnvId}&limit=50`, apiKey, { method: 'GET' });
+      if (Array.isArray(envRes)) {
+        for (const item of envRes) {
+          const s = item.service || item;
+          if (s && s.id) serviceMap.set(s.id, s);
+        }
+      }
+    } catch (e) {}
+  }
+
+  return Array.from(serviceMap.values());
 }
 
 /**
@@ -156,7 +199,11 @@ async function createWorkerService(account, options = {}) {
     { key: 'NODE_ENV', value: 'production' }
   ];
 
+  // Tự động tìm Environment ID của Project (ví dụ: "My project") để gom worker vào chung project
+  const targetEnvId = account.environmentId || await getDefaultEnvironmentId(account.apiKey, account.ownerId);
+
   // Chuẩn cấu trúc Render API v1 POST /services:
+  // - environmentId: nếu có, đưa service vào Project tương ứng
   // - envVars nằm ở cấp root của request body
   // - serviceDetails chứa runtime, plan, region
   // - envSpecificDetails chứa buildCommand, startCommand đối với native runtime (node)
@@ -179,6 +226,11 @@ async function createWorkerService(account, options = {}) {
       }
     }
   };
+
+  if (targetEnvId) {
+    payload.environmentId = targetEnvId;
+    console.log(`[RenderManager] 📦 Gom Worker mới vào Project (Environment: ${targetEnvId})`);
+  }
 
   console.log(`[RenderManager] 🚀 Đang tạo Worker Service mới [${serviceName}] tại Region [${region}] trên Render...`);
   const result = await callRenderApi('/services', account.apiKey, {
