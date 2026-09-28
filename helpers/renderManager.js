@@ -100,6 +100,21 @@ async function getNextAvailableAccount() {
 }
 
 /**
+ * Lấy danh sách các Service trên Render của tài khoản
+ */
+async function listServices(apiKey, ownerId) {
+  try {
+    const endpoint = ownerId ? `/services?ownerId=${ownerId}&limit=50` : `/services?limit=50`;
+    const res = await callRenderApi(endpoint, apiKey, { method: 'GET' });
+    if (!Array.isArray(res)) return [];
+    return res.map(item => item.service || item).filter(Boolean);
+  } catch (err) {
+    console.warn(`[RenderManager] ⚠️ Không thể lấy danh sách Services từ Render: ${err.message}`);
+    return [];
+  }
+}
+
+/**
  * Xóa Service Render theo Service ID
  */
 async function deleteService(apiKey, serviceId) {
@@ -131,16 +146,20 @@ async function createWorkerService(account, options = {}) {
   const branch = account.branch || 'main';
   const serviceName = `kingmc-worker-${Math.random().toString(36).substring(2, 7)}`;
 
-  // Chuẩn bị biến môi trường cho Worker
+  // Chuẩn bị biến môi trường cho Worker (Chuẩn Render API: mảng các { key, value } chuỗi)
   const envVars = [
     { key: 'BOT_ROLE', value: 'worker' },
-    { key: 'MASTER_URL', value: masterUrl || process.env.RENDER_EXTERNAL_URL || process.env.MASTER_URL || '' },
-    { key: 'WORKER_SECRET', value: workerSecret || process.env.WORKER_SECRET || '' },
-    { key: 'MC_SERVER_HOSTS', value: mcServerHosts || process.env.MC_SERVER_HOSTS || 'sgp.kingmc.vn,kingmc.vn' },
+    { key: 'MASTER_URL', value: String(masterUrl || process.env.RENDER_EXTERNAL_URL || process.env.MASTER_URL || '') },
+    { key: 'WORKER_SECRET', value: String(workerSecret || process.env.WORKER_SECRET || '') },
+    { key: 'MC_SERVER_HOSTS', value: String(mcServerHosts || process.env.MC_SERVER_HOSTS || 'sgp.kingmc.vn,kingmc.vn') },
     { key: 'MC_SERVER_PORT', value: String(mcServerPort || process.env.MC_SERVER_PORT || '25565') },
     { key: 'NODE_ENV', value: 'production' }
   ];
 
+  // Chuẩn cấu trúc Render API v1 POST /services:
+  // - envVars nằm ở cấp root của request body
+  // - serviceDetails chứa runtime, plan, region
+  // - envSpecificDetails chứa buildCommand, startCommand đối với native runtime (node)
   const payload = {
     type: 'web_service',
     name: serviceName,
@@ -148,13 +167,16 @@ async function createWorkerService(account, options = {}) {
     repo,
     branch,
     autoDeploy: 'yes',
+    envVars,
     serviceDetails: {
+      runtime: 'node',
       env: 'node',
       region: region || 'singapore',
       plan: 'free',
-      buildCommand: 'npm install',
-      startCommand: 'node index.js',
-      envVars
+      envSpecificDetails: {
+        buildCommand: 'npm install',
+        startCommand: 'node index.js'
+      }
     }
   };
 
@@ -287,6 +309,30 @@ async function rotateWorker({
 
     if (oldServiceId) {
       await deleteService(targetAccount.apiKey, oldServiceId);
+      // Chờ 1.5s để Render API cập nhật trạng thái
+      await new Promise(r => setTimeout(r, 1500));
+    }
+
+    // Tự động quét và dọn dẹp các service worker cũ tồn đọng (có tiền tố kingmc-worker- hoặc trùng URL)
+    try {
+      console.log(`[RenderManager] 🔍 Đang quét dọn dẹp Worker Service cũ trên tài khoản [${targetAccount.name || targetAccount.accountId}]...`);
+      const existingServices = await listServices(targetAccount.apiKey, targetAccount.ownerId);
+      const matchedWorkers = existingServices.filter(s => {
+        if (s.id === oldServiceId) return false;
+        const sUrl = s?.serviceDetails?.url || s?.url || '';
+        const isUrlMatch = (workerUrl && sUrl && (sUrl.includes(workerUrl) || workerUrl.includes(sUrl))) ||
+                           (oldUrl && sUrl && (sUrl.includes(oldUrl) || oldUrl.includes(sUrl)));
+        const isNameMatch = s?.name && s.name.startsWith('kingmc-worker-');
+        return isUrlMatch || isNameMatch;
+      });
+
+      for (const w of matchedWorkers) {
+        console.log(`[RenderManager] 🗑️ Dọn dẹp Worker cũ tồn đọng: [${w.id}] (${w.name})...`);
+        await deleteService(targetAccount.apiKey, w.id);
+        await new Promise(r => setTimeout(r, 1500));
+      }
+    } catch (cleanErr) {
+      console.warn(`[RenderManager] ⚠️ Cảnh báo quét dọn dẹp worker cũ: ${cleanErr.message}`);
     }
 
     // Gỡ Worker cũ khỏi QueueDispatcher & MongoDB Worker
@@ -401,6 +447,7 @@ module.exports = {
   getRandomRegion,
   getAccounts,
   getNextAvailableAccount,
+  listServices,
   deleteService,
   createWorkerService,
   waitForServiceUrl,
