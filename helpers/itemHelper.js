@@ -69,15 +69,16 @@ function getItemDetail(itemInput) {
 }
 
 /**
- * Tìm kiếm danh sách vật phẩm theo từ khóa tiếng Anh
+ * Tìm kiếm danh sách vật phẩm theo từ khóa tiếng Anh hoặc tiếng Việt
  * @param {string} query - Từ khóa cần tìm (yêu cầu >= 3 ký tự)
- * @param {number} limit - Số kết quả tối đa (mặc định 25 cho Dropdown Discord)
+ * @param {number} limit - Số kết quả tối đa (mặc định 0 = không giới hạn, trả về tất cả kết quả)
  */
-function searchItems(query, limit = 25) {
+function searchItems(query, limit = 0) {
   if (!query || typeof query !== 'string') return [];
   const q = query.trim().toLowerCase();
   if (q.length < 3) return [];
 
+  const qNoAccents = (q || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
   const qUnderscore = q.replace(/[\s-]+/g, '_');
   const items = mcData.itemsArray || [];
   const matches = [];
@@ -88,22 +89,38 @@ function searchItems(query, limit = 25) {
 
     const name = item.name.toLowerCase();
     const displayName = (item.displayName || '').toLowerCase();
+    const viName = getVietnameseName(item.name, '').toLowerCase();
+    const viNameNoAccents = viName ? viName.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd') : '';
     let score = -1;
 
     // 1. Khớp chính xác hoàn toàn
-    if (name === qUnderscore || displayName === q) {
+    if (name === qUnderscore || displayName === q || viName === q || viNameNoAccents === qNoAccents) {
       score = 0;
     }
     // 2. Bắt đầu bằng từ khóa
-    else if (name.startsWith(qUnderscore) || displayName.startsWith(q)) {
+    else if (
+      name.startsWith(qUnderscore) ||
+      displayName.startsWith(q) ||
+      viName.startsWith(q) ||
+      (viNameNoAccents && viNameNoAccents.startsWith(qNoAccents))
+    ) {
       score = 1;
     }
     // 3. Có từ đơn lẻ trong tên bắt đầu bằng từ khóa (VD: "Sword" bắt đầu bằng "swo")
-    else if (displayName.split(/\s+/).some(w => w.startsWith(q))) {
+    else if (
+      displayName.split(/\s+/).some(w => w.startsWith(q)) ||
+      (viName && viName.split(/\s+/).some(w => w.startsWith(q))) ||
+      (viNameNoAccents && viNameNoAccents.split(/\s+/).some(w => w.startsWith(qNoAccents)))
+    ) {
       score = 2;
     }
     // 4. Chứa từ khóa bên trong tên
-    else if (name.includes(qUnderscore) || displayName.includes(q)) {
+    else if (
+      name.includes(qUnderscore) ||
+      displayName.includes(q) ||
+      viName.includes(q) ||
+      (viNameNoAccents && viNameNoAccents.includes(qNoAccents))
+    ) {
       score = 3;
     }
 
@@ -123,7 +140,8 @@ function searchItems(query, limit = 25) {
     return a.length - b.length;
   });
 
-  return matches.slice(0, limit).map(m => getItemDetail(m.item));
+  const finalMatches = limit > 0 ? matches.slice(0, limit) : matches;
+  return finalMatches.map(m => getItemDetail(m.item));
 }
 
 /**

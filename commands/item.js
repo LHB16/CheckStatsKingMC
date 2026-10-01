@@ -8,8 +8,9 @@ const {
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
   ActionRowBuilder,
-  EmbedBuilder,
-  ComponentType
+  ButtonBuilder,
+  ButtonStyle,
+  EmbedBuilder
 } = require('discord.js');
 const {
   searchItems,
@@ -26,7 +27,7 @@ module.exports = {
     .addStringOption(option =>
       option
         .setName('name')
-        .setDescription('Tên tiếng Anh của vật phẩm cần tìm (tối thiểu 3 ký tự)')
+        .setDescription('Tên tiếng Anh hoặc tiếng Việt của vật phẩm cần tìm (tối thiểu 3 ký tự)')
         .setRequired(true)
     ),
 
@@ -37,15 +38,15 @@ module.exports = {
     // 1. Kiểm tra độ dài từ khóa (yêu cầu tối thiểu 3 ký tự)
     if (!query || query.length < 3) {
       const warnEmoji = getCustomEmoji('barrier', '⚠️');
-      const errorMsg = `${warnEmoji} Vui lòng nhập từ khóa tiếng Anh có **ít nhất 3 chữ cái** để tìm kiếm vật phẩm! (VD: \`/item sword\` hoặc \`?item diamond\`)`;
+      const errorMsg = `${warnEmoji} Vui lòng nhập từ khóa có **ít nhất 3 chữ cái** để tìm kiếm vật phẩm! (VD: \`/item sword\` hoặc \`?item diamond\`)`;
       if (interaction.reply) {
         return await interaction.reply({ content: errorMsg, ephemeral: true });
       }
       return;
     }
 
-    // 2. Tìm kiếm vật phẩm trong cơ sở dữ liệu Minecraft 1.21.4
-    const items = searchItems(query, 25);
+    // 2. Tìm kiếm vật phẩm trong cơ sở dữ liệu Minecraft 1.21.4 (Không giới hạn để hỗ trợ phân trang)
+    const items = searchItems(query);
 
     // Không tìm thấy vật phẩm
     if (items.length === 0) {
@@ -62,38 +63,98 @@ module.exports = {
       return await interaction.reply({ embeds: [detailEmbed] });
     }
 
-    // 4. Nếu tìm thấy nhiều kết quả: Hiển thị Dropdown Select Menu (Tối đa 25 mục)
-    const selectMenuId = `item_select_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-    const selectMenu = new StringSelectMenuBuilder()
-      .setCustomId(selectMenuId)
-      .setPlaceholder(`🔍 Chọn vật phẩm muốn xem (${items.length} kết quả)...`);
+    // 4. Phân trang kết quả (mỗi trang tối đa 25 mục do giới hạn Select Menu của Discord)
+    const PAGE_SIZE = 25;
+    const totalPages = Math.ceil(items.length / PAGE_SIZE);
+    let currentPage = 0;
+    let currentSelectedItem = null;
 
-    for (const item of items) {
-      const option = new StringSelectMenuOptionBuilder()
-        .setLabel(item.displayName.slice(0, 100))
-        .setValue(item.name)
-        .setDescription(`${item.vietnameseName} • ID: ${item.name}`.slice(0, 100));
+    const uid = `${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    const selectMenuId = `item_select_${uid}`;
+    const prevBtnId = `item_prev_${uid}`;
+    const nextBtnId = `item_next_${uid}`;
+    const pageIndicatorId = `item_page_${uid}`;
 
-      const parsedEmoji = resolveSelectMenuEmoji(item.emoji);
-      if (parsedEmoji) {
-        option.setEmoji(parsedEmoji);
+    // Hàm tạo nội dung payload tin nhắn dựa theo trang hiện tại và item đang chọn
+    const generatePayload = (page, selectedItem = null) => {
+      const startIdx = page * PAGE_SIZE;
+      const endIdx = startIdx + PAGE_SIZE;
+      const pageItems = items.slice(startIdx, endIdx);
+
+      // Select Menu cho 25 item của trang hiện tại
+      const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId(selectMenuId)
+        .setPlaceholder(`🔍 Chọn vật phẩm (Trang ${page + 1}/${totalPages} • ${pageItems.length} mục)...`);
+
+      for (const item of pageItems) {
+        const option = new StringSelectMenuOptionBuilder()
+          .setLabel(item.displayName.slice(0, 100))
+          .setValue(item.name)
+          .setDescription(`${item.vietnameseName} • ID: ${item.name}`.slice(0, 100));
+
+        const parsedEmoji = resolveSelectMenuEmoji(item.emoji);
+        if (parsedEmoji) {
+          option.setEmoji(parsedEmoji);
+        }
+        selectMenu.addOptions(option);
       }
-      selectMenu.addOptions(option);
-    }
 
-    const row = new ActionRowBuilder().addComponents(selectMenu);
+      const rows = [new ActionRowBuilder().addComponents(selectMenu)];
 
-    const compassEmoji = getCustomEmoji('compass', '🧭');
-    const summaryEmbed = new EmbedBuilder()
-      .setTitle(`${compassEmoji} Kết quả tìm kiếm cho: "${query}"`)
-      .setDescription(`Tìm thấy **${items.length}** vật phẩm phù hợp.\nVui lòng chọn một vật phẩm từ danh sách bên dưới để xem chi tiết thông tin:`)
-      .setColor('#2b2d31')
-      .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
-      .setTimestamp();
+      // Nút điều hướng phân trang (nếu có từ 2 trang trở lên)
+      if (totalPages > 1) {
+        const prevButton = new ButtonBuilder()
+          .setCustomId(prevBtnId)
+          .setLabel('Trang trước')
+          .setEmoji('◀️')
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(page === 0);
+
+        const pageIndicator = new ButtonBuilder()
+          .setCustomId(pageIndicatorId)
+          .setLabel(`${page + 1}/${totalPages} (${items.length} món)`)
+          .setStyle(ButtonStyle.Primary)
+          .setDisabled(true);
+
+        const nextButton = new ButtonBuilder()
+          .setCustomId(nextBtnId)
+          .setLabel('Trang sau')
+          .setEmoji('▶️')
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(page >= totalPages - 1);
+
+        rows.push(new ActionRowBuilder().addComponents(prevButton, pageIndicator, nextButton));
+      }
+
+      // Tạo Embed
+      let embed;
+      if (selectedItem) {
+        embed = formatItemEmbed(selectedItem);
+        embed.setFooter({
+          text: `CheckStatsKingMC • Trang ${page + 1}/${totalPages} (${items.length} kết quả) • Thiết kế bởi BinhLH`
+        });
+      } else {
+        const compassEmoji = getCustomEmoji('compass', '🧭');
+        embed = new EmbedBuilder()
+          .setTitle(`${compassEmoji} Kết quả tìm kiếm cho: "${query}"`)
+          .setDescription(
+            `Tìm thấy **${items.length}** vật phẩm phù hợp trong Minecraft 1.21.4.\n` +
+            (totalPages > 1 ? `Đang hiển thị **Trang ${page + 1}/${totalPages}** (mỗi trang tối đa 25 mục).\n\n` : '') +
+            `👉 Vui lòng chọn một vật phẩm từ danh sách bên dưới để xem chi tiết:`
+          )
+          .setColor('#2b2d31')
+          .setFooter({
+            text: `CheckStatsKingMC • Trang ${page + 1}/${totalPages} (${items.length} kết quả) • Thiết kế bởi BinhLH`
+          })
+          .setTimestamp();
+      }
+
+      return { embeds: [embed], components: rows };
+    };
 
     let responseMsg = null;
     if (interaction.reply) {
-      const res = await interaction.reply({ embeds: [summaryEmbed], components: [row] });
+      const res = await interaction.reply(generatePayload(currentPage, currentSelectedItem));
       // Lấy Message object nếu là Slash Command
       if (interaction.fetchReply) {
         try {
@@ -106,52 +167,77 @@ module.exports = {
 
     if (!responseMsg) return;
 
-    // 5. Thiết lập Collector lắng nghe sự kiện khi người dùng chọn trong Dropdown
+    // 5. Thiết lập Collector lắng nghe sự kiện tương tác (Menu & Buttons)
     const collector = responseMsg.createMessageComponentCollector({
-      componentType: ComponentType.StringSelect,
-      time: 60000 // 60 giây TTL
+      time: 120000 // 120 giây TTL
     });
 
-    collector.on('collect', async selectInteraction => {
+    collector.on('collect', async componentInteraction => {
       // Chỉ cho phép người thực hiện lệnh tương tác
-      if (selectInteraction.user.id !== targetUserId) {
-        return await selectInteraction.reply({
+      if (componentInteraction.user.id !== targetUserId) {
+        return await componentInteraction.reply({
           content: '⚠️ Bạn không phải là người gọi lệnh tìm kiếm này!',
           ephemeral: true
         });
       }
 
-      const selectedName = selectInteraction.values[0];
-      const selectedDetail = getItemDetail(selectedName);
+      // Xử lý khi chọn vật phẩm trong Dropdown
+      if (componentInteraction.isStringSelectMenu() && componentInteraction.customId === selectMenuId) {
+        const selectedName = componentInteraction.values[0];
+        const selectedDetail = getItemDetail(selectedName);
 
-      if (!selectedDetail) {
-        return await selectInteraction.reply({
-          content: '❌ Không thể tìm thấy dữ liệu chi tiết của vật phẩm này!',
-          ephemeral: true
-        });
+        if (!selectedDetail) {
+          return await componentInteraction.reply({
+            content: '❌ Không thể tìm thấy dữ liệu chi tiết của vật phẩm này!',
+            ephemeral: true
+          });
+        }
+
+        currentSelectedItem = selectedDetail;
+        await componentInteraction.update(generatePayload(currentPage, currentSelectedItem));
       }
-
-      const detailEmbed = formatItemEmbed(selectedDetail);
-
-      // Cập nhật Embed chi tiết nhưng vẫn giữ Dropdown để người dùng có thể chọn món khác nếu muốn
-      await selectInteraction.update({
-        embeds: [detailEmbed],
-        components: [row]
-      });
+      // Xử lý khi bấm nút chuyển trang
+      else if (componentInteraction.isButton()) {
+        if (componentInteraction.customId === prevBtnId) {
+          if (currentPage > 0) {
+            currentPage--;
+          }
+          await componentInteraction.update(generatePayload(currentPage, currentSelectedItem));
+        } else if (componentInteraction.customId === nextBtnId) {
+          if (currentPage < totalPages - 1) {
+            currentPage++;
+          }
+          await componentInteraction.update(generatePayload(currentPage, currentSelectedItem));
+        }
+      }
     });
 
     collector.on('end', async () => {
-      // Hết hạn 60s: Vô hiệu hóa Dropdown để tránh click lỗi
+      // Hết hạn: Vô hiệu hóa Dropdown và Buttons
       try {
-        const disabledRow = new ActionRowBuilder().addComponents(
-          selectMenu
-            .setDisabled(true)
-            .setPlaceholder('Menu tìm kiếm đã hết hạn (Dùng lại lệnh để tìm kiếm mới)')
-        );
+        const lastPayload = generatePayload(currentPage, currentSelectedItem);
+        const disabledRows = lastPayload.components.map(row => {
+          const newRow = new ActionRowBuilder();
+          for (const comp of row.components) {
+            if (comp instanceof StringSelectMenuBuilder) {
+              newRow.addComponents(
+                StringSelectMenuBuilder.from(comp)
+                  .setDisabled(true)
+                  .setPlaceholder('Menu tìm kiếm đã hết hạn (Dùng lại lệnh để tìm kiếm mới)')
+              );
+            } else if (comp instanceof ButtonBuilder) {
+              newRow.addComponents(
+                ButtonBuilder.from(comp).setDisabled(true)
+              );
+            }
+          }
+          return newRow;
+        });
+
         if (responseMsg && responseMsg.edit) {
-          await responseMsg.edit({ components: [disabledRow] }).catch(() => {});
+          await responseMsg.edit({ components: disabledRows }).catch(() => {});
         } else if (interaction.editReply) {
-          await interaction.editReply({ components: [disabledRow] }).catch(() => {});
+          await interaction.editReply({ components: disabledRows }).catch(() => {});
         }
       } catch (_) {}
     });
