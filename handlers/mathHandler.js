@@ -416,10 +416,14 @@ async function handleMathMessage(message, expressionText) {
     return await message.reply(`⚠️ **Lỗi tính toán:** ${evalResult.error}`);
   }
 
+  const craftingTableEmoji = getCustomEmoji('crafting_table', '🛠️');
   const bookshelfEmoji = getCustomEmoji('bookshelf', '📚');
   const resultEmbed = new EmbedBuilder()
     .setColor('#57F287')
-    .setDescription(`${bookshelfEmoji} Kết quả là: **${evalResult.formattedResult}**`)
+    .setDescription(
+      `${craftingTableEmoji} Biểu thức: ${expressionText.trim()}\n` +
+      `${bookshelfEmoji} Kết quả là: ${evalResult.formattedResult}`
+    )
     .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
     .setTimestamp();
 
