@@ -230,6 +230,16 @@ function formatVietnamTime(date, includeSeconds = true) {
   });
 }
 
+/**
+ * Đếm số từ trong đoạn văn bản (phân tách theo khoảng trắng)
+ * @param {string} text 
+ * @returns {number}
+ */
+function countWords(text) {
+  if (!text || typeof text !== 'string') return 0;
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
 module.exports = {
   CUSTOM_EMOJIS,
   loadDynamicEmojis,
@@ -240,5 +250,6 @@ module.exports = {
   getStatsLabel,
   isDecorationItem,
   formatTimeAgo,
-  formatVietnamTime
+  formatVietnamTime,
+  countWords
 };

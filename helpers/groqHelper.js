@@ -6,7 +6,7 @@ class GroqManager {
     this.currentIndex = 0;
     this.defaultModel = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
     this.systemPrompt = process.env.GROQ_SYSTEM_PROMPT || 
-      'Bạn là một AI trợ lý thân thiện, thông minh và hữu ích trên Discord. Hãy trả lời ngắn gọn, lịch sự và bằng tiếng Việt ngoại trừ khi người dùng yêu cầu ngôn ngữ khác.';
+      'Bạn là một AI trợ lý thân thiện, thông minh và hữu ích trên Discord. BẮT BUỘC trả lời thật ngắn gọn, súc tích, tuyệt đối không được vượt quá 100 từ, lịch sự và bằng tiếng Việt ngoại trừ khi người dùng yêu cầu ngôn ngữ khác.';
   }
 
   /**

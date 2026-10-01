@@ -1,5 +1,6 @@
 const { checkSensitiveContent } = require('../helpers/filterHelper');
 const { performWebSearch, shouldPerformWebSearch } = require('../helpers/searchHelper');
+const { countWords } = require('../helpers/utils');
 const groqManager = require('../helpers/groqHelper');
 
 // Bộ nhớ đệm lưu lịch sử chat ngắn hạn theo channelId hoặc userId
@@ -56,7 +57,7 @@ async function handleAiChatMessage(message, customPromptText = null) {
           .map((item, idx) => `[${idx + 1}] ${item.title}\nNội dung: ${item.snippet}\nNguồn: ${item.url}`)
           .join('\n\n');
         
-        finalPromptContent = `[Dữ liệu tìm kiếm thời gian thực từ Internet]:\n${searchContext}\n\n[Câu hỏi của người dùng]: "${promptText}"\n\nHãy dựa vào dữ liệu tìm kiếm thời gian thực trên (nếu có ích) để tổng hợp và trả lời ngắn gọn, chính xác bằng tiếng Việt.`;
+        finalPromptContent = `[Dữ liệu tìm kiếm thời gian thực từ Internet]:\n${searchContext}\n\n[Câu hỏi của người dùng]: "${promptText}"\n\nHãy dựa vào dữ liệu tìm kiếm thời gian thực trên (nếu có ích) để tổng hợp và trả lời thật ngắn gọn, súc tích (bắt buộc dưới 100 từ) bằng tiếng Việt.`;
       }
     }
 
@@ -76,7 +77,15 @@ async function handleAiChatMessage(message, customPromptText = null) {
     // 8. Gửi câu hỏi sang Groq AI (với cơ chế xoay vòng API Keys)
     const aiReply = await groqManager.chat(messages);
 
-    // 8. Cập nhật lịch sử thoại
+    // 8.1. Kiểm tra giới hạn độ dài phản hồi (tối đa 100 chữ)
+    const wordCount = countWords(aiReply);
+    if (wordCount > 100) {
+      console.warn(`[AIChat] ⚠️ Phản hồi AI quá dài (${wordCount} chữ > 100 chữ). Lập tức drop câu trả lời.`);
+      await message.reply('⚠️ **Thông báo:** Câu trả lời từ AI vượt quá giới hạn cho phép (tối đa 100 chữ), bot không thể trả lời. Vui lòng đặt câu hỏi cụ thể hơn hoặc yêu cầu tóm tắt ngắn gọn!');
+      return;
+    }
+
+    // 8.2. Cập nhật lịch sử thoại (chỉ lưu nếu câu trả lời hợp lệ)
     history.push({ role: 'user', content: promptText });
     history.push({ role: 'assistant', content: aiReply });
     

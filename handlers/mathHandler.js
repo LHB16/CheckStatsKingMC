@@ -65,10 +65,13 @@ function formatMathNumber(num) {
  */
 function normalizeExpression(rawExpr) {
   let expr = rawExpr
+    .replace(/[\s=?]+$/, '')               // Bỏ dấu = hoặc ? ở cuối biểu thức (VD: 12*2 = ?)
     .replace(/[\u2013\u2014\u2212]/g, '-') // Chuẩn hóa dấu gạch ngang/dấu trừ unicode
     .replace(/[xX\u00D7\u22C5]/g, '*')      // Chuẩn hóa ký tự nhân x, × sang *
     .replace(/[\:\u00F7]/g, '/')            // Chuẩn hóa ký tự chia :, ÷ sang /
     .replace(/\*\*/g, '^')                  // Chuẩn hóa ** sang ^
+    .replace(/(?<=\d),(?=\d{3}(?:\D|$))/g, '') // Khử dấu phẩy phân tách hàng nghìn (1,000,000 -> 1000000)
+    .replace(/,/g, '.')                     // Chuẩn hóa dấu phẩy thập phân sang dấu chấm (12,5 -> 12.5)
     .replace(/\s+/g, '');                   // Loại bỏ khoảng trắng
 
   return expr;
@@ -399,7 +402,8 @@ async function handleMathMessage(message, expressionText) {
         `• \`@${botName} math 2 ^ 16\`\n` +
         `• \`@${botName} math 100 % 7\``
       )
-      .setFooter({ text: 'Toán học thuần túy • Tốc độ tức thì' });
+      .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
+      .setTimestamp();
 
     return await message.reply({ embeds: [guideEmbed] });
   }
@@ -419,15 +423,86 @@ async function handleMathMessage(message, expressionText) {
       { name: '📥 Biểu thức', value: `\`\`\`math\n${expressionText.trim()}\n\`\`\``, inline: false },
       { name: '📤 Kết quả', value: `\`\`\`yaml\n= ${evalResult.formattedResult}\n\`\`\``, inline: false }
     )
-    .setFooter({ text: 'CheckStatsKingMC • Pure Math Engine' })
+    .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
     .setTimestamp();
 
   await message.reply({ embeds: [resultEmbed] });
+}
+
+/**
+ * Kiểm tra xem một chuỗi văn bản có phải là một biểu thức toán học hợp lệ hay không.
+ * Tự động loại bỏ các câu chữ thông thường và chỉ chấp nhận khi:
+ * 1. Chỉ chứa các ký tự toán học hợp lệ (số, khoảng trắng, toán tử, ngoặc, chấm/phẩy).
+ * 2. Có ít nhất một chữ số và ít nhất một toán tử toán học.
+ * 3. Cú pháp biểu thức phân tích thành công (hợp lệ theo thuật toán Shunting-yard).
+ * @param {string} rawText 
+ * @returns {boolean}
+ */
+function isMathExpression(rawText) {
+  if (!rawText || typeof rawText !== 'string') return false;
+
+  // Bỏ khoảng trắng thừa và ký tự kết thúc như = hoặc ? nếu người dùng gõ kiểu: "12*2 = ?" hay "15+5="
+  const text = rawText.trim().replace(/[\s=?]+$/, '').trim();
+  if (!text) return false;
+
+  // 1. Chỉ chấp nhận các ký tự hợp lệ cho biểu thức toán học:
+  // Số 0-9, khoảng trắng, +, -, *, /, %, ^, x, X, :, ÷, ngoặc đơn (), chấm ., phẩy ,, e/E khoa học
+  const validMathCharsRegex = /^[\d\s+\-*\/%^xX:\u00D7\u00F7\u2212\u22C5\(\)\.,eE]+$/;
+  if (!validMathCharsRegex.test(text)) {
+    return false;
+  }
+
+  // 2. Bắt buộc phải có ít nhất 1 chữ số
+  if (!/\d/.test(text)) {
+    return false;
+  }
+
+  // 3. Phải có ít nhất 1 toán tử toán học
+  // Để tránh nhận nhầm một chuỗi chỉ có 1 số nguyên (VD: "100" hoặc "0")
+  const hasOperator = /[+\-*\/%^xX:\u00D7\u00F7\u2212\u22C5]/.test(text);
+  if (!hasOperator) {
+    return false;
+  }
+
+  // 4. Chuẩn hóa và tokenize để kiểm tra tính toàn vẹn cú pháp
+  try {
+    const cleanExpr = normalizeExpression(text);
+    if (!cleanExpr) return false;
+
+    const tokens = tokenize(cleanExpr);
+    if (!tokens || tokens.length === 0) return false;
+
+    // Đếm số lượng toán tử nhị phân và số
+    const operatorTokens = tokens.filter(t => t.type === 'OPERATOR');
+    const numberTokens = tokens.filter(t => t.type === 'NUMBER');
+
+    // Một phép tính tối thiểu phải có 1 toán tử và số hợp lệ
+    if (operatorTokens.length === 0 && tokens.filter(t => t.type === 'UNARY').length === 0) {
+      return false;
+    }
+    if (numberTokens.length === 0) {
+      return false;
+    }
+
+    // Nếu chỉ có 1 số và 1 toán tử unary (như: "-5" hay "+5"), thường người ta chỉ gõ số âm đơn lẻ
+    if (numberTokens.length === 1 && operatorTokens.length === 0) {
+      return false;
+    }
+
+    // Kiểm tra cấu trúc cú pháp bằng Shunting-yard algorithm
+    const rpn = shuntingYard(tokens);
+    if (!rpn || rpn.length === 0) return false;
+
+    return true;
+  } catch (_) {
+    return false;
+  }
 }
 
 module.exports = {
   evaluateMath,
   formatMathNumber,
   normalizeExpression,
-  handleMathMessage
+  handleMathMessage,
+  isMathExpression
 };

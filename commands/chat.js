@@ -6,6 +6,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { checkSensitiveContent } = require('../helpers/filterHelper');
 const { performWebSearch, shouldPerformWebSearch } = require('../helpers/searchHelper');
+const { countWords } = require('../helpers/utils');
 const groqManager = require('../helpers/groqHelper');
 
 module.exports = {
@@ -53,12 +54,26 @@ module.exports = {
             .map((item, idx) => `[${idx + 1}] ${item.title}\nNội dung: ${item.snippet}\nNguồn: ${item.url}`)
             .join('\n\n');
           
-          finalPrompt = `[Dữ liệu tìm kiếm thời gian thực từ Internet]:\n${searchContext}\n\n[Câu hỏi của người dùng]: "${question}"\n\nHãy dựa vào dữ liệu tìm kiếm thời gian thực trên (nếu có ích) để tổng hợp và trả lời ngắn gọn, chính xác bằng tiếng Việt.`;
+          finalPrompt = `[Dữ liệu tìm kiếm thời gian thực từ Internet]:\n${searchContext}\n\n[Câu hỏi của người dùng]: "${question}"\n\nHãy dựa vào dữ liệu tìm kiếm thời gian thực trên (nếu có ích) để tổng hợp và trả lời thật ngắn gọn, súc tích (bắt buộc dưới 100 từ) bằng tiếng Việt.`;
         }
       }
 
       // 3. Gửi câu hỏi sang Groq AI
       const aiReply = await groqManager.chat([{ role: 'user', content: finalPrompt }]);
+
+      // 3.1. Kiểm tra giới hạn độ dài phản hồi (tối đa 100 chữ)
+      const wordCount = countWords(aiReply);
+      if (wordCount > 100) {
+        console.warn(`[Slash-Chat] ⚠️ Phản hồi AI quá dài (${wordCount} chữ > 100 chữ). Lập tức drop câu trả lời.`);
+        const warningEmbed = new EmbedBuilder()
+          .setTitle('⚠️ Không thể trả lời')
+          .setDescription('Câu trả lời từ AI vượt quá giới hạn cho phép (tối đa 100 chữ). Vui lòng đặt câu hỏi cụ thể hơn hoặc yêu cầu tóm tắt ngắn gọn!')
+          .setColor('#f59e0b')
+          .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
+          .setTimestamp();
+
+        return await interaction.editReply({ embeds: [warningEmbed] });
+      }
 
       // 4. Hiển thị kết quả dạng Embed hoặc tin nhắn tùy độ dài
       if (aiReply.length <= 4000) {

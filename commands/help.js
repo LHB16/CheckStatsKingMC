@@ -44,6 +44,8 @@ module.exports = {
         {
           name: `${enderChestEmoji} **LỆNH THỊ TRƯỜNG & VẬT PHẨM**`,
           value: 
+            `• \`/item <tên>\` hoặc \`@Bot item <tên>\` (hoặc \`?item <tên>\`)\n` +
+            `  └ *Tra cứu thông tin vật phẩm Minecraft (Anh - Việt, ID, Emoji Discord).*\n` +
             `• \`/ah [tên]\` hoặc \`@Bot ah [tên]\` (hoặc \`?ah [tên]\`)\n` +
             `  └ *Tra cứu vật phẩm đang rao bán trên Chợ Đen (AH).*\n` +
             `• \`/order [tên]\` hoặc \`@Bot order [tên]\` (hoặc \`?order [tên]\`)\n` +

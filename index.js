@@ -15,7 +15,7 @@ const CommandHandler = require('./handlers/commandHandler');
 const { handleReportButtons, sendBanAlert } = require('./helpers/reportHelper');
 const configHelper = require('./helpers/configHelper');
 const { handleAiChatMessage } = require('./handlers/aiChatHandler');
-const { handleMathMessage } = require('./handlers/mathHandler');
+const { handleMathMessage, isMathExpression } = require('./handlers/mathHandler');
 const trackerHelper = require('./helpers/trackerHelper');
 const { handleTrackerButtons, buildTrackerOverviewMessage } = require('./handlers/trackerButtonHandler');
 const { handlePaginationButtons } = require('./helpers/paginationHelper');
@@ -800,7 +800,7 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     }
 
     // Danh sách lệnh hợp lệ
-    const allowedCommands = ['stats', 'order', 'bal', 'ah', 'online', 'ping', 'help', 'lb', 'donate', 'bounty'];
+    const allowedCommands = ['stats', 'order', 'bal', 'ah', 'online', 'ping', 'help', 'lb', 'donate', 'bounty', 'item'];
     const adminCommands = ['help', 'status', 'workers', 'restart', 'mode', 'render', 'toggle', 'ai', 'tracker', 'theodoi'];
 
     // 3. Kiểm tra xem có phải lệnh game/người dùng hay không
@@ -1076,8 +1076,13 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   }
 
   // --- LUỒNG 2: TRỢ LÝ AI (ĐỘC LẬP & TÁCH RỜI VỚI LUỒNG LỆNH) ---
-  // Chỉ kích hoạt khi người dùng chỉ định rõ tiền tố 'ai': @Bot ai <câu hỏi> hoặc ?ai <câu hỏi>
-  const isAiExplicitCommand = cleanText.startsWith('ai ') || cleanText === 'ai' || cleanText.startsWith('?ai');
+  // Chỉ kích hoạt khi:
+  // 1. Dùng lệnh tiền tố rõ ràng: ?ai <câu hỏi> (trong guild hoặc DM)
+  // 2. Tag Bot kèm từ khóa ai: @Bot ai <câu hỏi>
+  // 3. Nhắn trong tin nhắn riêng (DM): ai <câu hỏi> hoặc ?ai <câu hỏi>
+  // Tuyệt đối không kích hoạt khi chỉ chat bình thường trong server bắt đầu bằng từ 'ai' mà không tag bot
+  const isAiExplicitCommand = /^\?ai(\s+|$)/i.test(cleanText) ||
+    ((isMentioned || isDirectMessage) && /^ai(\s+|$)/i.test(cleanText));
   if (isAiExplicitCommand) {
     if (global.isAiChatEnabled === false) {
       await message.reply(`⚠️ **Thông báo:** ${global.aiDisableReason || 'Tính năng AI Chat hiện đang tạm tắt.'}`);
@@ -1094,11 +1099,29 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   }
 
   // --- LUỒNG 3: TÍNH TOÁN TOÁN HỌC THUẦN TÚY (PURE MATH ENGINE) ---
-  // Hỗ trợ: @Bot math <biểu thức>, @Bot calc <biểu thức>, @Bot tinh <biểu thức>, ?math <biểu thức>, ?calc <biểu thức>
-  const isMathExplicitCommand = /^(math|calc|tinh)(\s+|$)/i.test(cleanText) || /^\?(math|calc|tinh)(\s+|$)/i.test(cleanText);
+  // 1. Cú pháp truyền thống: @Bot math <biểu thức>, ?math <biểu thức>, ?calc ..., ?tinh ...
+  const isMathExplicitCommand = /^\?(math|calc|tinh)(\s+|$)/i.test(cleanText) ||
+    ((isMentioned || isDirectMessage) && /^(math|calc|tinh)(\s+|$)/i.test(cleanText));
   if (isMathExplicitCommand) {
     const mathExpression = cleanText.replace(/^\??(math|calc|tinh)\s*/i, '').trim();
     await handleMathMessage(message, mathExpression);
+    return;
+  }
+
+  // 2. Tự động nhận dạng phép tính toán học (không cần chữ math):
+  // Hỗ trợ:
+  // - Khi có tiền tố ? (kênh chat hoặc DM): ?12*2, ? 12*2, ?(15+5)*2
+  // - Khi tag bot: @Bot 12*2, @Bot (15 + 25) * 4 / 2
+  // - Trong tin nhắn riêng (DM): 12*2, (15 + 25) * 4
+  let mathCandidate = null;
+  if (cleanText.startsWith('?')) {
+    mathCandidate = cleanText.slice(1).trim();
+  } else if (isMentioned || isDirectMessage) {
+    mathCandidate = cleanText.trim();
+  }
+
+  if (mathCandidate && isMathExpression(mathCandidate)) {
+    await handleMathMessage(message, mathCandidate);
     return;
   }
 
@@ -1109,7 +1132,7 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     await message.reply(
       `👋 Bạn vừa tag mình! Để sử dụng, vui lòng gõ kèm tên lệnh:\n` +
       `• Tra cứu game: \`@${botName} stats <tên>\` hoặc \`@${botName} bal <tên>\`\n` +
-      `• Tính toán nhanh: \`@${botName} math <biểu thức>\` (VD: \`@${botName} math 12*2\`)\n` +
+      `• Tính toán nhanh: \`@${botName} <phép tính>\` (VD: \`@${botName} 12*2\` hoặc \`?12*2\`)\n` +
       `• Trò chuyện AI: \`@${botName} ai <câu hỏi>\` (VD: \`@${botName} ai Cách chế tạo khiên?\`)\n` +
       `• Hoặc dùng Slash Command: \`/stats\`, \`/help\` để xem danh sách toàn bộ lệnh!`
     );
