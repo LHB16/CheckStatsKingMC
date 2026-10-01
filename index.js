@@ -780,24 +780,55 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   });
 
   // Lắng nghe lệnh qua DM hoặc Kênh chat (Admin)
+  // Lắng nghe lệnh qua DM hoặc Kênh chat (Admin & User)
   client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
 
-    // --- Hỗ trợ Trò chuyện với AI khi Tag/Mention Bot ---
-    if (message.mentions.has(client.user)) {
-      await handleAiChatMessage(message);
-      return;
+    // 1. Nhận diện ngữ cảnh: Tag Bot hoặc Tin nhắn riêng (DM)
+    const isMentioned = message.mentions.has(client.user);
+    const isDirectMessage = !message.guild;
+
+    // 2. Làm sạch nội dung tin nhắn (loại bỏ tag bot nếu có)
+    let rawText = message.content || '';
+    let cleanText = rawText;
+    if (isMentioned) {
+      const mentionRegex = new RegExp(`<@!?${client.user.id}>`, 'g');
+      cleanText = rawText.replace(mentionRegex, '').trim();
+    } else {
+      cleanText = rawText.trim();
     }
 
-    // --- Hỗ trợ lệnh tiền tố '?' cho mọi user trên Discord (không yêu cầu Admin) ---
-    if (message.content.startsWith('?')) {
-      const args = message.content.slice(1).trim().split(/ +/);
-      const commandName = args.shift().toLowerCase();
+    // Danh sách lệnh hợp lệ
+    const allowedCommands = ['stats', 'order', 'bal', 'ah', 'online', 'ping', 'help', 'lb', 'donate', 'bounty'];
+    const adminCommands = ['help', 'status', 'workers', 'restart', 'mode', 'render', 'toggle', 'ai', 'tracker', 'theodoi'];
 
-      // Chỉ cho phép một số lệnh cụ thể qua tiền tố '?'
-      const allowedCommands = ['stats', 'order', 'bal', 'ah', 'online', 'ping', 'help', 'lb', 'donate', 'bounty'];
-      if (!allowedCommands.includes(commandName)) return;
+    // 3. Kiểm tra xem có phải lệnh game/người dùng hay không
+    // Hỗ trợ: ?stats, @Bot ?stats, @Bot stats, và stats trong DM
+    let isGameCommand = false;
+    let commandName = '';
+    let commandArgs = [];
+    let showPrefixTip = false;
 
+    if (cleanText.startsWith('?')) {
+      commandArgs = cleanText.slice(1).trim().split(/ +/);
+      commandName = commandArgs.shift()?.toLowerCase();
+      if (allowedCommands.includes(commandName)) {
+        isGameCommand = true;
+        // Chỉ đính kèm lưu ý chuyển đổi nếu dùng lệnh '?' trực tiếp trong kênh server mà KHÔNG tag bot
+        showPrefixTip = !isMentioned && !isDirectMessage;
+      }
+    } else if ((isMentioned || isDirectMessage) && cleanText) {
+      commandArgs = cleanText.split(/ +/);
+      const firstWord = commandArgs.shift()?.toLowerCase();
+      if (allowedCommands.includes(firstWord)) {
+        isGameCommand = true;
+        commandName = firstWord;
+        showPrefixTip = false;
+      }
+    }
+
+    // --- XỬ LÝ LỆNH GAME / NGƯỜI DÙNG ---
+    if (isGameCommand) {
       const command = client.commands.get(commandName);
       if (!command) return;
 
@@ -805,15 +836,18 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
 
       // Chặn nếu đang bảo trì (trừ Admin)
       if (global.isBotMaintenance) {
-         if (!ADMIN_ID || message.author.id !== ADMIN_ID) {
-            return message.channel.send(`${barrierEmoji} **Bảo trì:** ${global.maintenanceMessage}`);
-         }
+        if (!ADMIN_ID || message.author.id !== ADMIN_ID) {
+          return message.channel.send(`${barrierEmoji} **Bảo trì:** ${global.maintenanceMessage}`);
+        }
       }
 
-      const argStr = args.join(' ').trim();
+      const argStr = commandArgs.join(' ').trim();
       const noArgRequiredCommands = ['ping', 'help', 'lb', 'donate', 'bounty'];
       if (!noArgRequiredCommands.includes(commandName) && !argStr) {
-         return message.channel.send(`${barrierEmoji} Lệnh \`?${commandName}\` cần có tham số (tên người chơi hoặc vật phẩm). VD: \`?${commandName} BinhLH\``);
+        const exampleSyntax = isMentioned
+          ? `@${client.user.username} ${commandName} BinhLH`
+          : `?${commandName} BinhLH`;
+        return message.channel.send(`${barrierEmoji} Lệnh \`${commandName}\` cần có tham số (tên người chơi hoặc vật phẩm). VD: \`${exampleSyntax}\``);
       }
 
       const userId = message.author.id;
@@ -822,61 +856,92 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
         return message.channel.send(spamCheck.message);
       }
 
+      // Thông báo lưu ý chuyển đổi khi người dùng vẫn đang gõ '?'
+      const botName = client.user?.username || 'CheckStatsKingMC';
+      const tipText = `> 💡 **Lưu ý:** *Nếu một ngày lệnh \`?${commandName}\` không phản hồi, bạn hãy tag bot (\`@${botName} ${commandName}\` hoặc \`@${botName} ?${commandName}\`), hoặc dùng Slash Command (\`/${commandName}\`) nhé!*`;
+
+      const attachTip = (payload) => {
+        if (!showPrefixTip) return payload;
+        if (typeof payload === 'string') {
+          return `${payload}\n${tipText}`;
+        }
+        const newPayload = { ...payload };
+        if (newPayload.content) {
+          newPayload.content = `${newPayload.content}\n${tipText}`;
+        } else {
+          newPayload.content = tipText;
+        }
+        return newPayload;
+      };
+
       // Fake Interaction Object để dùng chung logic với Slash Commands
       const interaction = {
         user: message.author,
         client: client,
         options: {
-          getString: (name) => argStr
+          getString: () => argStr
         },
         deferReply: async () => {
-           interaction._replyMessage = await message.channel.send('⏳ Đang xử lý yêu cầu...');
+          interaction._replyMessage = await message.channel.send('⏳ Đang xử lý yêu cầu...');
         },
         editReply: async (data) => {
-           if (interaction._replyMessage) {
-              const editPayload = typeof data === 'string'
-                 ? { content: data }
-                 : { content: '', ...data };
-              await interaction._replyMessage.edit(editPayload);
-           } else {
-              await message.channel.send(data);
-           }
+          const finalData = attachTip(data);
+          if (interaction._replyMessage) {
+            const editPayload = typeof finalData === 'string'
+              ? { content: finalData }
+              : { content: '', ...finalData };
+            await interaction._replyMessage.edit(editPayload);
+          } else {
+            await message.channel.send(finalData);
+          }
         },
         reply: async (data) => {
-           await message.channel.send(data);
+          await message.channel.send(attachTip(data));
         },
         followUp: async (data) => {
-           await message.channel.send(data);
+          await message.channel.send(data);
         }
       };
 
       try {
         await command.execute(interaction, queueDispatcher);
       } catch (error) {
-        console.error(`[Discord] Lỗi lệnh text ?${commandName}:`, error);
+        console.error(`[Discord] Lỗi lệnh text ${commandName}:`, error);
       } finally {
         commandHandler.finishUserTask(userId);
       }
       return;
     }
 
-    // --- Xử lý lệnh tiền tố '!' (Chỉ dành cho Admin) ---
-    // Log debug để dễ dàng kiểm tra
-    if (message.content.startsWith('!')) {
-      console.log(`[Admin-Debug] Nhận tin nhắn: "${message.content}" từ User ID: ${message.author.id} (Tên: ${message.author.tag}). ADMIN_ID hiện tại trong .env là: "${ADMIN_ID}"`);
+    // 4. Kiểm tra xem có phải lệnh Quản trị (Admin) hay không
+    // Hỗ trợ: !status, @Bot !status, @Bot status (nếu là Admin), hoặc !status trong DM
+    let isAdminCommand = false;
+    let command = '';
+    let args = [];
+
+    if (cleanText.startsWith('!')) {
+      args = cleanText.slice(1).trim().split(/ +/);
+      command = args.shift()?.toLowerCase();
+      isAdminCommand = true;
+    } else if ((isMentioned || isDirectMessage) && ADMIN_ID && message.author.id === ADMIN_ID && cleanText) {
+      const testArgs = cleanText.split(/ +/);
+      const firstWord = testArgs[0]?.toLowerCase();
+      if (adminCommands.includes(firstWord)) {
+        args = testArgs;
+        command = args.shift()?.toLowerCase();
+        isAdminCommand = true;
+      }
     }
 
-    // Kiểm tra ADMIN_ID nếu đã được cấu hình
-    if (ADMIN_ID && message.author.id !== ADMIN_ID) {
-      if (message.content.startsWith('!')) {
-         console.warn(`[Admin-Debug] Bỏ qua tin nhắn vì User ID (${message.author.id}) không khớp với ADMIN_ID (${ADMIN_ID}).`);
+    // --- XỬ LÝ LỆNH ADMIN ---
+    if (isAdminCommand) {
+      console.log(`[Admin-Debug] Nhận lệnh Admin: "${command}" từ User ID: ${message.author.id} (Tên: ${message.author.tag}). ADMIN_ID cấu hình: "${ADMIN_ID}"`);
+
+      // Kiểm tra ADMIN_ID nếu đã được cấu hình
+      if (ADMIN_ID && message.author.id !== ADMIN_ID) {
+        console.warn(`[Admin-Debug] Bỏ qua tin nhắn vì User ID (${message.author.id}) không khớp với ADMIN_ID (${ADMIN_ID}).`);
+        return;
       }
-      return;
-    }
-    
-    if (!message.content.startsWith('!')) return;
-    const args = message.content.slice(1).trim().split(/ +/);
-    const command = args.shift().toLowerCase();
 
     try {
       if (command === 'help') {
@@ -1006,6 +1071,18 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     } catch (cmdErr) {
       console.error('[Admin-Debug] Lỗi gửi tin nhắn trả lời:', cmdErr);
     }
+    return;
+  }
+
+  // 5. Nếu người dùng Tag/Mention Bot nhưng không phải lệnh game hay admin -> Xử lý AI Chat
+  if (isMentioned) {
+    if (!cleanText) {
+      await message.reply('👋 Bạn vừa tag mình! Bạn có thể tra cứu stats (VD: `@CheckStatsKingMC stats <tên>`), dùng lệnh gạch chéo `/<lệnh>` hoặc trò chuyện cùng AI cứ nhắn nhé.');
+      return;
+    }
+    await handleAiChatMessage(message);
+    return;
+  }
   });
 
   if (DISCORD_TOKEN && DISCORD_TOKEN !== 'your_discord_bot_token_here') {

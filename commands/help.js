@@ -27,47 +27,48 @@ module.exports = {
       .setThumbnail('https://mc-heads.net/head/BinhLH/3d')
       .setDescription(
         `Chào mừng bạn đến với **KingMC Stats Bot**!\n` +
-        `Bạn có thể sử dụng các lệnh bằng **Slash Command (\`/\`)** hoặc **Tiền tố (\`?\`)** trực tiếp trong kênh chat.`
+        `Bạn có thể sử dụng các lệnh bằng **Slash Command (\`/\`)**, **Tag Bot (\`@bot <lệnh>\`)**, hoặc **Tiền tố (\`?\`)** trực tiếp trong kênh chat.`
       )
       .addFields(
         {
           name: `${nameTagEmoji} **LỆNH KIỂM TRA NGƯỜI CHƠI**`,
           value: 
-            `• \`?stats <tên>\` hoặc \`/stats <tên>\`\n` +
+            `• \`/stats <tên>\` hoặc \`@Bot stats <tên>\` (hoặc \`?stats <tên>\`)\n` +
             `  └ *Xem thống kê (chỉ số) chi tiết của người chơi.*\n` +
-            `• \`?bal <tên>\` hoặc \`/bal <tên>\`\n` +
+            `• \`/bal <tên>\` hoặc \`@Bot bal <tên>\` (hoặc \`?bal <tên>\`)\n` +
             `  └ *Xem số dư tài khoản (tiền/xu) của người chơi.*\n` +
-            `• \`?bounty [tên]\` hoặc \`/bounty [tên]\`\n` +
+            `• \`/bounty [tên]\` hoặc \`@Bot bounty [tên]\` (hoặc \`?bounty [tên]\`)\n` +
             `  └ *Xem Top 5 tiền thưởng hoặc kiểm tra tiền thưởng của người chơi.*`,
           inline: false
         },
         {
           name: `${enderChestEmoji} **LỆNH THỊ TRƯỜNG & VẬT PHẨM**`,
           value: 
-            `• \`?ah [tên vật phẩm]\` hoặc \`/ah [tên]\`\n` +
+            `• \`/ah [tên]\` hoặc \`@Bot ah [tên]\` (hoặc \`?ah [tên]\`)\n` +
             `  └ *Tra cứu vật phẩm đang rao bán trên Chợ Đen (AH).*\n` +
-            `• \`?order [tên vật phẩm]\` hoặc \`/order [tên]\`\n` +
+            `• \`/order [tên]\` hoặc \`@Bot order [tên]\` (hoặc \`?order [tên]\`)\n` +
             `  └ *Tra cứu các đơn đặt hàng thị trường.*`,
           inline: false
         },
         {
           name: `${compassEmoji} **LỆNH HỆ THỐNG & TRẠNG THÁI**`,
           value: 
-            `• \`?online [cụm server]\` hoặc \`/online [cụm]\`\n` +
+            `• \`/online [cụm]\` hoặc \`@Bot online [cụm]\` (hoặc \`?online [cụm]\`)\n` +
             `  └ *Xem danh sách & số lượng người chơi đang online.*\n` +
-            `• \`?ping\` hoặc \`/ping\`\n` +
+            `• \`/ping\` hoặc \`@Bot ping\` (hoặc \`?ping\`)\n` +
             `  └ *Kiểm tra độ trễ Discord Bot & trạng thái máy chủ KingMC.*\n` +
-            `• \`?donate\` hoặc \`/donate\`\n` +
+            `• \`/donate\` hoặc \`@Bot donate\` (hoặc \`?donate\`)\n` +
             `  └ *Xem thông tin & mã QR ủng hộ kinh phí duy trì bot.*\n` +
-            `• \`?help\` hoặc \`/help\`\n` +
+            `• \`/help\` hoặc \`@Bot help\` (hoặc \`?help\`)\n` +
             `  └ *Hiển thị bảng trợ giúp này.*`,
           inline: false
         },
         {
-          name: `${redstoneTorchEmoji} **MẸO SỬ DỤNG**`,
+          name: `${redstoneTorchEmoji} **MẸO SỬ DỤNG & LƯU Ý**`,
           value: 
-            `• Bạn có thể bấm trực tiếp nút **Báo lỗi** dưới các kết quả nếu gặp sự cố.\n` +
-            `• Sử dụng cú pháp ví dụ: \`?stats BinhLH\` hoặc \`?ah kiem\``,
+            `• Có 3 cách dùng: \`/stats <tên>\`, tag bot \`@Bot stats <tên>\` (hoặc \`@Bot ?stats\`), hoặc \`?stats <tên>\`.\n` +
+            `• 💡 **Lưu ý:** Nếu một ngày lệnh \`?<lệnh>\` không phản hồi, bạn hãy tag bot kèm lệnh hoặc dùng lệnh gạch chéo (\`/\`) nhé!\n` +
+            `• Bạn có thể bấm trực tiếp nút **Báo lỗi** dưới các kết quả nếu gặp sự cố.`,
           inline: false
         }
       )
