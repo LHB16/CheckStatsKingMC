@@ -101,24 +101,22 @@ module.exports = {
 
       const rows = [new ActionRowBuilder().addComponents(selectMenu)];
 
-      // Nút điều hướng phân trang (nếu có từ 2 trang trở lên)
+      // Nút điều hướng phân trang tối giản (nếu có từ 2 trang trở lên)
       if (totalPages > 1) {
         const prevButton = new ButtonBuilder()
           .setCustomId(prevBtnId)
-          .setLabel('Trang trước')
           .setEmoji('◀️')
           .setStyle(ButtonStyle.Secondary)
           .setDisabled(page === 0);
 
         const pageIndicator = new ButtonBuilder()
           .setCustomId(pageIndicatorId)
-          .setLabel(`${page + 1}/${totalPages} (${items.length} món)`)
-          .setStyle(ButtonStyle.Primary)
+          .setLabel(`${page + 1}/${totalPages}`)
+          .setStyle(ButtonStyle.Secondary)
           .setDisabled(true);
 
         const nextButton = new ButtonBuilder()
           .setCustomId(nextBtnId)
-          .setLabel('Trang sau')
           .setEmoji('▶️')
           .setStyle(ButtonStyle.Secondary)
           .setDisabled(page >= totalPages - 1);
