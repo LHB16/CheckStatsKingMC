@@ -915,7 +915,8 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     }
 
     // 4. Kiểm tra xem có phải lệnh Quản trị (Admin) hay không
-    // Hỗ trợ: !status, @Bot !status, @Bot status (nếu là Admin), hoặc !status trong DM
+    // BẮT BUỘC phải có tiền tố '!': !status, !restart, !mode, !toggle, !ai on/off, !tracker, v.v. (kể cả trong DM lẫn server)
+    // Nếu không có '!', Admin sẽ được đối xử như một người dùng bình thường (được hỏi AI, dùng lệnh game, tính toán,...)
     let isAdminCommand = false;
     let command = '';
     let args = [];
@@ -923,13 +924,7 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     if (cleanText.startsWith('!')) {
       args = cleanText.slice(1).trim().split(/ +/);
       command = args.shift()?.toLowerCase();
-      isAdminCommand = true;
-    } else if ((isMentioned || isDirectMessage) && ADMIN_ID && message.author.id === ADMIN_ID && cleanText) {
-      const testArgs = cleanText.split(/ +/);
-      const firstWord = testArgs[0]?.toLowerCase();
-      if (adminCommands.includes(firstWord)) {
-        args = testArgs;
-        command = args.shift()?.toLowerCase();
+      if (adminCommands.includes(command)) {
         isAdminCommand = true;
       }
     }
@@ -993,7 +988,8 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
             await message.channel.send('🟢 Đã **BẬT** lại tính năng trò chuyện AI.');
          } else {
             const statusStr = global.isAiChatEnabled ? '🟢 Đang **BẬT**' : `🔴 Đang **TẮT** (Lý do: \`${global.aiDisableReason}\`)`;
-            await message.channel.send(`🤖 **Trạng thái AI Chat:** ${statusStr}\n\nCú pháp Admin: \`!ai on\` hoặc \`!ai off [lời nhắn]\``);
+            const botName = client.user?.username || 'CheckStatsKingMC';
+            await message.channel.send(`🤖 **Trạng thái AI Chat:** ${statusStr}\n\n⚙️ **Cú pháp Admin:** \`!ai on\` hoặc \`!ai off [lời nhắn]\`\n💡 *Ghi chú: Để hỏi đáp AI, vui lòng dùng \`?ai <câu hỏi>\` hoặc tag \`@${botName} ai <câu hỏi>\` (trong tin nhắn riêng DM chỉ cần gõ: \`ai <câu hỏi>\`).*`);
          }
       } else if (command === 'mode' || command === 'render') {
          const targetMode = args.shift()?.toLowerCase();
