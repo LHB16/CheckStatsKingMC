@@ -5,6 +5,7 @@
  */
 
 const { EmbedBuilder } = require('discord.js');
+const { getCustomEmoji } = require('../helpers/utils');
 
 /**
  * Bản đồ ký tự số mũ trên (Superscript)
@@ -415,14 +416,10 @@ async function handleMathMessage(message, expressionText) {
     return await message.reply(`⚠️ **Lỗi tính toán:** ${evalResult.error}`);
   }
 
-  // Gửi kết quả
+  const bookshelfEmoji = getCustomEmoji('bookshelf', '📚');
   const resultEmbed = new EmbedBuilder()
     .setColor('#57F287')
-    .setTitle('🧮 KẾT QUẢ TÍNH TOÁN')
-    .addFields(
-      { name: '📥 Biểu thức', value: `\`\`\`math\n${expressionText.trim()}\n\`\`\``, inline: false },
-      { name: '📤 Kết quả', value: `\`\`\`yaml\n= ${evalResult.formattedResult}\n\`\`\``, inline: false }
-    )
+    .setDescription(`${bookshelfEmoji} Kết quả là: **${evalResult.formattedResult}**`)
     .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
     .setTimestamp();
 

@@ -5,6 +5,7 @@
 
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { evaluateMath } = require('../handlers/mathHandler');
+const { getCustomEmoji } = require('../helpers/utils');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -33,13 +34,10 @@ module.exports = {
       });
     }
 
+    const bookshelfEmoji = getCustomEmoji('bookshelf', '📚');
     const resultEmbed = new EmbedBuilder()
       .setColor('#57F287')
-      .setTitle('🧮 KẾT QUẢ TÍNH TOÁN')
-      .addFields(
-        { name: '📥 Biểu thức', value: `\`\`\`math\n${expression.trim()}\n\`\`\``, inline: false },
-        { name: '📤 Kết quả', value: `\`\`\`yaml\n= ${evalResult.formattedResult}\n\`\`\``, inline: false }
-      )
+      .setDescription(`${bookshelfEmoji} Kết quả là: **${evalResult.formattedResult}**`)
       .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
       .setTimestamp();
 
