@@ -785,26 +785,16 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
 
-    // 1. Nhận diện ngữ cảnh: Tag Bot hoặc Tin nhắn riêng (DM)
-    const isMentioned = message.mentions.has(client.user);
+    // 1. Nhận diện ngữ cảnh: Tin nhắn riêng (DM)
     const isDirectMessage = !message.guild;
-
-    // 2. Làm sạch nội dung tin nhắn (loại bỏ tag bot nếu có)
-    let rawText = message.content || '';
-    let cleanText = rawText;
-    if (isMentioned) {
-      const mentionRegex = new RegExp(`<@!?${client.user.id}>`, 'g');
-      cleanText = rawText.replace(mentionRegex, '').trim();
-    } else {
-      cleanText = rawText.trim();
-    }
+    const cleanText = (message.content || '').trim();
 
     // Danh sách lệnh hợp lệ
-    const allowedCommands = ['stats', 'order', 'bal', 'ah', 'online', 'ping', 'help', 'lb', 'donate', 'bounty', 'item'];
+    const allowedCommands = ['stats', 'order', 'bal', 'ah', 'online', 'ping', 'help', 'lb', 'donate', 'bounty', 'item', 'math', 'ai', 'chat'];
     const adminCommands = ['help', 'status', 'workers', 'restart', 'mode', 'render', 'toggle', 'ai', 'tracker', 'theodoi'];
 
-    // 3. Kiểm tra xem có phải lệnh game/người dùng hay không
-    // Hỗ trợ: ?stats, @Bot ?stats, @Bot stats, và stats trong DM
+    // 2. Kiểm tra xem có phải lệnh game/người dùng hay không
+    // Hỗ trợ: ?stats trong server hoặc stats trong DM
     let isGameCommand = false;
     let commandName = '';
     let commandArgs = [];
@@ -815,10 +805,9 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
       commandName = commandArgs.shift()?.toLowerCase();
       if (allowedCommands.includes(commandName)) {
         isGameCommand = true;
-        // Chỉ đính kèm lưu ý chuyển đổi nếu dùng lệnh '?' trực tiếp trong kênh server mà KHÔNG tag bot
-        showPrefixTip = !isMentioned && !isDirectMessage;
+        showPrefixTip = !isDirectMessage;
       }
-    } else if ((isMentioned || isDirectMessage) && cleanText) {
+    } else if (isDirectMessage && cleanText) {
       commandArgs = cleanText.split(/ +/);
       const firstWord = commandArgs.shift()?.toLowerCase();
       if (allowedCommands.includes(firstWord)) {
@@ -845,10 +834,8 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
       const argStr = commandArgs.join(' ').trim();
       const noArgRequiredCommands = ['ping', 'help', 'lb', 'donate', 'bounty'];
       if (!noArgRequiredCommands.includes(commandName) && !argStr) {
-        const exampleSyntax = isMentioned
-          ? `@${client.user.username} ${commandName} BinhLH`
-          : `?${commandName} BinhLH`;
-        return message.channel.send(`${barrierEmoji} Lệnh \`${commandName}\` cần có tham số (tên người chơi hoặc vật phẩm). VD: \`${exampleSyntax}\``);
+        const exampleSyntax = `?${commandName} BinhLH`;
+        return message.channel.send(`${barrierEmoji} Lệnh \`${commandName}\` cần có tham số (tên người chơi hoặc vật phẩm). VD: \`${exampleSyntax}\` hoặc \`/${commandName}\``);
       }
 
       const userId = message.author.id;
@@ -858,8 +845,7 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
       }
 
       // Thông báo lưu ý chuyển đổi khi người dùng vẫn đang gõ '?'
-      const botName = client.user?.username || 'CheckStatsKingMC';
-      const tipText = `> 💡 **Lưu ý:** *Nếu một ngày lệnh \`?${commandName}\` không phản hồi, bạn hãy tag bot (\`@${botName} ${commandName}\` hoặc \`@${botName} ?${commandName}\`), hoặc dùng Slash Command (\`/${commandName}\`) nhé!*`;
+      const tipText = `> 💡 **Lưu ý:** *Nếu lệnh tiền tố \`?${commandName}\` không phản hồi, bạn hãy sử dụng Slash Command (\`/${commandName}\`) nhé!*`;
 
       const attachTip = (payload) => {
         if (!showPrefixTip) return payload;
@@ -988,8 +974,7 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
             await message.channel.send('🟢 Đã **BẬT** lại tính năng trò chuyện AI.');
          } else {
             const statusStr = global.isAiChatEnabled ? '🟢 Đang **BẬT**' : `🔴 Đang **TẮT** (Lý do: \`${global.aiDisableReason}\`)`;
-            const botName = client.user?.username || 'CheckStatsKingMC';
-            await message.channel.send(`🤖 **Trạng thái AI Chat:** ${statusStr}\n\n⚙️ **Cú pháp Admin:** \`!ai on\` hoặc \`!ai off [lời nhắn]\`\n💡 *Ghi chú: Để hỏi đáp AI, vui lòng dùng \`?ai <câu hỏi>\` hoặc tag \`@${botName} ai <câu hỏi>\` (trong tin nhắn riêng DM chỉ cần gõ: \`ai <câu hỏi>\`).*`);
+            await message.channel.send(`🤖 **Trạng thái AI Chat:** ${statusStr}\n\n⚙️ **Cú pháp Admin:** \`!ai on\` hoặc \`!ai off [lời nhắn]\`\n💡 *Ghi chú: Để hỏi đáp AI, vui lòng dùng \`?ai <câu hỏi>\` hoặc Slash Command \`/ai\` (trong tin nhắn riêng DM chỉ cần gõ: \`ai <câu hỏi>\`).*`);
          }
       } else if (command === 'mode' || command === 'render') {
          const targetMode = args.shift()?.toLowerCase();
@@ -1072,13 +1057,11 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   }
 
   // --- LUỒNG 2: TRỢ LÝ AI (ĐỘC LẬP & TÁCH RỜI VỚI LUỒNG LỆNH) ---
-  // Chỉ kích hoạt khi:
+  // Kích hoạt khi:
   // 1. Dùng lệnh tiền tố rõ ràng: ?ai <câu hỏi> (trong guild hoặc DM)
-  // 2. Tag Bot kèm từ khóa ai: @Bot ai <câu hỏi>
-  // 3. Nhắn trong tin nhắn riêng (DM): ai <câu hỏi> hoặc ?ai <câu hỏi>
-  // Tuyệt đối không kích hoạt khi chỉ chat bình thường trong server bắt đầu bằng từ 'ai' mà không tag bot
+  // 2. Nhắn trong tin nhắn riêng (DM): ai <câu hỏi>
   const isAiExplicitCommand = /^\?ai(\s+|$)/i.test(cleanText) ||
-    ((isMentioned || isDirectMessage) && /^ai(\s+|$)/i.test(cleanText));
+    (isDirectMessage && /^ai(\s+|$)/i.test(cleanText));
   if (isAiExplicitCommand) {
     if (global.isAiChatEnabled === false) {
       await message.reply(`⚠️ **Thông báo:** ${global.aiDisableReason || 'Tính năng AI Chat hiện đang tạm tắt.'}`);
@@ -1086,8 +1069,7 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     }
     const promptText = cleanText.replace(/^\??ai\s*/i, '').trim();
     if (!promptText) {
-      const botName = client.user?.username || 'CheckStatsKingMC';
-      await message.reply(`👋 Bạn đã gọi kênh AI! Vui lòng nhập câu hỏi kèm theo. VD: \`@${botName} ai Cách chế tạo khiên trong Minecraft?\``);
+      await message.reply('👋 Bạn đã gọi kênh AI! Vui lòng nhập câu hỏi kèm theo. VD: `?ai Cách chế tạo khiên trong Minecraft?` hoặc dùng Slash Command `/ai`.');
       return;
     }
     await handleAiChatMessage(message, promptText);
@@ -1095,9 +1077,9 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   }
 
   // --- LUỒNG 3: TÍNH TOÁN TOÁN HỌC THUẦN TÚY (PURE MATH ENGINE) ---
-  // 1. Cú pháp truyền thống: @Bot math <biểu thức>, ?math <biểu thức>, ?calc ..., ?tinh ...
+  // 1. Cú pháp tiền tố: ?math <biểu thức>, ?calc <biểu thức>, ?tinh <biểu thức> (hoặc trong DM: math ...)
   const isMathExplicitCommand = /^\?(math|calc|tinh)(\s+|$)/i.test(cleanText) ||
-    ((isMentioned || isDirectMessage) && /^(math|calc|tinh)(\s+|$)/i.test(cleanText));
+    (isDirectMessage && /^(math|calc|tinh)(\s+|$)/i.test(cleanText));
   if (isMathExplicitCommand) {
     const mathExpression = cleanText.replace(/^\??(math|calc|tinh)\s*/i, '').trim();
     await handleMathMessage(message, mathExpression);
@@ -1107,31 +1089,16 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   // 2. Tự động nhận dạng phép tính toán học (không cần chữ math):
   // Hỗ trợ:
   // - Khi có tiền tố ? (kênh chat hoặc DM): ?12*2, ? 12*2, ?(15+5)*2
-  // - Khi tag bot: @Bot 12*2, @Bot (15 + 25) * 4 / 2
   // - Trong tin nhắn riêng (DM): 12*2, (15 + 25) * 4
   let mathCandidate = null;
   if (cleanText.startsWith('?')) {
     mathCandidate = cleanText.slice(1).trim();
-  } else if (isMentioned || isDirectMessage) {
+  } else if (isDirectMessage) {
     mathCandidate = cleanText.trim();
   }
 
   if (mathCandidate && isMathExpression(mathCandidate)) {
     await handleMathMessage(message, mathCandidate);
-    return;
-  }
-
-  // --- NẾU NGƯỜI DÙNG TAG BOT NHƯNG KHÔNG GÕ ĐÚNG LỆNH ---
-  // (Hoàn toàn không kích hoạt AI, chỉ hướng dẫn cách dùng lệnh tra cứu)
-  if (isMentioned) {
-    const botName = client.user?.username || 'CheckStatsKingMC';
-    await message.reply(
-      `👋 Bạn vừa tag mình! Để sử dụng, vui lòng gõ kèm tên lệnh:\n` +
-      `• Tra cứu game: \`@${botName} stats <tên>\` hoặc \`@${botName} bal <tên>\`\n` +
-      `• Tính toán nhanh: \`@${botName} <phép tính>\` (VD: \`@${botName} 12*2\` hoặc \`?12*2\`)\n` +
-      `• Trò chuyện AI: \`@${botName} ai <câu hỏi>\` (VD: \`@${botName} ai Cách chế tạo khiên?\`)\n` +
-      `• Hoặc dùng Slash Command: \`/stats\`, \`/help\` để xem danh sách toàn bộ lệnh!`
-    );
     return;
   }
   });

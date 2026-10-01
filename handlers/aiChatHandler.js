@@ -24,17 +24,14 @@ async function handleAiChatMessage(message, customPromptText = null) {
       return;
     }
 
-    const clientUser = message.client.user;
-
-    // 3. Tách lấy câu hỏi sạch (sử dụng customPromptText hoặc xóa tag bot và tiền tố ai)
+    // 3. Tách lấy câu hỏi sạch (sử dụng customPromptText hoặc loại bỏ tiền tố ai)
     let promptText = customPromptText;
     if (!promptText) {
-      const mentionRegex = new RegExp(`<@!?${clientUser.id}>`, 'g');
-      promptText = message.content.replace(mentionRegex, '').replace(/^\??ai\s*/i, '').trim();
+      promptText = message.content.replace(/^\??ai\s*/i, '').trim();
     }
 
     if (!promptText) {
-      await message.reply('👋 Bạn vừa tag mình! Bạn cần trợ giúp gì? Hãy nhắn câu hỏi kèm theo nhé.');
+      await message.reply('👋 Bạn đã gọi kênh AI! Vui lòng nhập câu hỏi kèm theo. VD: `?ai Cách chế tạo khiên trong Minecraft?` hoặc dùng Slash Command `/ai`.');
       return;
     }
 

@@ -389,18 +389,18 @@ async function handleMathMessage(message, expressionText) {
       .setDescription(
         `Bot hỗ trợ tính toán toán học thuần túy, an toàn và tức thì!\n\n` +
         `**Cách dùng:**\n` +
-        `• Tag Bot: \`@${botName} math <biểu thức>\`\n` +
-        `• Tiền tố: \`?math <biểu thức>\` hoặc \`?calc <biểu thức>\`\n\n` +
+        `• Slash Command: \`/math <biểu thức>\`\n` +
+        `• Tiền tố: \`?math <biểu thức>\`, \`?calc <biểu thức>\` hoặc \`?<phép tính>\` (VD: \`?12*2\`)\n\n` +
         `**Toán tử hỗ trợ:**\n` +
         `• Cộng (\`+\`), Trừ (\`-\`)\n` +
         `• Nhân (\`*\`, \`x\`), Chia (\`/\`, \`:\`)\n` +
         `• Chia lấy dư (\`%\`), Lũy thừa (\`^\`)\n` +
         `• Dấu ngoặc nhóm: \`( )\`, số âm, số thập phân\n\n` +
         `**Ví dụ mẫu:**\n` +
-        `• \`@${botName} math 12*2\`\n` +
-        `• \`@${botName} math (15 + 25) * 4 / 2\`\n` +
-        `• \`@${botName} math 2 ^ 16\`\n` +
-        `• \`@${botName} math 100 % 7\``
+        `• \`/math expression: 12*2\`\n` +
+        `• \`?math (15 + 25) * 4 / 2\`\n` +
+        `• \`?2 ^ 16\`\n` +
+        `• \`?100 % 7\``
       )
       .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
       .setTimestamp();
