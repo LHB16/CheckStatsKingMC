@@ -15,6 +15,7 @@ const CommandHandler = require('./handlers/commandHandler');
 const { handleReportButtons, sendBanAlert } = require('./helpers/reportHelper');
 const configHelper = require('./helpers/configHelper');
 const { handleAiChatMessage } = require('./handlers/aiChatHandler');
+const { handleMathMessage } = require('./handlers/mathHandler');
 const trackerHelper = require('./helpers/trackerHelper');
 const { handleTrackerButtons, buildTrackerOverviewMessage } = require('./handlers/trackerButtonHandler');
 const { handlePaginationButtons } = require('./helpers/paginationHelper');
@@ -1074,13 +1075,44 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     return;
   }
 
-  // 5. Nếu người dùng Tag/Mention Bot nhưng không phải lệnh game hay admin -> Xử lý AI Chat
-  if (isMentioned) {
-    if (!cleanText) {
-      await message.reply('👋 Bạn vừa tag mình! Bạn có thể tra cứu stats (VD: `@CheckStatsKingMC stats <tên>`), dùng lệnh gạch chéo `/<lệnh>` hoặc trò chuyện cùng AI cứ nhắn nhé.');
+  // --- LUỒNG 2: TRỢ LÝ AI (ĐỘC LẬP & TÁCH RỜI VỚI LUỒNG LỆNH) ---
+  // Chỉ kích hoạt khi người dùng chỉ định rõ tiền tố 'ai': @Bot ai <câu hỏi> hoặc ?ai <câu hỏi>
+  const isAiExplicitCommand = cleanText.startsWith('ai ') || cleanText === 'ai' || cleanText.startsWith('?ai');
+  if (isAiExplicitCommand) {
+    if (global.isAiChatEnabled === false) {
+      await message.reply(`⚠️ **Thông báo:** ${global.aiDisableReason || 'Tính năng AI Chat hiện đang tạm tắt.'}`);
       return;
     }
-    await handleAiChatMessage(message);
+    const promptText = cleanText.replace(/^\??ai\s*/i, '').trim();
+    if (!promptText) {
+      const botName = client.user?.username || 'CheckStatsKingMC';
+      await message.reply(`👋 Bạn đã gọi kênh AI! Vui lòng nhập câu hỏi kèm theo. VD: \`@${botName} ai Cách chế tạo khiên trong Minecraft?\``);
+      return;
+    }
+    await handleAiChatMessage(message, promptText);
+    return;
+  }
+
+  // --- LUỒNG 3: TÍNH TOÁN TOÁN HỌC THUẦN TÚY (PURE MATH ENGINE) ---
+  // Hỗ trợ: @Bot math <biểu thức>, @Bot calc <biểu thức>, @Bot tinh <biểu thức>, ?math <biểu thức>, ?calc <biểu thức>
+  const isMathExplicitCommand = /^(math|calc|tinh)(\s+|$)/i.test(cleanText) || /^\?(math|calc|tinh)(\s+|$)/i.test(cleanText);
+  if (isMathExplicitCommand) {
+    const mathExpression = cleanText.replace(/^\??(math|calc|tinh)\s*/i, '').trim();
+    await handleMathMessage(message, mathExpression);
+    return;
+  }
+
+  // --- NẾU NGƯỜI DÙNG TAG BOT NHƯNG KHÔNG GÕ ĐÚNG LỆNH ---
+  // (Hoàn toàn không kích hoạt AI, chỉ hướng dẫn cách dùng lệnh tra cứu)
+  if (isMentioned) {
+    const botName = client.user?.username || 'CheckStatsKingMC';
+    await message.reply(
+      `👋 Bạn vừa tag mình! Để sử dụng, vui lòng gõ kèm tên lệnh:\n` +
+      `• Tra cứu game: \`@${botName} stats <tên>\` hoặc \`@${botName} bal <tên>\`\n` +
+      `• Tính toán nhanh: \`@${botName} math <biểu thức>\` (VD: \`@${botName} math 12*2\`)\n` +
+      `• Trò chuyện AI: \`@${botName} ai <câu hỏi>\` (VD: \`@${botName} ai Cách chế tạo khiên?\`)\n` +
+      `• Hoặc dùng Slash Command: \`/stats\`, \`/help\` để xem danh sách toàn bộ lệnh!`
+    );
     return;
   }
   });

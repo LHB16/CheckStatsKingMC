@@ -64,6 +64,15 @@ module.exports = {
           inline: false
         },
         {
+          name: `🧮 **TIỆN ÍCH TÍNH TOÁN & TRỢ LÝ**`,
+          value: 
+            `• \`@Bot math <biểu thức>\` (hoặc \`?math <biểu thức>\`)\n` +
+            `  └ *Tính toán toán học thuần túy: \`+\`, \`-\`, \`*\`, \`/\`, \`%\`, \`^\`, dấu ngoặc... VD: \`@Bot math 12*2\`*\n` +
+            `• \`@Bot ai <câu hỏi>\` (hoặc \`?ai <câu hỏi>\`)\n` +
+            `  └ *Trò chuyện hỏi đáp cùng trợ lý AI KingMC.*`,
+          inline: false
+        },
+        {
           name: `${redstoneTorchEmoji} **MẸO SỬ DỤNG & LƯU Ý**`,
           value: 
             `• Có 3 cách dùng: \`/stats <tên>\`, tag bot \`@Bot stats <tên>\` (hoặc \`@Bot ?stats\`), hoặc \`?stats <tên>\`.\n` +

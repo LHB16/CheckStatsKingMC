@@ -8,31 +8,29 @@ const conversationHistory = new Map();
 const MAX_HISTORY = 6; // Lưu tối đa 6 câu thoại gần nhất (3 cặp hỏi - đáp)
 
 /**
- * Xử lý sự kiện tin nhắn trong Discord (Mention tag @bot)
+ * Xử lý sự kiện tin nhắn AI trong Discord (Luồng độc lập)
  * @param {import('discord.js').Message} message 
+ * @param {string|null} customPromptText
  */
-async function handleAiChatMessage(message) {
+async function handleAiChatMessage(message, customPromptText = null) {
   try {
     // 1. Bỏ qua tin nhắn từ Bot khác hoặc từ chính bot
     if (message.author.bot) return;
 
-    const clientUser = message.client.user;
-    
-    // 2. Kiểm tra xem bot có được tag/mention không
-    const isMentioned = message.mentions.has(clientUser);
-    
-    // Nếu không được mention thì bỏ qua
-    if (!isMentioned) return;
-
-    // 2.5 Kiểm tra xem tính năng AI Chat có đang bị Admin TẮT hay không
+    // 2. Kiểm tra xem tính năng AI Chat có đang bị Admin TẮT hay không
     if (global.isAiChatEnabled === false) {
       console.log(`[AIChat] Bỏ qua câu hỏi vì tính năng AI Chat hiện đang bị TẮT.`);
       return;
     }
 
-    // 3. Tách lấy câu hỏi sạch (xóa tag bot khỏi chuỗi tin nhắn)
-    const mentionRegex = new RegExp(`<@!?${clientUser.id}>`, 'g');
-    const promptText = message.content.replace(mentionRegex, '').trim();
+    const clientUser = message.client.user;
+
+    // 3. Tách lấy câu hỏi sạch (sử dụng customPromptText hoặc xóa tag bot và tiền tố ai)
+    let promptText = customPromptText;
+    if (!promptText) {
+      const mentionRegex = new RegExp(`<@!?${clientUser.id}>`, 'g');
+      promptText = message.content.replace(mentionRegex, '').replace(/^\??ai\s*/i, '').trim();
+    }
 
     if (!promptText) {
       await message.reply('👋 Bạn vừa tag mình! Bạn cần trợ giúp gì? Hãy nhắn câu hỏi kèm theo nhé.');
