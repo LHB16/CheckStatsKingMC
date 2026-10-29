@@ -92,7 +92,12 @@ async function getBrowser() {
       launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
     }
 
-    browserInstance = await puppeteer.launch(launchOptions);
+    try {
+      browserInstance = await puppeteer.launch(launchOptions);
+    } catch (launchErr) {
+      console.warn('[RenderHelper] ⚠️ Không thể khởi chạy Chromium:', launchErr.message);
+      throw new Error(`Chromium/Puppeteer không khả dụng trên môi trường này (${launchErr.message}). Vui lòng dùng chế độ hiển thị TEXT (!mode text).`);
+    }
   }
   return browserInstance;
 }

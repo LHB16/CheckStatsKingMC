@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "debug": "node debug/debug_bot.js",
-    "postinstall": "npx puppeteer browsers install chrome",
+    "postinstall": "node scripts/postinstall.js",
     "build:dashboard": "npm run --prefix dashboard build",
     "emoji:optimize": "node scripts/optimize_textures_to_emojis.js",
     "emoji:upload": "node scripts/upload_discord_emojis.js",

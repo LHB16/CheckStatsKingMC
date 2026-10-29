@@ -24,6 +24,20 @@ const { getCustomEmoji } = require('./helpers/utils');
 const { connectMongo, isMongoAvailable, getSystemConfig } = require('./helpers/mongoHelper');
 const { handleDashboardRequest, syncDiscordGuilds } = require('./handlers/dashboardHandler');
 const renderManager = require('./helpers/renderManager');
+const masterElection = require('./helpers/masterElection');
+
+/**
+ * Lấy Master URL hiệu dụng (ưu tiên cấu hình động từ MongoDB Atlas để tự động xoay chuyển)
+ */
+async function getEffectiveMasterUrl() {
+  if (isMongoAvailable()) {
+    try {
+      const dbUrl = await getSystemConfig('master_url', null);
+      if (dbUrl && String(dbUrl).startsWith('http')) return String(dbUrl).trim();
+    } catch (e) {}
+  }
+  return process.env.MASTER_URL || process.env.RENDER_EXTERNAL_URL || '';
+}
 
 
 // Cấu hình từ .env
@@ -111,7 +125,7 @@ if (BOT_ROLE === 'worker' || BOT_ROLE === 'standalone') {
   localMcBot = new PersistentBot(credentials, MC_SERVER_HOSTS, MC_SERVER_PORT);
   
   localMcBot.on('notifyAdmin', async (message) => {
-    const MASTER_URL = process.env.MASTER_URL;
+    const MASTER_URL = await getEffectiveMasterUrl();
     if (BOT_ROLE === 'standalone' && global.globalDiscordClient && ADMIN_ID) {
       try {
         const adminUser = await global.globalDiscordClient.users.fetch(ADMIN_ID);
@@ -137,7 +151,7 @@ if (BOT_ROLE === 'worker' || BOT_ROLE === 'standalone') {
 
   localMcBot.on('ipLimitDetected', async ({ username, reason }) => {
     console.warn(`[Worker] 🚨 Nhận tín hiệu ipLimitDetected: [${username}] - Lý do: [${reason}]`);
-    const MASTER_URL = process.env.MASTER_URL;
+    const MASTER_URL = await getEffectiveMasterUrl();
     if (MASTER_URL) {
       try {
         const targetUrl = new URL('/api/worker-ip-limit', MASTER_URL);
@@ -220,7 +234,8 @@ connectMongo().then(async (connected) => {
 });
 
 // 2. Khởi tạo HTTP Server (Health Check cho Render & Worker API endpoints & Dashboard Web UI)
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.SERVER_PORT || process.env.PORT) || 3000;
+const HOST = '0.0.0.0';
 
 // Bộ nhớ đệm giới hạn IP (Rate Limiter)
 const ipRateLimitMap = new Map();
@@ -283,6 +298,8 @@ const server = http.createServer(async (req, res) => {
       ready: isReady,
       busy: isBusy,
       username: localMcBot ? localMcBot.credentials.username : 'NoLocalBot',
+      isLeader: BOT_ROLE === 'master' ? masterElection.isLeader : (BOT_ROLE === 'standalone' ? true : undefined),
+      masterInstanceId: BOT_ROLE === 'master' ? masterElection.instanceId : undefined,
       timestamp: new Date().toISOString()
     };
     return res.end(JSON.stringify(healthStatus));
@@ -483,8 +500,8 @@ const server = http.createServer(async (req, res) => {
   res.end(JSON.stringify({ success: false, error: 'Endpoint không tồn tại' }));
 });
 
-server.listen(PORT, () => {
-  console.log(`[HTTP-Server] Đang lắng nghe trên cổng ${PORT} (${BOT_ROLE.toUpperCase()}).`);
+server.listen(PORT, HOST, () => {
+  console.log(`[HTTP-Server] Đang lắng nghe trên ${HOST}:${PORT} (${BOT_ROLE.toUpperCase()}).`);
   setTimeout(() => {
     syncMasterKeepalive().catch(() => {});
   }, 3000);
@@ -729,22 +746,27 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   const commandHandler = new CommandHandler(client, queueDispatcher);
   commandHandler.loadCommands();
 
-  client.once('clientReady', async () => {
+  let isHelpersInitialized = false;
+  client.on('clientReady', async () => {
     console.log(`[Discord-Bot] Bot đã trực tuyến với tên: ${client.user.tag}`);
     await commandHandler.registerSlashCommands(DISCORD_TOKEN, CLIENT_ID, GUILD_ID);
 
     // Đồng bộ danh sách Guild vào MongoDB cho Web UI
     await syncDiscordGuilds(client).catch(e => console.warn('[Index] Lỗi đồng bộ Guild ban đầu:', e.message));
 
-    // Khởi tạo hệ thống lưu trữ theo dõi số dư (MongoDB / JSON)
-    await trackerHelper.initTracker();
+    if (!isHelpersInitialized) {
+      isHelpersInitialized = true;
+      // Khởi tạo hệ thống lưu trữ theo dõi số dư (MongoDB / JSON)
+      await trackerHelper.initTracker();
+      // Khởi tạo hệ thống lưu trữ skin (MongoDB / JSON)
+      await skinHelper.initSkinHelper();
+    }
 
-    // Khởi tạo hệ thống lưu trữ skin (MongoDB / JSON)
-    await skinHelper.initSkinHelper();
-
-    // Khởi chạy tiến trình kiểm tra số dư định kỳ 1 giờ / lần
-    global.trackerSchedulerInstance = startTrackerScheduler(queueDispatcher);
-    global.runTrackerCheckCycle = global.trackerSchedulerInstance?.runCheckCycle;
+    // Khởi chạy tiến trình kiểm tra số dư định kỳ 1 giờ / lần (nếu chưa chạy)
+    if (!global.trackerSchedulerInstance) {
+      global.trackerSchedulerInstance = startTrackerScheduler(queueDispatcher);
+      global.runTrackerCheckCycle = global.trackerSchedulerInstance?.runCheckCycle;
+    }
   });
 
   // Tự động đồng bộ khi Bot tham gia hoặc rời server Discord
@@ -791,7 +813,7 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
 
     // Danh sách lệnh hợp lệ
     const allowedCommands = ['stats', 'order', 'bal', 'ah', 'online', 'ping', 'help', 'lb', 'donate', 'bounty', 'item', 'math', 'ai', 'chat'];
-    const adminCommands = ['help', 'status', 'workers', 'restart', 'mode', 'render', 'toggle', 'ai', 'tracker', 'theodoi'];
+    const adminCommands = ['help', 'status', 'workers', 'restart', 'mode', 'render', 'toggle', 'ai', 'tracker', 'theodoi', 'master', 'failover'];
 
     // 2. Kiểm tra xem có phải lệnh game/người dùng hay không
     // Hỗ trợ: ?stats trong server hoặc stats trong DM
@@ -927,7 +949,7 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
 
     try {
       if (command === 'help') {
-         await safeSend(message.channel, '**Danh sách lệnh Admin:**\n- `!status` hoặc `!workers`: Xem danh sách và trạng thái toàn bộ Workers (Local & Remote)\n- `!restart`: Random tên mới và khởi động lại bot ngay lập tức\n- `!mode` hoặc `!render`: Chuyển đổi chế độ hiển thị danh sách (Text / Image)\n- `!toggle off/on [lời nhắn]`: Bật/tắt việc nhận Slash Commands từ user khác.\n- `!ai off/on [lời nhắn]`: Bật/tắt tính năng trò chuyện AI với người dùng.\n- `!tracker [trang]`: Xem danh sách và trạng thái theo dõi số dư định kỳ (phân trang)\n- `!tracker add <tên>`: Bật theo dõi số dư cho một người chơi\n- `!tracker untrack <tên>`: Hủy theo dõi một người chơi\n- `!tracker check`: Kích hoạt vòng lặp check bal cho các người chơi ngay lập tức');
+         await safeSend(message.channel, '**Danh sách lệnh Admin:**\n- `!master [status/switch]`: Xem hoặc chuyển đổi quyền giữa 2 Master (Active / Standby)\n- `!status` hoặc `!workers`: Xem danh sách và trạng thái toàn bộ Workers (Local & Remote)\n- `!restart`: Random tên mới và khởi động lại bot ngay lập tức\n- `!mode` hoặc `!render`: Chuyển đổi chế độ hiển thị danh sách (Text / Image)\n- `!toggle off/on [lời nhắn]`: Bật/tắt việc nhận Slash Commands từ user khác.\n- `!ai off/on [lời nhắn]`: Bật/tắt tính năng trò chuyện AI với người dùng.\n- `!tracker [trang]`: Xem danh sách và trạng thái theo dõi số dư định kỳ (phân trang)\n- `!tracker add <tên>`: Bật theo dõi số dư cho một người chơi\n- `!tracker untrack <tên>`: Hủy theo dõi một người chơi\n- `!tracker check`: Kích hoạt vòng lặp check bal cho các người chơi ngay lập tức');
       } else if (command === 'tracker' || command === 'theodoi') {
          const sub = args.shift()?.toLowerCase();
          if (sub === 'help') {
@@ -1049,6 +1071,35 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
          } else {
             await message.channel.send('Cú pháp: `!toggle on` hoặc `!toggle off [lời nhắn]`');
          }
+      } else if (command === 'master' || command === 'failover') {
+         const sub = args.shift()?.toLowerCase();
+         if (sub === 'switch' || sub === 'handoff' || sub === 'stepdown') {
+            const statusMsg = await message.channel.send('🔄 **Đang gửi yêu cầu từ chức Leader... Master dự phòng sẽ tự động tiếp quản!**');
+            const res = await masterElection.stepDown('Admin yêu cầu chuyển quyền qua lệnh !master switch');
+            if (res.success) {
+              await statusMsg.edit('✅ **Đã bàn giao quyền Leader thành công!** Node này đã trở về trạng thái STANDBY.');
+            } else {
+              await statusMsg.edit(`❌ Chuyển đổi thất bại: ${res.error}`);
+            }
+         } else {
+            const st = await masterElection.getStatus();
+            const leaderInfo = st.currentLeader;
+            let desc = `👑 **HỆ THỐNG LUÂN PHIÊN 2 MASTER (HIGH AVAILABILITY):**\n\n`;
+            desc += `• **Node hiện tại:** \`${st.thisNode.instanceName}\` (\`${st.thisNode.instanceId}\`)\n`;
+            desc += `• **Vai trò:** ${st.thisNode.isLeader ? '🟢 **ACTIVE LEADER** (Đang trực tiếp phục vụ)' : '🛡️ **STANDBY BACKUP** (Đang chờ dự phòng)'}\n`;
+            desc += `• **URL:** \`${st.thisNode.selfUrl || 'Chưa cấu hình URL'}\`\n\n`;
+            if (leaderInfo) {
+              desc += `• **Leader đang giữ quyền:** \`${leaderInfo.leaderName}\` (ID: \`${leaderInfo.leaderId}\`)\n`;
+              desc += `• **URL Leader:** \`${leaderInfo.leaderUrl || 'N/A'}\`\n`;
+              desc += `• **Nhịp tim cuối:** \`${leaderInfo.lastHeartbeatAgoSec}s trước\` (${leaderInfo.isAlive ? '🟢 Sống' : '🔴 Mất tín hiệu'})\n`;
+              desc += `• **Nhiệm kỳ (Term):** \`#${leaderInfo.term}\`\n`;
+            } else {
+              desc += `• **Leader đang giữ quyền:** *Chưa xác định*\n`;
+            }
+            desc += `• **Thời gian chờ Failover:** \`${st.failoverTimeoutSec}s\`\n\n`;
+            desc += `💡 *Để chuyển quyền ngay cho Master dự phòng, gõ:* \`!master switch\``;
+            await safeSend(message.channel, desc);
+         }
       }
     } catch (cmdErr) {
       console.error('[Admin-Debug] Lỗi gửi tin nhắn trả lời:', cmdErr);
@@ -1103,10 +1154,24 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   }
   });
 
-  if (DISCORD_TOKEN && DISCORD_TOKEN !== 'your_discord_bot_token_here') {
-    client.login(DISCORD_TOKEN);
+  if (BOT_ROLE === 'master') {
+    // Khởi động cơ chế bầu chọn Master tự động (High Availability Active - Standby)
+    console.log('[Index] 🚀 Bắt đầu khởi động cơ chế bầu chọn Master (Leader Election)...');
+    masterElection.start({
+      discordClient: client,
+      queueDispatcher,
+      startSchedulerFn: startTrackerScheduler,
+      getSelfUrlFn: () => process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || process.env.MASTER_URL || process.env.SELF_URL || ''
+    }).catch(err => {
+      console.error('[Index] Lỗi khởi động MasterElection:', err.message);
+    });
   } else {
-    console.error('[Discord-Bot] Chưa cấu hình DISCORD_TOKEN trong file .env!');
+    // Chế độ Standalone: Luôn tự đăng nhập Discord bot trực tiếp
+    if (DISCORD_TOKEN && DISCORD_TOKEN !== 'your_discord_bot_token_here') {
+      client.login(DISCORD_TOKEN);
+    } else {
+      console.error('[Discord-Bot] Chưa cấu hình DISCORD_TOKEN trong file .env!');
+    }
   }
 }
 

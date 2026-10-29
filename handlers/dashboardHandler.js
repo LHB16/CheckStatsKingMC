@@ -16,6 +16,7 @@ const {
   setSystemConfig
 } = require('../helpers/mongoHelper');
 const renderManager = require('../helpers/renderManager');
+const masterElection = require('../helpers/masterElection');
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -229,7 +230,8 @@ async function handleDashboardRequest(req, res, context) {
             },
             guilds: {
               total: guildsCount
-            }
+            },
+            master: await masterElection.getStatus()
           }
         });
       } catch (err) {
@@ -653,6 +655,26 @@ async function handleDashboardRequest(req, res, context) {
           success: true,
           message: msg
         });
+      } catch (err) {
+        return sendJson(res, 500, { success: false, error: err.message });
+      }
+    }
+
+    // GET /api/master/status (Trạng thái bầu chọn Master & High Availability)
+    if (pathname === '/api/master/status' && method === 'GET') {
+      try {
+        const status = await masterElection.getStatus();
+        return sendJson(res, 200, { success: true, data: status });
+      } catch (err) {
+        return sendJson(res, 500, { success: false, error: err.message });
+      }
+    }
+
+    // POST /api/master/switch (Chuyển đổi Leader sang Standby Node)
+    if (pathname === '/api/master/switch' && method === 'POST') {
+      try {
+        const result = await masterElection.stepDown('Yêu cầu chuyển đổi từ Web UI Dashboard');
+        return sendJson(res, result.success ? 200 : 400, result);
       } catch (err) {
         return sendJson(res, 500, { success: false, error: err.message });
       }
