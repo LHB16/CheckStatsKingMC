@@ -90,16 +90,18 @@ async function syncDiscordGuilds(discordClient) {
     isActive: true
   }));
 
-  if (isMongoAvailable()) {
+  if (isMongoAvailable() && guilds.length > 0) {
     try {
       const GuildModel = getDiscordGuildModel();
-      for (const g of guilds) {
-        await GuildModel.findOneAndUpdate(
-          { guildId: g.guildId },
-          { ...g, isActive: true },
-          { upsert: true, returnDocument: 'after' }
-        );
-      }
+      const bulkOps = guilds.map(g => ({
+        updateOne: {
+          filter: { guildId: g.guildId },
+          update: { $set: { ...g, isActive: true } },
+          upsert: true
+        }
+      }));
+      await GuildModel.bulkWrite(bulkOps, { ordered: false });
+      console.log(`[DashboardHandler] ✅ Đã đồng bộ nhanh ${guilds.length} Guilds vào MongoDB Atlas (bulkWrite).`);
     } catch (e) {
       console.warn('[DashboardHandler] Lỗi đồng bộ Guilds vào MongoDB:', e.message);
     }

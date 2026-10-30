@@ -749,17 +749,19 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   let isHelpersInitialized = false;
   client.on('clientReady', async () => {
     console.log(`[Discord-Bot] Bot đã trực tuyến với tên: ${client.user.tag}`);
-    await commandHandler.registerSlashCommands(DISCORD_TOKEN, CLIENT_ID, GUILD_ID);
 
-    // Đồng bộ danh sách Guild vào MongoDB cho Web UI
-    await syncDiscordGuilds(client).catch(e => console.warn('[Index] Lỗi đồng bộ Guild ban đầu:', e.message));
+    // Đăng ký Slash Commands và đồng bộ Guild trong nền (non-blocking) để bot phản hồi lệnh ngay lập tức
+    setImmediate(async () => {
+      await commandHandler.registerSlashCommands(DISCORD_TOKEN, CLIENT_ID, GUILD_ID).catch(e => console.warn('[Index] Lỗi đăng ký Slash Commands:', e.message));
+      await syncDiscordGuilds(client).catch(e => console.warn('[Index] Lỗi đồng bộ Guild ban đầu:', e.message));
+    });
 
     if (!isHelpersInitialized) {
       isHelpersInitialized = true;
       // Khởi tạo hệ thống lưu trữ theo dõi số dư (MongoDB / JSON)
-      await trackerHelper.initTracker();
+      trackerHelper.initTracker().catch(() => {});
       // Khởi tạo hệ thống lưu trữ skin (MongoDB / JSON)
-      await skinHelper.initSkinHelper();
+      skinHelper.initSkinHelper().catch(() => {});
     }
 
     // Khởi chạy tiến trình kiểm tra số dư định kỳ 1 giờ / lần (nếu chưa chạy)
@@ -823,14 +825,14 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     let showPrefixTip = false;
 
     if (cleanText.startsWith('?')) {
-      commandArgs = cleanText.slice(1).trim().split(/\s+/);
+      commandArgs = cleanText.slice(1).trim().split(/ +/);
       commandName = commandArgs.shift()?.toLowerCase();
       if (allowedCommands.includes(commandName)) {
         isGameCommand = true;
         showPrefixTip = !isDirectMessage;
       }
     } else if (isDirectMessage && cleanText) {
-      commandArgs = cleanText.split(/\s+/);
+      commandArgs = cleanText.split(/ +/);
       const firstWord = commandArgs.shift()?.toLowerCase();
       if (allowedCommands.includes(firstWord)) {
         isGameCommand = true;
@@ -930,7 +932,7 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     let args = [];
 
     if (cleanText.startsWith('!')) {
-      args = cleanText.slice(1).trim().split(/\s+/);
+      args = cleanText.slice(1).trim().split(/ +/);
       command = args.shift()?.toLowerCase();
       if (adminCommands.includes(command)) {
         isAdminCommand = true;
@@ -1161,8 +1163,7 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
       discordClient: client,
       queueDispatcher,
       startSchedulerFn: startTrackerScheduler,
-      getSelfUrlFn: () => process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || process.env.MASTER_URL || process.env.SELF_URL || '',
-      discordToken: DISCORD_TOKEN
+      getSelfUrlFn: () => process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || process.env.MASTER_URL || process.env.SELF_URL || ''
     }).catch(err => {
       console.error('[Index] Lỗi khởi động MasterElection:', err.message);
     });

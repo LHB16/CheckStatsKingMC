@@ -9,7 +9,7 @@ const renderManager = require('./renderManager');
 
 const CONFIG_KEY_LEADER = 'master_leader';
 const HEARTBEAT_INTERVAL_MS = 15000; // Gửi nhịp tim mỗi 15 giây
-const FAILOVER_TIMEOUT_MS = 45000;   // Coi Leader đã chết nếu không có nhịp tim sau 45 giây
+const FAILOVER_TIMEOUT_MS = 60000;   // Coi Leader đã chết nếu không có nhịp tim sau 60 giây (tránh flapping)
 const STANDBY_CHECK_INTERVAL_MS = 10000; // Node Standby kiểm tra nhịp tim mỗi 10 giây
 
 class MasterElection {
@@ -60,6 +60,19 @@ class MasterElection {
         console.warn('[MasterElection] Lỗi vòng lặp bầu chọn:', err.message);
       });
     }, this.isLeader ? HEARTBEAT_INTERVAL_MS : STANDBY_CHECK_INTERVAL_MS);
+
+    // Tự động ping chéo giữa các Master mỗi 4 phút để chống Sleep trên Render Free
+    if (!this.keepAlivePingTimer) {
+      this.keepAlivePingTimer = setInterval(async () => {
+        const targetUrls = [
+          'https://checkstatskingmc-master-01.onrender.com/health',
+          'https://checkstatskingmc-master-02.onrender.com/health'
+        ];
+        for (const u of targetUrls) {
+          fetch(u, { signal: AbortSignal.timeout(5000) }).catch(() => {});
+        }
+      }, 4 * 60 * 1000);
+    }
   }
 
   /**

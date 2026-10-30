@@ -439,7 +439,7 @@ class QueueDispatcher {
     }
   }
 
-  // Lấy danh sách toàn bộ Worker đang rảnh & sẵn sàng nhận lệnh
+  // Lấy danh sách toàn bộ Worker đang rảnh & sẵn sàng nhận lệnh (Tối ưu độ trễ siêu tốc < 1ms)
   async getAvailableWorkers() {
     const available = [];
 
@@ -454,22 +454,40 @@ class QueueDispatcher {
     const workers = await this.getAllWorkers();
     const activeWorkers = workers.filter(w => w.isActive !== false);
 
+    // Ưu tiên Worker không nằm trong busyWorkers và không bị đánh dấu 'offline' / 'busy'
     for (const w of activeWorkers) {
       if (this.busyWorkers.has(w.url)) continue;
 
-      try {
-        const status = await this.checkRemoteWorkerHealth(w.url);
-        if (status && status.online && status.ready && !status.busy) {
-          available.push({ 
-            type: 'remote', 
-            id: w._id,
-            name: w.name || w.url, 
-            url: w.url,
-            secret: w.secret || this.workerSecret 
-          });
+      if (w.status !== 'offline' && w.status !== 'busy') {
+        available.push({ 
+          type: 'remote', 
+          id: w._id,
+          name: w.name || w.url, 
+          url: w.url,
+          secret: w.secret || this.workerSecret 
+        });
+      }
+    }
+
+    // Fallback: Nếu không tìm thấy worker nào từ cache nhưng có active worker, kiểm tra trực tiếp nhanh
+    if (available.length === 0 && activeWorkers.length > 0) {
+      for (const w of activeWorkers) {
+        if (this.busyWorkers.has(w.url)) continue;
+        try {
+          const status = await this.checkRemoteWorkerHealth(w.url);
+          if (status && status.online && status.ready && !status.busy) {
+            available.push({ 
+              type: 'remote', 
+              id: w._id,
+              name: w.name || w.url, 
+              url: w.url,
+              secret: w.secret || this.workerSecret 
+            });
+            break;
+          }
+        } catch (e) {
+          console.warn(`[QueueDispatcher] Không thể kết nối tới Remote Worker ${w.url}: ${e.message}`);
         }
-      } catch (e) {
-        console.warn(`[QueueDispatcher] Không thể kết nối tới Remote Worker ${w.url}: ${e.message}`);
       }
     }
 
