@@ -41,11 +41,12 @@ class MasterElection {
   /**
    * Khởi động quy trình bầu chọn Master
    */
-  async start({ discordClient, queueDispatcher, startSchedulerFn, getSelfUrlFn }) {
+  async start({ discordClient, queueDispatcher, startSchedulerFn, getSelfUrlFn, discordToken }) {
     this.discordClient = discordClient;
     this.queueDispatcher = queueDispatcher;
     this.startSchedulerFn = startSchedulerFn;
     this.getSelfUrlFn = getSelfUrlFn;
+    if (discordToken) this.discordToken = discordToken;
 
     console.log(`[MasterElection] 🛡️ Khởi tạo Master Node: [${this.instanceName}] (ID: ${this.instanceId})`);
 
@@ -105,13 +106,16 @@ class MasterElection {
         }
       } else {
         // --- TRƯỜNG HỢP B: BẢN THÂN ĐANG LÀ STANDBY ---
-        if (!isLeaderAlive) {
-          const reason = !hasLeader ? 'Chưa có Leader nào được đăng ký' : `Leader cũ [${currentLeader.leaderName}] (${currentLeader.leaderId}) đã mất tín hiệu nhịp tim quá ${Math.round((now - currentLeader.lastHeartbeat) / 1000)}s`;
-          console.warn(`[MasterElection] 🚨 ${reason}. Bắt đầu giành quyền ACTIVE LEADER...`);
+        const isSelf = currentLeader && currentLeader.leaderId === this.instanceId;
+        if (!isLeaderAlive || isSelf) {
+          const reason = isSelf
+            ? `Node [${this.instanceName}] vừa khởi động lại và tái xác lập quyền ACTIVE LEADER`
+            : (!hasLeader ? 'Chưa có Leader nào được đăng ký' : `Leader cũ [${currentLeader.leaderName}] (${currentLeader.leaderId}) đã mất tín hiệu nhịp tim quá ${Math.round((now - currentLeader.lastHeartbeat) / 1000)}s`);
+          console.log(`[MasterElection] 🚨 ${reason}. Bắt đầu giành quyền ACTIVE LEADER...`);
           
           const success = await this.tryAcquireLeadership(currentLeader);
           if (success) {
-            await this.promoteToLeader(currentLeader, true);
+            await this.promoteToLeader(currentLeader, !isSelf);
           }
         } else {
           // Leader cũ vẫn còn sống tốt -> Tiếp tục ở chế độ Standby
@@ -146,8 +150,8 @@ class MasterElection {
         promotedAt: now
       };
 
-      // Điều kiện atomic: Hoặc chưa có doc, hoặc nhịp tim cũ đã hết hạn
-      const filter = oldLeader && oldLeader.lastHeartbeat
+      // Điều kiện atomic: Hoặc chưa có doc, hoặc nhịp tim cũ đã hết hạn, hoặc chính node này khởi động lại
+      const filter = oldLeader && oldLeader.lastHeartbeat && oldLeader.leaderId !== this.instanceId
         ? { key: CONFIG_KEY_LEADER, 'value.lastHeartbeat': oldLeader.lastHeartbeat }
         : { key: CONFIG_KEY_LEADER };
 

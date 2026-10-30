@@ -823,14 +823,14 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     let showPrefixTip = false;
 
     if (cleanText.startsWith('?')) {
-      commandArgs = cleanText.slice(1).trim().split(/ +/);
+      commandArgs = cleanText.slice(1).trim().split(/\s+/);
       commandName = commandArgs.shift()?.toLowerCase();
       if (allowedCommands.includes(commandName)) {
         isGameCommand = true;
         showPrefixTip = !isDirectMessage;
       }
     } else if (isDirectMessage && cleanText) {
-      commandArgs = cleanText.split(/ +/);
+      commandArgs = cleanText.split(/\s+/);
       const firstWord = commandArgs.shift()?.toLowerCase();
       if (allowedCommands.includes(firstWord)) {
         isGameCommand = true;
@@ -930,7 +930,7 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     let args = [];
 
     if (cleanText.startsWith('!')) {
-      args = cleanText.slice(1).trim().split(/ +/);
+      args = cleanText.slice(1).trim().split(/\s+/);
       command = args.shift()?.toLowerCase();
       if (adminCommands.includes(command)) {
         isAdminCommand = true;
@@ -1161,7 +1161,8 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
       discordClient: client,
       queueDispatcher,
       startSchedulerFn: startTrackerScheduler,
-      getSelfUrlFn: () => process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || process.env.MASTER_URL || process.env.SELF_URL || ''
+      getSelfUrlFn: () => process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || process.env.MASTER_URL || process.env.SELF_URL || '',
+      discordToken: DISCORD_TOKEN
     }).catch(err => {
       console.error('[Index] Lỗi khởi động MasterElection:', err.message);
     });
