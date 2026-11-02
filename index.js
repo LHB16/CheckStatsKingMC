@@ -780,6 +780,11 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   });
 
   client.on('interactionCreate', async (interaction) => {
+    // Chặn nếu là Master Node nhưng không phải Active Leader (Standby)
+    if (BOT_ROLE === 'master' && !masterElection.isLeader) {
+      return;
+    }
+
     // Chặn Slash Commands khi bảo trì
     if (global.isBotMaintenance && interaction.isChatInputCommand()) {
        if (!ADMIN_ID || interaction.user.id !== ADMIN_ID) {
@@ -808,6 +813,11 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   // Lắng nghe lệnh qua DM hoặc Kênh chat (Admin & User)
   client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
+
+    // Chặn nếu là Master Node nhưng không phải Active Leader (Standby)
+    if (BOT_ROLE === 'master' && !masterElection.isLeader) {
+      return;
+    }
 
     // 1. Nhận diện ngữ cảnh: Tin nhắn riêng (DM)
     const isDirectMessage = !message.guild;
@@ -901,7 +911,12 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
             const editPayload = typeof finalData === 'string'
               ? { content: finalData }
               : { content: '', ...finalData };
-            await interaction._replyMessage.edit(editPayload);
+            try {
+              await interaction._replyMessage.edit(editPayload);
+            } catch (editErr) {
+              console.warn('[Index] Không thể sửa replyMessage, gửi tin nhắn mới:', editErr.message);
+              await message.channel.send(finalData);
+            }
           } else {
             await message.channel.send(finalData);
           }

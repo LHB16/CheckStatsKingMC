@@ -213,7 +213,8 @@ class MasterElection {
       }
 
       // Khởi động Discord Bot (nếu chưa đăng nhập)
-      if (this.discordClient && !this.discordClient.readyAt) {
+      const isClientConnected = this.discordClient && (this.discordClient.isReady() || !!this.discordClient.readyAt);
+      if (this.discordClient && !isClientConnected) {
         console.log('[MasterElection] 🤖 Đang đăng nhập Discord Bot cho Active Master Node...');
         if (this.discordToken && this.discordToken !== 'your_discord_bot_token_here') {
           await this.discordClient.login(this.discordToken).catch(err => {
@@ -268,10 +269,10 @@ class MasterElection {
     }
 
     // Ngắt kết nối Discord Bot để tránh duplicate reply
-    if (this.discordClient && this.discordClient.readyAt) {
+    if (this.discordClient) {
       console.log('[MasterElection] 🔌 Đang ngắt kết nối Discord Bot để nhường cho Leader mới...');
       try {
-        this.discordClient.destroy();
+        await this.discordClient.destroy();
       } catch (err) {
         console.warn('[MasterElection] Lỗi khi ngắt kết nối Discord Client:', err.message);
       }
