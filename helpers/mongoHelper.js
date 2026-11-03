@@ -89,7 +89,36 @@ function setupDonationConfigModel() {
 
 let LeaderboardModel = null;
 let RenderAccountModel = null;
+let WispbyteAccountModel = null;
 let SystemConfigModel = null;
+
+// Khởi tạo Wispbyte Account Schema (Lưu trữ nhiều tài khoản Wispbyte để tự động gia hạn 14 ngày / 24h)
+function setupWispbyteAccountModel() {
+  if (WispbyteAccountModel) return WispbyteAccountModel;
+
+  const WispbyteAccountSchema = new mongoose.Schema({
+    accountId: { type: String, required: true, unique: true, index: true },
+    name: { type: String, default: '' },
+    cookie: { type: String, required: true },
+    panelUrl: { type: String, default: 'https://wispbyte.com/client' },
+    serverId: { type: String, default: '' },
+    userAgent: { type: String, default: '' },
+    isActive: { type: Boolean, default: true, index: true },
+    lastPingAt: { type: Date, default: null },
+    lastStatus: {
+      type: String,
+      enum: ['ok', 'expired', 'error', 'unknown'],
+      default: 'unknown'
+    },
+    lastMessage: { type: String, default: '' },
+    renewCount: { type: Number, default: 0 }
+  }, {
+    timestamps: true
+  });
+
+  WispbyteAccountModel = mongoose.models.WispbyteAccount || mongoose.model('WispbyteAccount', WispbyteAccountSchema);
+  return WispbyteAccountModel;
+}
 
 // Khởi tạo Render Account Schema (Lưu trữ cấu hình xoay Render trên MongoDB)
 function setupRenderAccountModel() {
@@ -167,6 +196,10 @@ function getRenderAccountModel() {
   return setupRenderAccountModel();
 }
 
+function getWispbyteAccountModel() {
+  return setupWispbyteAccountModel();
+}
+
 function getSystemConfigModel() {
   return setupSystemConfigModel();
 }
@@ -186,6 +219,7 @@ async function connectMongo() {
     setupDonationConfigModel();
     setupLeaderboardModel();
     setupRenderAccountModel();
+    setupWispbyteAccountModel();
     setupSystemConfigModel();
     return true;
   }
@@ -201,6 +235,7 @@ async function connectMongo() {
     setupDonationConfigModel();
     setupLeaderboardModel();
     setupRenderAccountModel();
+    setupWispbyteAccountModel();
     setupSystemConfigModel();
     console.log('✅ [MongoHelper] Kết nối MongoDB Atlas THÀNH CÔNG!');
     return true;
@@ -384,6 +419,60 @@ async function deleteRenderAccount(accountId) {
   }
 }
 
+/**
+ * Lấy danh sách toàn bộ Wispbyte Account từ MongoDB
+ */
+async function getAllWispbyteAccounts() {
+  try {
+    if (!isMongoAvailable()) return [];
+    const Model = setupWispbyteAccountModel();
+    return await Model.find().sort({ createdAt: 1 }).lean();
+  } catch (err) {
+    console.warn('[MongoHelper] Lỗi lấy danh sách WispbyteAccount:', err.message);
+    return [];
+  }
+}
+
+/**
+ * Lưu hoặc cập nhật Wispbyte Account vào MongoDB
+ */
+async function saveWispbyteAccount(accountData) {
+  try {
+    if (!isMongoAvailable()) return null;
+    const Model = setupWispbyteAccountModel();
+    const accountId = accountData.accountId || accountData.id;
+    if (!accountId) throw new Error('Thiếu accountId khi lưu WispbyteAccount');
+
+    const updatePayload = { ...accountData, accountId };
+    delete updatePayload.id;
+
+    const doc = await Model.findOneAndUpdate(
+      { accountId },
+      updatePayload,
+      { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
+    ).lean();
+    return doc;
+  } catch (err) {
+    console.error('[MongoHelper] Lỗi lưu WispbyteAccount:', err.message);
+    throw err;
+  }
+}
+
+/**
+ * Xóa Wispbyte Account khỏi MongoDB
+ */
+async function deleteWispbyteAccount(accountId) {
+  try {
+    if (!isMongoAvailable()) return false;
+    const Model = setupWispbyteAccountModel();
+    const res = await Model.findOneAndDelete({ accountId });
+    return !!res;
+  } catch (err) {
+    console.error('[MongoHelper] Lỗi xóa WispbyteAccount:', err.message);
+    return false;
+  }
+}
+
 module.exports = {
   connectMongo,
   isMongoAvailable,
@@ -392,12 +481,14 @@ module.exports = {
   getDonationConfigModel,
   getLeaderboardModel,
   getRenderAccountModel,
+  getWispbyteAccountModel,
   getSystemConfigModel,
   setupWorkerModel,
   setupDiscordGuildModel,
   setupDonationConfigModel,
   setupLeaderboardModel,
   setupRenderAccountModel,
+  setupWispbyteAccountModel,
   setupSystemConfigModel,
   seedDonationImage,
   getDonationConfig,
@@ -405,5 +496,8 @@ module.exports = {
   setSystemConfig,
   getAllRenderAccounts,
   saveRenderAccount,
-  deleteRenderAccount
+  deleteRenderAccount,
+  getAllWispbyteAccounts,
+  saveWispbyteAccount,
+  deleteWispbyteAccount
 };

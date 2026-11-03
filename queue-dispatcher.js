@@ -33,6 +33,11 @@ class QueueDispatcher {
     this.cachedWorkers = [];
     this.isInitialized = false;
 
+    // Quản lý các Worker Vệ tinh (Satellite Workers - Wispbyte kết nối chiều đi về Master)
+    this.satelliteWorkers = new Map();       // workerId -> thông tin vệ tinh
+    this.satellitePollWaiters = new Map();   // workerId -> { resolve, timer } (Long-Polling)
+    this.satellitePendingTasks = new Map();  // taskId -> { workerId, action, player, timeoutMs, resolve, reject, timer, delivered }
+
     // Khởi chạy vòng lặp kiểm tra sức khỏe Worker định kỳ
     this.healthMonitorTimer = null;
   }
@@ -216,6 +221,14 @@ class QueueDispatcher {
    * Bật/Tắt hoạt động của Worker
    */
   async toggleWorkerActive(id) {
+    if (String(id).startsWith('sat_') || this.satelliteWorkers.has(String(id))) {
+      const satKey = String(id).replace(/^sat_/, '');
+      const sat = this.satelliteWorkers.get(satKey) || this.satelliteWorkers.get(String(id));
+      if (!sat) throw new Error('Không tìm thấy Satellite Worker.');
+      sat.isActive = sat.isActive === false ? true : false;
+      return sat;
+    }
+
     if (isMongoAvailable()) {
       const Worker = getWorkerModel();
       const worker = await Worker.findById(id);
@@ -236,6 +249,14 @@ class QueueDispatcher {
    * Xóa Worker khỏi hệ thống
    */
   async removeWorker(id) {
+    if (String(id).startsWith('sat_') || this.satelliteWorkers.has(String(id))) {
+      const satKey = String(id).replace(/^sat_/, '');
+      const sat = this.satelliteWorkers.get(satKey) || this.satelliteWorkers.get(String(id));
+      if (!sat) throw new Error('Không tìm thấy Satellite Worker để xóa.');
+      this.satelliteWorkers.delete(sat.workerId);
+      return sat;
+    }
+
     if (isMongoAvailable()) {
       const Worker = getWorkerModel();
       const deleted = await Worker.findByIdAndDelete(id);
@@ -254,6 +275,21 @@ class QueueDispatcher {
    * Ping và kiểm tra sức khỏe của một Worker cụ thể
    */
   async pingWorker(id) {
+    if (String(id).startsWith('sat_') || this.satelliteWorkers.has(String(id))) {
+      const satKey = String(id).replace(/^sat_/, '');
+      const sat = this.satelliteWorkers.get(satKey) || this.satelliteWorkers.get(String(id));
+      if (!sat) throw new Error('Không tìm thấy Satellite Worker.');
+      const ageMs = Date.now() - (sat.lastHeartbeat ? new Date(sat.lastHeartbeat).getTime() : 0);
+      const isAlive = ageMs < 45000 && sat.online;
+      return {
+        success: isAlive,
+        status: !isAlive ? 'offline' : (sat.busy ? 'busy' : (sat.ready ? 'online' : 'busy')),
+        latency: isAlive ? (sat.latency || 15) : -1,
+        botUsername: sat.username || '',
+        lastHeartbeat: sat.lastHeartbeat
+      };
+    }
+
     const workers = await this.getAllWorkers();
     const worker = workers.find(w => String(w._id) === String(id));
     if (!worker) throw new Error('Không tìm thấy Worker.');
@@ -430,6 +466,8 @@ class QueueDispatcher {
         } else {
           throw new Error(`Hành động không hợp lệ: ${action}`);
         }
+      } else if (worker.type === 'satellite') {
+        return await this.executeSatelliteWorker(worker.workerId, action, player, timeoutMs);
       } else {
         const secret = worker.secret || this.workerSecret;
         return await this.executeRemoteWorker(worker.url, action, player, timeoutMs, secret);
@@ -450,7 +488,7 @@ class QueueDispatcher {
       }
     }
 
-    // 2. Lấy danh sách Worker đang kích hoạt (isActive === true)
+    // 2. Lấy danh sách Worker Render từ xa đang kích hoạt (isActive === true)
     const workers = await this.getAllWorkers();
     const activeWorkers = workers.filter(w => w.isActive !== false);
 
@@ -465,6 +503,24 @@ class QueueDispatcher {
           name: w.name || w.url, 
           url: w.url,
           secret: w.secret || this.workerSecret 
+        });
+      }
+    }
+
+    // 3. Lấy danh sách Satellite Workers (Wispbyte Vệ tinh) đang trực tuyến & rảnh
+    const now = Date.now();
+    for (const [workerId, sat] of this.satelliteWorkers.entries()) {
+      const satUrl = sat.url || `satellite://${workerId}`;
+      if (sat.isActive === false) continue;
+      if (this.busyWorkers.has(satUrl)) continue;
+      const lastSeenMs = sat.lastHeartbeat ? now - new Date(sat.lastHeartbeat).getTime() : Infinity;
+      if (lastSeenMs < 45000 && sat.online && sat.ready && !sat.busy) {
+        available.push({
+          type: 'satellite',
+          id: `sat_${workerId}`,
+          workerId,
+          name: sat.name || `Wispbyte-${workerId}`,
+          url: satUrl
         });
       }
     }
@@ -691,7 +747,7 @@ class QueueDispatcher {
     };
   }
 
-  // Lấy trạng thái của toàn bộ Workers (Local + Remote)
+  // Lấy trạng thái của toàn bộ Workers (Local + Remote + Satellite)
   async getAllWorkersStatus() {
     const list = [];
 
@@ -712,7 +768,7 @@ class QueueDispatcher {
       });
     }
 
-    // 2. Quét Remote Workers từ danh sách đã nạp
+    // 2. Quét Remote Workers từ danh sách đã nạp (Render)
     const workers = await this.getAllWorkers();
     for (const w of workers) {
       list.push({
@@ -732,7 +788,222 @@ class QueueDispatcher {
       });
     }
 
+    // 3. Quét Satellite Workers (Wispbyte Vệ tinh)
+    const now = Date.now();
+    for (const [workerId, sat] of this.satelliteWorkers.entries()) {
+      const satUrl = sat.url || `satellite://${workerId}`;
+      const lastSeenMs = sat.lastHeartbeat ? now - new Date(sat.lastHeartbeat).getTime() : Infinity;
+      const isAlive = lastSeenMs < 45000 && sat.online;
+      const isBusy = !sat.ready || sat.busy || this.busyWorkers.has(satUrl);
+
+      list.push({
+        id: `sat_${workerId}`,
+        workerId,
+        type: 'satellite',
+        name: sat.name || `Wispbyte-${workerId}`,
+        url: satUrl,
+        username: sat.username || 'N/A',
+        online: isAlive,
+        ready: isAlive && sat.ready,
+        busy: isAlive && isBusy,
+        status: !isAlive ? 'offline' : (isBusy ? 'busy' : 'online'),
+        isActive: sat.isActive !== false,
+        latency: isAlive ? (sat.latency || 15) : -1,
+        targetPlayer: sat.targetPlayer || null,
+        lastHeartbeat: sat.lastHeartbeat,
+        lastError: !isAlive ? 'Mất kết nối vệ tinh (>45s)' : ''
+      });
+    }
+
     return list;
+  }
+
+  /**
+   * Xử lý yêu cầu Poll / Heartbeat từ Satellite Worker (Wispbyte)
+   * Hỗ trợ Long-Polling: Nếu vệ tinh rảnh, giữ kết nối tối đa 12s để nhận tác vụ với độ trễ 0ms
+   */
+  handleSatellitePoll(payload, waitMs = 12000) {
+    const workerId = String(payload.workerId || '').trim();
+    if (!workerId) {
+      return Promise.resolve({ success: false, error: 'Thiếu workerId' });
+    }
+
+    const existing = this.satelliteWorkers.get(workerId) || {};
+    const satUrl = `satellite://${workerId}`;
+    const updatedSat = {
+      ...existing,
+      workerId,
+      name: payload.name || existing.name || `Wispbyte-${workerId}`,
+      url: satUrl,
+      username: payload.username || existing.username || 'N/A',
+      online: Boolean(payload.online),
+      ready: Boolean(payload.ready),
+      busy: Boolean(payload.busy),
+      targetPlayer: payload.targetPlayer || null,
+      isActive: existing.isActive !== undefined ? existing.isActive : true,
+      lastHeartbeat: new Date(),
+      latency: payload.latency || 15
+    };
+    this.satelliteWorkers.set(workerId, updatedSat);
+
+    // 1. Nếu có lệnh hệ thống đang chờ (VD: restart từ Admin/Dashboard)
+    if (updatedSat.pendingCommand) {
+      const cmd = updatedSat.pendingCommand;
+      delete updatedSat.pendingCommand;
+      return Promise.resolve({
+        success: true,
+        command: cmd
+      });
+    }
+
+    // 2. Nếu có tác vụ đang chờ giao cho workerId này
+    for (const [taskId, task] of this.satellitePendingTasks.entries()) {
+      if (task.workerId === workerId && !task.delivered) {
+        task.delivered = true;
+        return Promise.resolve({
+          success: true,
+          task: {
+            taskId,
+            action: task.action,
+            player: task.player,
+            timeoutMs: task.timeoutMs
+          }
+        });
+      }
+    }
+
+    // Nếu hàng đợi chung đang có việc và vệ tinh này vừa sẵn sàng -> kích hoạt processQueue ngay
+    if (this.queue.length > 0 && updatedSat.online && updatedSat.ready && !updatedSat.busy) {
+      setImmediate(() => this.processQueue());
+    }
+
+    // Nếu vệ tinh đang bận hoặc chưa sẵn sàng -> trả về ngay không giữ Long-Poll
+    if (!updatedSat.online || !updatedSat.ready || updatedSat.busy || waitMs <= 0) {
+      return Promise.resolve({ success: true, task: null });
+    }
+
+    // 3. Long-Polling: Giữ kết nối chờ lệnh mới để đạt tốc độ phản hồi 0ms
+    const prevWaiter = this.satellitePollWaiters.get(workerId);
+    if (prevWaiter) {
+      clearTimeout(prevWaiter.timer);
+      prevWaiter.resolve({ success: true, task: null });
+      this.satellitePollWaiters.delete(workerId);
+    }
+
+    return new Promise((resolve) => {
+      const timer = setTimeout(() => {
+        this.satellitePollWaiters.delete(workerId);
+        resolve({ success: true, task: null });
+      }, waitMs);
+
+      this.satellitePollWaiters.set(workerId, { resolve, timer });
+    });
+  }
+
+  /**
+   * Giao tác vụ cho một Satellite Worker (Wispbyte) và chờ kết quả trả về
+   */
+  executeSatelliteWorker(workerId, action, player, timeoutMs = 15000) {
+    return new Promise((resolve, reject) => {
+      const sat = this.satelliteWorkers.get(workerId);
+      if (!sat || !sat.online || !sat.ready) {
+        return reject(new Error(`Satellite Worker [${workerId}] chưa sẵn sàng.`));
+      }
+
+      const taskId = `sat_task_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      const timer = setTimeout(() => {
+        this.satellitePendingTasks.delete(taskId);
+        reject(new Error(`Satellite Worker [${sat.name || workerId}] bị Timeout sau ${Math.round(timeoutMs / 1000)}s!`));
+      }, timeoutMs + 6000);
+
+      const taskObj = {
+        taskId,
+        workerId,
+        action,
+        player,
+        timeoutMs,
+        delivered: false,
+        resolve,
+        reject,
+        timer
+      };
+
+      this.satellitePendingTasks.set(taskId, taskObj);
+
+      // Nếu vệ tinh đang mở kết nối Long-Polling -> Đẩy tác vụ xuống ngay lập tức (0ms)!
+      const waiter = this.satellitePollWaiters.get(workerId);
+      if (waiter) {
+        clearTimeout(waiter.timer);
+        this.satellitePollWaiters.delete(workerId);
+        taskObj.delivered = true;
+        waiter.resolve({
+          success: true,
+          task: {
+            taskId,
+            action,
+            player,
+            timeoutMs
+          }
+        });
+      }
+    });
+  }
+
+  /**
+   * Nhận kết quả thực thi lệnh từ Satellite Worker gửi về POST /api/satellite/result
+   */
+  resolveSatelliteTask({ taskId, workerId, success, result, error }) {
+    const task = this.satellitePendingTasks.get(taskId);
+    if (!task) {
+      return { handled: false, error: 'Task không tồn tại hoặc đã quá hạn' };
+    }
+
+    clearTimeout(task.timer);
+    this.satellitePendingTasks.delete(taskId);
+
+    const sat = this.satelliteWorkers.get(workerId || task.workerId);
+    if (sat) {
+      sat.busy = false;
+      sat.targetPlayer = null;
+      sat.lastHeartbeat = new Date();
+    }
+
+    if (success) {
+      task.resolve(result);
+    } else {
+      task.reject(new Error(error || 'Lỗi thực thi trên Satellite Worker'));
+    }
+
+    return { handled: true };
+  }
+
+  /**
+   * Gửi lệnh restart tới 1 Satellite Worker
+   */
+  restartSatelliteWorker(workerId) {
+    const cleanId = String(workerId).replace(/^sat_/, '');
+    const sat = this.satelliteWorkers.get(cleanId) || this.satelliteWorkers.get(workerId);
+    if (!sat) throw new Error('Không tìm thấy Satellite Worker.');
+
+    sat.pendingCommand = 'restart';
+
+    // Nếu đang có Long-Poll mở -> đánh thức ngay để nhận lệnh restart
+    const waiter = this.satellitePollWaiters.get(sat.workerId);
+    if (waiter) {
+      clearTimeout(waiter.timer);
+      this.satellitePollWaiters.delete(sat.workerId);
+      delete sat.pendingCommand;
+      waiter.resolve({
+        success: true,
+        command: 'restart'
+      });
+    }
+
+    return {
+      success: true,
+      message: 'Đã xếp lệnh restart cho Satellite Worker',
+      username: 'Đang tạo tên mới...'
+    };
   }
 
   // Gửi lệnh restart tới 1 Remote Worker qua API /api/restart
@@ -797,6 +1068,10 @@ class QueueDispatcher {
       return { success: true, username: newName };
     }
 
+    if (String(id).startsWith('sat_') || this.satelliteWorkers.has(String(id))) {
+      return this.restartSatelliteWorker(id);
+    }
+
     const workers = await this.getAllWorkers();
     const worker = workers.find(w => String(w._id) === String(id));
     if (!worker) throw new Error('Không tìm thấy Worker.');
@@ -808,7 +1083,7 @@ class QueueDispatcher {
     return res;
   }
 
-  // Gửi lệnh restart tới toàn bộ Workers
+  // Gửi lệnh restart tới toàn bộ Workers (Local + Remote Render + Satellite Wispbyte)
   async restartAllWorkers() {
     const results = [];
     const workers = await this.getAllWorkers();
@@ -828,6 +1103,15 @@ class QueueDispatcher {
         results.push({ type: 'remote', name: w.name || w.url, success: true, username: res.username || 'RemoteBot' });
       } catch (e) {
         results.push({ type: 'remote', name: w.name || w.url, success: false, error: e.message });
+      }
+    }
+
+    for (const [workerId, sat] of this.satelliteWorkers.entries()) {
+      try {
+        const res = this.restartSatelliteWorker(workerId);
+        results.push({ type: 'satellite', name: sat.name || `Wispbyte-${workerId}`, success: true, username: res.username });
+      } catch (e) {
+        results.push({ type: 'satellite', name: sat.name || `Wispbyte-${workerId}`, success: false, error: e.message });
       }
     }
 

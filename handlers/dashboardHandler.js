@@ -16,6 +16,7 @@ const {
   setSystemConfig
 } = require('../helpers/mongoHelper');
 const renderManager = require('../helpers/renderManager');
+const wispbyteManager = require('../helpers/wispbyteManager');
 const masterElection = require('../helpers/masterElection');
 const configHelper = require('../helpers/configHelper');
 
@@ -710,6 +711,79 @@ async function handleDashboardRequest(req, res, context) {
       try {
         const result = await masterElection.stepDown('Yêu cầu chuyển đổi từ Web UI Dashboard');
         return sendJson(res, result.success ? 200 : 400, result);
+      } catch (err) {
+        return sendJson(res, 500, { success: false, error: err.message });
+      }
+    }
+
+    // ==========================================
+    // 7. WISPBYTE MULTI-ACCOUNT API ROUTES
+    // ==========================================
+    if (pathname === '/api/wispbyte/accounts' && method === 'GET') {
+      try {
+        const accounts = await wispbyteManager.getAllWispbyteAccounts();
+        const safeAccounts = accounts.map(a => ({
+          ...a,
+          cookieMasked: a.cookie ? `${a.cookie.substring(0, 12)}...` : '',
+          hasCookie: !!a.cookie
+        }));
+        return sendJson(res, 200, { success: true, data: safeAccounts });
+      } catch (err) {
+        return sendJson(res, 500, { success: false, error: err.message });
+      }
+    }
+
+    if (pathname === '/api/wispbyte/accounts' && method === 'POST') {
+      try {
+        const body = await parseJsonBody(req);
+        const accountId = (body.accountId || body.id || '').trim();
+        if (!accountId) {
+          return sendJson(res, 400, { success: false, error: 'Vui lòng nhập Account ID (VD: wisp_acc_01).' });
+        }
+        const saved = await wispbyteManager.saveWispbyteAccount({
+          accountId,
+          name: (body.name || accountId).trim(),
+          cookie: (body.cookie || '').trim(),
+          panelUrl: (body.panelUrl || 'https://wispbyte.com/client').trim(),
+          serverId: (body.serverId || '').trim(),
+          isActive: body.isActive !== undefined ? Boolean(body.isActive) : true
+        });
+        return sendJson(res, 200, {
+          success: true,
+          message: `Đã lưu tài khoản Wispbyte [${accountId}] thành công!`,
+          data: saved
+        });
+      } catch (err) {
+        return sendJson(res, 400, { success: false, error: err.message });
+      }
+    }
+
+    const wispSubMatch = pathname.match(/^\/api\/wispbyte\/accounts\/([^/]+)$/);
+    if (wispSubMatch && method === 'DELETE') {
+      try {
+        const targetId = decodeURIComponent(wispSubMatch[1]);
+        const ok = await wispbyteManager.deleteWispbyteAccount(targetId);
+        return sendJson(res, 200, {
+          success: ok,
+          message: ok ? `Đã xóa tài khoản Wispbyte [${targetId}].` : `Không tìm thấy tài khoản [${targetId}].`
+        });
+      } catch (err) {
+        return sendJson(res, 400, { success: false, error: err.message });
+      }
+    }
+
+    if (pathname === '/api/wispbyte/check-now' && method === 'POST') {
+      try {
+        wispbyteManager.checkAllWispbyteAccounts({
+          discordClient,
+          adminId: process.env.ADMIN_ID || '',
+          manual: true
+        }).catch(e => console.error('[Dashboard] Lỗi check Wispbyte thủ công:', e.message));
+
+        return sendJson(res, 200, {
+          success: true,
+          message: 'Đã bắt đầu truy cập Client Panel cho toàn bộ các tài khoản Wispbyte trong nền.'
+        });
       } catch (err) {
         return sendJson(res, 500, { success: false, error: err.message });
       }

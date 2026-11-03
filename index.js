@@ -7,24 +7,12 @@
  */
 
 require('dotenv').config();
+const fs = require('fs');
+const os = require('os');
 const http = require('http');
-const { Client, GatewayIntentBits, Partials } = require('discord.js');
 const PersistentBot = require('./mc-bot');
-const QueueDispatcher = require('./queue-dispatcher');
-const CommandHandler = require('./handlers/commandHandler');
-const { handleReportButtons, sendBanAlert } = require('./helpers/reportHelper');
-const configHelper = require('./helpers/configHelper');
-const { handleAiChatMessage } = require('./handlers/aiChatHandler');
-const { handleMathMessage, isMathExpression } = require('./handlers/mathHandler');
-const trackerHelper = require('./helpers/trackerHelper');
-const { handleTrackerButtons, buildTrackerOverviewMessage } = require('./handlers/trackerButtonHandler');
-const { handlePaginationButtons } = require('./helpers/paginationHelper');
 const skinHelper = require('./helpers/skinHelper');
-const { getCustomEmoji } = require('./helpers/utils');
 const { connectMongo, isMongoAvailable, getSystemConfig } = require('./helpers/mongoHelper');
-const { handleDashboardRequest, syncDiscordGuilds } = require('./handlers/dashboardHandler');
-const renderManager = require('./helpers/renderManager');
-const masterElection = require('./helpers/masterElection');
 
 /**
  * Lấy Master URL hiệu dụng (ưu tiên cấu hình động từ MongoDB Atlas để tự động xoay chuyển)
@@ -39,14 +27,51 @@ async function getEffectiveMasterUrl() {
   return process.env.MASTER_URL || process.env.RENDER_EXTERNAL_URL || '';
 }
 
+// Tự động nhận diện môi trường Wispbyte (/home/container)
+const IS_WISPBYTE_CONTAINER = fs.existsSync('/home/container') || process.env.IS_WISPBYTE === 'true';
 
-// Cấu hình từ .env
-const BOT_ROLE = (process.env.BOT_ROLE || 'standalone').toLowerCase();
+// Cấu hình từ .env (nếu chạy trên Wispbyte mà chưa đặt DISCORD_TOKEN thì mặc định là 'worker')
+const defaultRole = (IS_WISPBYTE_CONTAINER && !process.env.DISCORD_TOKEN) ? 'worker' : 'standalone';
+const BOT_ROLE = (process.env.BOT_ROLE || defaultRole).toLowerCase();
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
 const WORKER_SECRET = process.env.WORKER_SECRET || '';
 const ADMIN_ID = (process.env.ADMIN_ID || '1056490968343396352').trim(); // Dùng để cấu hình Admin ID chạy lệnh qua DM
+
+// Chỉ nạp các module nặng của Master / Discord khi không phải là Worker thuần túy
+let Client, GatewayIntentBits, Partials;
+let QueueDispatcher, CommandHandler, handleReportButtons, sendBanAlert, configHelper;
+let handleAiChatMessage, handleMathMessage, isMathExpression, trackerHelper;
+let handleTrackerButtons, buildTrackerOverviewMessage, handlePaginationButtons;
+let getCustomEmoji, handleDashboardRequest, syncDiscordGuilds, renderManager, wispbyteManager, masterElection;
+
+if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
+  ({ Client, GatewayIntentBits, Partials } = require('discord.js'));
+  QueueDispatcher = require('./queue-dispatcher');
+  CommandHandler = require('./handlers/commandHandler');
+  ({ handleReportButtons, sendBanAlert } = require('./helpers/reportHelper'));
+  configHelper = require('./helpers/configHelper');
+  ({ handleAiChatMessage } = require('./handlers/aiChatHandler'));
+  ({ handleMathMessage, isMathExpression } = require('./handlers/mathHandler'));
+  trackerHelper = require('./helpers/trackerHelper');
+  ({ handleTrackerButtons, buildTrackerOverviewMessage } = require('./handlers/trackerButtonHandler'));
+  ({ handlePaginationButtons } = require('./helpers/paginationHelper'));
+  ({ getCustomEmoji } = require('./helpers/utils'));
+  ({ handleDashboardRequest, syncDiscordGuilds } = require('./handlers/dashboardHandler'));
+  renderManager = require('./helpers/renderManager');
+  wispbyteManager = require('./helpers/wispbyteManager');
+  masterElection = require('./helpers/masterElection');
+}
+
+// Cấu hình định danh Vệ tinh (Satellite Worker cho Wispbyte)
+const SATELLITE_MODE =
+  process.env.SATELLITE_MODE === 'true' ||
+  IS_WISPBYTE_CONTAINER ||
+  (BOT_ROLE === 'worker' && !process.env.RENDER_EXTERNAL_URL && !process.env.RENDER_SERVICE_ID);
+const RAW_HOST_ID = (process.env.WORKER_ID || process.env.P_SERVER_UUID || os.hostname() || '').replace(/[^a-zA-Z0-9_-]/g, '');
+const SATELLITE_WORKER_ID = RAW_HOST_ID ? RAW_HOST_ID.slice(0, 12) : Math.random().toString(36).substring(2, 8);
+const SATELLITE_WORKER_NAME = (process.env.WORKER_NAME || `Wispbyte-${SATELLITE_WORKER_ID}`).trim();
 
 const MC_AUTH_TYPE = process.env.MC_AUTH_TYPE || 'offline';
 const MC_SERVER_PORT = parseInt(process.env.MC_SERVER_PORT) || 25565;
@@ -151,6 +176,18 @@ if (BOT_ROLE === 'worker' || BOT_ROLE === 'standalone') {
 
   localMcBot.on('ipLimitDetected', async ({ username, reason }) => {
     console.warn(`[Worker] 🚨 Nhận tín hiệu ipLimitDetected: [${username}] - Lý do: [${reason}]`);
+    const isRenderWorker = Boolean(
+      process.env.RENDER_SERVICE_ID ||
+      process.env.RENDER_ACCOUNT_ID ||
+      process.env.RENDER_EXTERNAL_URL
+    );
+
+    // Nếu là Wispbyte / Satellite Worker (không phải Render), không gọi API xóa service của Render
+    if (BOT_ROLE === 'worker' && !isRenderWorker) {
+      console.warn(`[Satellite-Worker] 🛡️ Worker vệ tinh [${SATELLITE_WORKER_NAME}] dính giới hạn IP. Sẽ chỉ đổi tên tài khoản mới và kết nối lại (không xoay Render).`);
+      return;
+    }
+
     const MASTER_URL = await getEffectiveMasterUrl();
     if (MASTER_URL) {
       try {
@@ -198,6 +235,146 @@ if (BOT_ROLE === 'worker' || BOT_ROLE === 'standalone') {
   localMcBot.connect();
 }
 
+/**
+ * Vòng lặp kết nối Vệ tinh (Satellite Worker Loop) dành cho Wispbyte
+ * Chủ động kết nối chiều đi (Outbound Long-Polling) tới Master để nhận việc mà không cần mở Port hay Domain
+ */
+async function startSatelliteClientLoop() {
+  if (BOT_ROLE !== 'worker' || !SATELLITE_MODE || !localMcBot) return;
+
+  console.log(`🛰️ [Satellite-Worker] Đã kích hoạt chế độ Vệ tinh cho [${SATELLITE_WORKER_NAME}] (ID: ${SATELLITE_WORKER_ID})`);
+
+  async function executeLocalTask(action, player, timeoutMs) {
+    if (!localMcBot || !localMcBot.isBotOnline || !localMcBot.isReady) {
+      throw new Error('Satellite Worker Minecraft Bot chưa sẵn sàng');
+    }
+    if (localMcBot.targetPlayer) {
+      throw new Error('Satellite Worker Minecraft Bot đang bận');
+    }
+
+    if (action === 'stats') return await localMcBot.getStats(player, timeoutMs || 15000);
+    if (action === 'bal') return await localMcBot.getBalance(player, timeoutMs || 15000);
+    if (action === 'order') return await localMcBot.getOrder(player, timeoutMs || 15000);
+    if (action === 'ah') return await localMcBot.getAh(player, timeoutMs || 15000);
+    if (action === 'online') return await localMcBot.getOnline(player, timeoutMs || 15000);
+    if (action === 'leaderboard' || action === 'lb') return await localMcBot.getLeaderboard(player, timeoutMs || 20000);
+    if (action === 'bounty') return await localMcBot.getBounty(player, timeoutMs || 15000);
+    throw new Error(`Hành động không hợp lệ: ${action}`);
+  }
+
+  let isRunningTask = false;
+
+  while (true) {
+    try {
+      const masterUrl = await getEffectiveMasterUrl();
+      if (!masterUrl || !masterUrl.startsWith('http')) {
+        await new Promise(r => setTimeout(r, 5000));
+        continue;
+      }
+
+      const pollUrl = new URL('/api/satellite/poll', masterUrl).href;
+      const isOnline = Boolean(localMcBot.isBotOnline);
+      const isReady = Boolean(localMcBot.isReady);
+      const isBusy = Boolean(!localMcBot.isReady || localMcBot.targetPlayer || isRunningTask);
+
+      const res = await fetch(pollUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-worker-secret': WORKER_SECRET || ''
+        },
+        body: JSON.stringify({
+          workerId: SATELLITE_WORKER_ID,
+          name: SATELLITE_WORKER_NAME,
+          username: localMcBot.credentials?.username || 'N/A',
+          online: isOnline,
+          ready: isReady,
+          busy: isBusy,
+          targetPlayer: localMcBot.targetPlayer || null
+        })
+      });
+
+      if (!res.ok) {
+        await new Promise(r => setTimeout(r, 4000));
+        continue;
+      }
+
+      const data = await res.json().catch(() => ({}));
+
+      // 1. Nếu Master gửi lệnh restart
+      if (data.command === 'restart') {
+        const newUsername = generateRandomUsername(10);
+        const newPassword = generateRandomUsername(10);
+        localMcBot.credentials.username = newUsername;
+        localMcBot.credentials.password = newPassword;
+        console.log(`[Satellite-Worker] 🔄 Nhận lệnh restart từ Master. Tên mới: [${newUsername}]`);
+        if (localMcBot.bot) {
+          localMcBot.bot.end('Satellite remote restart request');
+        } else {
+          localMcBot.scheduleReconnect();
+        }
+        await new Promise(r => setTimeout(r, 2000));
+        continue;
+      }
+
+      // 2. Nếu Master giao tác vụ
+      if (data.task && data.task.taskId) {
+        const { taskId, action, player, timeoutMs } = data.task;
+        console.log(`[Satellite-Worker] 🚀 Nhận tác vụ #${taskId}: [${action}] cho "${player}" từ Master...`);
+        isRunningTask = true;
+
+        (async () => {
+          let taskSuccess = false;
+          let taskResult = null;
+          let taskError = '';
+
+          try {
+            taskResult = await executeLocalTask(action, player, timeoutMs);
+            taskSuccess = true;
+          } catch (err) {
+            taskError = err.message;
+          } finally {
+            isRunningTask = false;
+          }
+
+          try {
+            const resultUrl = new URL('/api/satellite/result', masterUrl).href;
+            await fetch(resultUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-worker-secret': WORKER_SECRET || ''
+              },
+              body: JSON.stringify({
+                taskId,
+                workerId: SATELLITE_WORKER_ID,
+                success: taskSuccess,
+                result: taskResult,
+                error: taskError
+              })
+            });
+          } catch (postErr) {
+            console.error(`[Satellite-Worker] ❌ Lỗi gửi kết quả tác vụ #${taskId} về Master:`, postErr.message);
+          }
+        })();
+
+        // Đợi ngắn rồi tiếp tục poll trạng thái bận
+        await new Promise(r => setTimeout(r, 500));
+        continue;
+      }
+
+      // Nếu đang chưa sẵn sàng hoặc bận thì nghỉ 2.5s giữa các nhịp Heartbeat
+      if (!isOnline || !isReady || isBusy) {
+        await new Promise(r => setTimeout(r, 2500));
+      } else {
+        await new Promise(r => setTimeout(r, 300));
+      }
+    } catch (err) {
+      await new Promise(r => setTimeout(r, 4000));
+    }
+  }
+}
+
 // Khởi tạo Queue Dispatcher sớm cho Master / Standalone
 let queueDispatcher = null;
 if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
@@ -223,14 +400,18 @@ async function syncMasterKeepalive() {
 // Kết nối MongoDB tập trung sớm và nạp Worker
 connectMongo().then(async (connected) => {
   if (connected) {
-    await configHelper.syncFromMongo();
+    if (configHelper) {
+      await configHelper.syncFromMongo();
+    }
     if (queueDispatcher) {
       await queueDispatcher.initWorkers();
     }
     syncMasterKeepalive().catch(() => {});
   }
+  startSatelliteClientLoop().catch(err => console.error('[Satellite-Worker] Lỗi vòng lặp:', err.message));
 }).catch(err => {
   console.warn('[MongoHelper] Lỗi khởi tạo MongoDB ban đầu:', err.message);
+  startSatelliteClientLoop().catch(e => console.error('[Satellite-Worker] Lỗi vòng lặp:', e.message));
 });
 
 // 2. Khởi tạo HTTP Server (Health Check cho Render & Worker API endpoints & Dashboard Web UI)
@@ -412,6 +593,72 @@ const server = http.createServer(async (req, res) => {
           success: true,
           message: 'Đã nhận báo cáo giới hạn IP và bắt đầu tiến trình xoay Worker.'
         }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // Endpoint API dành cho Satellite Worker (Wispbyte): Poll tác vụ & gửi Heartbeat
+  if (url.pathname === '/api/satellite/poll' && req.method === 'POST') {
+    if (WORKER_SECRET) {
+      const authHeader = req.headers['x-worker-secret'];
+      if (authHeader !== WORKER_SECRET) {
+        res.writeHead(401, { 'Content-Type': 'application/json; charset=utf-8' });
+        return res.end(JSON.stringify({ success: false, error: 'Unauthorized: Sai WORKER_SECRET' }));
+      }
+    }
+
+    if (!queueDispatcher) {
+      res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+      return res.end(JSON.stringify({ success: false, error: 'Node này không chạy QueueDispatcher' }));
+    }
+
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const pollResponse = await queueDispatcher.handleSatellitePoll(payload, 12000);
+        if (!res.writableEnded) {
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify(pollResponse));
+        }
+      } catch (err) {
+        if (!res.writableEnded) {
+          res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ success: false, error: err.message }));
+        }
+      }
+    });
+    return;
+  }
+
+  // Endpoint API dành cho Satellite Worker (Wispbyte): Gửi trả kết quả thực thi tác vụ
+  if (url.pathname === '/api/satellite/result' && req.method === 'POST') {
+    if (WORKER_SECRET) {
+      const authHeader = req.headers['x-worker-secret'];
+      if (authHeader !== WORKER_SECRET) {
+        res.writeHead(401, { 'Content-Type': 'application/json; charset=utf-8' });
+        return res.end(JSON.stringify({ success: false, error: 'Unauthorized: Sai WORKER_SECRET' }));
+      }
+    }
+
+    if (!queueDispatcher) {
+      res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+      return res.end(JSON.stringify({ success: false, error: 'Node này không chạy QueueDispatcher' }));
+    }
+
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const out = queueDispatcher.resolveSatelliteTask(payload);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: true, ...out }));
       } catch (err) {
         res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
         res.end(JSON.stringify({ success: false, error: err.message }));
@@ -769,6 +1016,12 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
       global.trackerSchedulerInstance = startTrackerScheduler(queueDispatcher);
       global.runTrackerCheckCycle = global.trackerSchedulerInstance?.runCheckCycle;
     }
+
+    // Khởi chạy bộ lập lịch tự động truy cập Wispbyte Client Panel 24h / lần cho đa tài khoản
+    wispbyteManager.startWispbyteKeepAliveScheduler({
+      discordClient: client,
+      adminId: ADMIN_ID
+    });
   });
 
   // Tự động đồng bộ khi Bot tham gia hoặc rời server Discord
@@ -854,7 +1107,7 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
 
     // Danh sách lệnh hợp lệ
     const allowedCommands = ['stats', 'order', 'bal', 'ah', 'online', 'ping', 'help', 'lb', 'donate', 'bounty', 'item', 'math', 'ai', 'chat'];
-    const adminCommands = ['help', 'status', 'workers', 'restart', 'mode', 'render', 'toggle', 'ai', 'tracker', 'theodoi', 'master', 'failover'];
+    const adminCommands = ['help', 'status', 'workers', 'restart', 'mode', 'render', 'toggle', 'ai', 'tracker', 'theodoi', 'master', 'failover', 'wispbyte'];
 
     // 2. Kiểm tra xem có phải lệnh game/người dùng hay không
     // Hỗ trợ: ?stats trong server hoặc stats trong DM
@@ -995,7 +1248,68 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
 
     try {
       if (command === 'help') {
-         await safeSend(message.channel, '**Danh sách lệnh Admin:**\n- `!master [status/switch]`: Xem hoặc chuyển đổi quyền giữa 2 Master (Active / Standby)\n- `!status` hoặc `!workers`: Xem danh sách và trạng thái toàn bộ Workers (Local & Remote)\n- `!restart`: Random tên mới và khởi động lại bot ngay lập tức\n- `!mode` hoặc `!render`: Chuyển đổi chế độ hiển thị danh sách (Text / Image)\n- `!toggle off/on [lời nhắn]`: Bật/tắt việc nhận Slash Commands từ user khác.\n- `!ai off/on [lời nhắn]`: Bật/tắt tính năng trò chuyện AI với người dùng.\n- `!tracker [trang]`: Xem danh sách và trạng thái theo dõi số dư định kỳ (phân trang)\n- `!tracker add <tên>`: Bật theo dõi số dư cho một người chơi\n- `!tracker untrack <tên>`: Hủy theo dõi một người chơi\n- `!tracker check`: Kích hoạt vòng lặp check bal cho các người chơi ngay lập tức');
+         await safeSend(message.channel, '**Danh sách lệnh Admin:**\n- `!master [status/switch]`: Xem hoặc chuyển đổi quyền giữa 2 Master (Active / Standby)\n- `!status` hoặc `!workers`: Xem danh sách và trạng thái toàn bộ Workers (Local, Remote Render & Satellite Wispbyte)\n- `!wispbyte [list/add/remove/check]`: Quản lý đa tài khoản Wispbyte & tự động truy cập Client Panel 24h/lần\n- `!restart`: Random tên mới và khởi động lại bot ngay lập tức\n- `!mode` hoặc `!render`: Chuyển đổi chế độ hiển thị danh sách (Text / Image)\n- `!toggle off/on [lời nhắn]`: Bật/tắt việc nhận Slash Commands từ user khác.\n- `!ai off/on [lời nhắn]`: Bật/tắt tính năng trò chuyện AI với người dùng.\n- `!tracker [trang]`: Xem danh sách và trạng thái theo dõi số dư định kỳ (phân trang)\n- `!tracker add <tên>`: Bật theo dõi số dư cho một người chơi\n- `!tracker untrack <tên>`: Hủy theo dõi một người chơi\n- `!tracker check`: Kích hoạt vòng lặp check bal cho các người chơi ngay lập tức');
+      } else if (command === 'wispbyte') {
+         const sub = (args.shift() || 'list').toLowerCase();
+         if (sub === 'add' || sub === 'set') {
+           const accountId = (args.shift() || '').trim();
+           const cookieStr = args.join(' ').trim();
+           if (!accountId || !cookieStr) {
+             return await safeSend(message.channel, '📖 **Cú pháp thêm/cập nhật tài khoản Wispbyte:**\n`!wispbyte add <tên_hoặc_id_acc> <chuỗi_cookie>`\n\n*Ví dụ:*\n`!wispbyte add wisp_acc_1 cf_clearance=...; session=...`');
+           }
+           await wispbyteManager.saveWispbyteAccount({
+             accountId,
+             name: accountId,
+             cookie: cookieStr,
+             isActive: true
+           });
+           await safeSend(message.channel, `✅ Đã lưu tài khoản Wispbyte **${accountId}** vào MongoDB Atlas! Đang kiểm tra kết nối Client Panel...`);
+           const testRes = await wispbyteManager.pingSingleWispbyteAccount({
+             accountId,
+             name: accountId,
+             cookie: cookieStr
+           });
+           const icon = testRes.success ? '🟢' : '🔴';
+           return await safeSend(message.channel, `${icon} **Kết quả kiểm tra [${accountId}]:** ${testRes.message}`);
+         } else if (sub === 'remove' || sub === 'delete' || sub === 'xoa') {
+           const accountId = (args.shift() || '').trim();
+           if (!accountId) {
+             return await safeSend(message.channel, '⚠️ Cú pháp: `!wispbyte remove <id_acc>`');
+           }
+           const ok = await wispbyteManager.deleteWispbyteAccount(accountId);
+           return await safeSend(message.channel, ok ? `🗑️ Đã xóa tài khoản Wispbyte **${accountId}**.` : `⚠️ Không tìm thấy tài khoản **${accountId}**.`);
+         } else if (sub === 'check' || sub === 'renew' || sub === 'ping') {
+           const statusMsg = await safeSend(message.channel, '⏳ **Đang truy cập Client Panel cho toàn bộ các tài khoản Wispbyte...**');
+           const checkRes = await wispbyteManager.checkAllWispbyteAccounts({
+             discordClient: client,
+             adminId: ADMIN_ID,
+             manual: true
+           });
+           if (!checkRes.results || checkRes.results.length === 0) {
+             return await statusMsg.edit('ℹ️ Chưa có tài khoản Wispbyte nào được cấu hình. Dùng `!wispbyte add <id_acc> <cookie>` để thêm.');
+           }
+           let txt = `🛰️ **KẾT QUẢ GIA HẠN / TRUY CẬP WISPBYTE (${checkRes.okCount}/${checkRes.total} thành công):**\n\n`;
+           checkRes.results.forEach((r, idx) => {
+             const icon = r.success ? '🟢' : (r.status === 'expired' ? '🔴' : '🟡');
+             txt += `**${idx + 1}. ${icon} ${r.name}** (\`${r.accountId}\`)\n   └ ${r.message} *(Tổng lần giữ hạn: ${r.renewCount})*\n`;
+           });
+           return await statusMsg.edit(txt);
+         } else {
+           const accounts = await wispbyteManager.getAllWispbyteAccounts();
+           if (accounts.length === 0) {
+             return await safeSend(message.channel, 'ℹ️ **Chưa có tài khoản Wispbyte nào trong hệ thống.**\n\n📖 **Hướng dẫn quản lý đa tài khoản Wispbyte (Tự động giữ hạn 14 ngày):**\n• Thêm tài khoản: `!wispbyte add <id_acc> <cookie>`\n• Kiểm tra/Gia hạn ngay tất cả acc: `!wispbyte check`\n• Xóa tài khoản: `!wispbyte remove <id_acc>`');
+           }
+           let txt = `🛰️ **DANH SÁCH TÀI KHOẢN WISPBYTE (${accounts.length}):**\n\n`;
+           accounts.forEach((a, idx) => {
+             const icon = a.lastStatus === 'ok' ? '🟢' : (a.lastStatus === 'expired' ? '🔴' : '⚪');
+             const lastTime = a.lastPingAt ? new Date(a.lastPingAt).toLocaleString('vi-VN') : 'Chưa chạy';
+             txt += `**${idx + 1}. ${icon} ${a.name || a.accountId}** (\`${a.accountId}\`)\n`;
+             txt += `   • Lần truy cập cuối: \`${lastTime}\` (Giữ hạn: **${a.renewCount || 0}** lần)\n`;
+             if (a.lastMessage) txt += `   • Chi tiết: ${a.lastMessage}\n`;
+           });
+           txt += `\n💡 *Hệ thống tự động truy cập tất cả tài khoản mỗi 24h. Gõ \`!wispbyte check\` để chạy ngay.*`;
+           return await safeSend(message.channel, txt);
+         }
       } else if (command === 'tracker' || command === 'theodoi') {
          const sub = args.shift()?.toLowerCase();
          if (sub === 'help') {

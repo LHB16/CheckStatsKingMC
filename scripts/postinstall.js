@@ -1,13 +1,43 @@
 /**
  * scripts/postinstall.js - Tự động tải Chrome cho Puppeteer nếu môi trường hỗ trợ
- * Cho phép bỏ qua trên Wispbyte hoặc các môi trường dung lượng thấp bằng biến:
- * PUPPETEER_SKIP_DOWNLOAD=true
+ * Tự động bỏ qua trên Wispbyte (/home/container), chế độ Worker (BOT_ROLE=worker),
+ * hoặc khi bật biến PUPPETEER_SKIP_DOWNLOAD=true.
  */
 
+const fs = require('fs');
+const path = require('path');
 const { execSync } = require('child_process');
+require('dotenv').config();
 
-if (process.env.PUPPETEER_SKIP_DOWNLOAD === 'true' || process.env.SKIP_PUPPETEER_DOWNLOAD === 'true') {
-  console.log('[PostInstall] ℹ️ Đã phát hiện cờ PUPPETEER_SKIP_DOWNLOAD=true. Bỏ qua tải Chrome để tiết kiệm dung lượng ổ cứng (1 GB limit).');
+const isWispbyteContainer = fs.existsSync('/home/container');
+const botRole = (process.env.BOT_ROLE || '').toLowerCase();
+const skipDownload =
+  process.env.PUPPETEER_SKIP_DOWNLOAD === 'true' ||
+  process.env.SKIP_PUPPETEER_DOWNLOAD === 'true' ||
+  process.env.IS_WISPBYTE === 'true' ||
+  botRole === 'worker' ||
+  isWispbyteContainer;
+
+// Tự động dọn dẹp cache Puppeteer/npm cũ trên Wispbyte để giải phóng ổ cứng ngay lập tức
+if (isWispbyteContainer) {
+  const cachesToClean = [
+    '/home/container/.cache/puppeteer',
+    '/home/container/.npm/_cacache'
+  ];
+  for (const cacheDir of cachesToClean) {
+    try {
+      if (fs.existsSync(cacheDir)) {
+        fs.rmSync(cacheDir, { recursive: true, force: true });
+        console.log(`[PostInstall] 🧹 Đã dọn dẹp thư mục bộ nhớ đệm nặng: ${cacheDir}`);
+      }
+    } catch (e) {
+      console.warn(`[PostInstall] ⚠️ Không thể xóa ${cacheDir}: ${e.message}`);
+    }
+  }
+}
+
+if (skipDownload) {
+  console.log('[PostInstall] ℹ️ Phát hiện môi trường Worker / Wispbyte (/home/container). Bỏ qua tải Chrome để tiết kiệm ổ cứng.');
   process.exit(0);
 }
 
