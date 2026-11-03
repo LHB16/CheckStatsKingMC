@@ -300,6 +300,12 @@ class PersistentBot extends EventEmitter {
     this.currentAction = null; // 'stats' | 'bal' | 'order'
     this.isProcessingOrder = false;
     this.isIpLimited = false;
+
+    // Mặc định ẩn spam [MC-Bot Chat] trên môi trường Wispbyte (/home/container) hoặc khi bật HIDE_CHAT_LOG=true
+    const isWispbyteEnv = process.env.IS_WISPBYTE === 'true' || require('fs').existsSync('/home/container');
+    this.showChatLog = process.env.HIDE_CHAT_LOG === 'true'
+      ? false
+      : (process.env.HIDE_CHAT_LOG === 'false' ? true : !isWispbyteEnv);
   }
 
   connect() {
@@ -427,7 +433,9 @@ class PersistentBot extends EventEmitter {
     this.bot.on('message', (jsonMsg) => {
       const msgText = jsonMsg.toString();
       const cleanMsg = cleanMinecraftText(msgText);
-      console.log(`[MC-Bot Chat] ${cleanMsg}`);
+      if (this.showChatLog) {
+        console.log(`[MC-Bot Chat] ${cleanMsg}`);
+      }
       const lowerMsg = cleanMsg.toLowerCase();
       
       // Bỏ qua các thông báo hệ thống / nội quy mặc định của KingMC

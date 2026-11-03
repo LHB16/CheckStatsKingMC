@@ -7,12 +7,18 @@ const path = require('path');
 const dns = require('dns');
 const mongoose = require('mongoose');
 
-// Cấu hình Google/Cloudflare DNS để phân giải SRV records MongoDB mượt mà trên mọi mạng
+// Cấu hình giữ nguyên DNS nội bộ của container (Docker/Wispbyte) kết hợp Google/Cloudflare DNS dự phòng
 try {
-  dns.setServers(['8.8.8.8', '1.1.1.1']);
+  const existingServers = dns.getServers ? dns.getServers() : [];
+  const mergedServers = Array.from(new Set([...existingServers, '8.8.8.8', '1.1.1.1']));
+  dns.setServers(mergedServers);
 } catch (e) {}
 
+// Tắt bufferCommands mặc định để tránh treo 10000ms khi mất kết nối hoặc bị chặn cổng 27017
+mongoose.set('bufferCommands', false);
+
 let isConnected = false;
+let connectingPromise = null;
 let WorkerModel = null;
 let DiscordGuildModel = null;
 let DonationConfigModel = null;
@@ -204,7 +210,7 @@ function getSystemConfigModel() {
   return setupSystemConfigModel();
 }
 
-// Kết nối MongoDB tập trung
+// Kết nối MongoDB tập trung (Chống race-condition khi nhiều module cùng gọi)
 async function connectMongo() {
   const mongoUri = process.env.MONGODB_URI;
   if (!mongoUri || !mongoUri.startsWith('mongodb')) {
@@ -224,30 +230,45 @@ async function connectMongo() {
     return true;
   }
 
-  try {
-    console.log('[MongoHelper] Đang kết nối tới MongoDB Atlas...');
-    await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 5000
-    });
-    isConnected = true;
-    setupWorkerModel();
-    setupDiscordGuildModel();
-    setupDonationConfigModel();
-    setupLeaderboardModel();
-    setupRenderAccountModel();
-    setupWispbyteAccountModel();
-    setupSystemConfigModel();
-    console.log('✅ [MongoHelper] Kết nối MongoDB Atlas THÀNH CÔNG!');
-    return true;
-  } catch (err) {
-    console.warn(`[MongoHelper] ⚠️ Không thể kết nối MongoDB Atlas: ${err.message}`);
-    isConnected = false;
-    return false;
+  if (connectingPromise) {
+    return connectingPromise;
   }
+
+  connectingPromise = (async () => {
+    try {
+      console.log('[MongoHelper] Đang kết nối tới MongoDB Atlas...');
+      if (mongoose.connection.readyState === 0) {
+        await mongoose.connect(mongoUri, {
+          serverSelectionTimeoutMS: 6000,
+          bufferCommands: false
+        });
+      }
+      isConnected = mongoose.connection.readyState === 1;
+      if (isConnected) {
+        setupWorkerModel();
+        setupDiscordGuildModel();
+        setupDonationConfigModel();
+        setupLeaderboardModel();
+        setupRenderAccountModel();
+        setupWispbyteAccountModel();
+        setupSystemConfigModel();
+        console.log('✅ [MongoHelper] Kết nối MongoDB Atlas THÀNH CÔNG!');
+      }
+      return isConnected;
+    } catch (err) {
+      console.warn(`[MongoHelper] ⚠️ Không thể kết nối MongoDB Atlas: ${err.message}`);
+      isConnected = false;
+      return false;
+    } finally {
+      connectingPromise = null;
+    }
+  })();
+
+  return connectingPromise;
 }
 
 function isMongoAvailable() {
-  return isConnected || (mongoose.connection && mongoose.connection.readyState === 1);
+  return Boolean(mongoose.connection && mongoose.connection.readyState === 1);
 }
 
 function getWorkerModel() {
