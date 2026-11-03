@@ -805,11 +805,11 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     const isPaginationHandled = await handlePaginationButtons(interaction);
     if (isPaginationHandled) return;
 
-    // Kiểm tra giới hạn máy chủ Discord (Chỉ cho phép server chỉ định, ngoại trừ Admin)
+    // Kiểm tra giới hạn máy chủ Discord (Hỗ trợ Whitelist & Blacklist đa máy chủ, ngoại trừ Admin)
     if (interaction.isChatInputCommand()) {
-      const allowedGuildId = configHelper.getAllowedGuildId();
+      const isAllowed = configHelper.isGuildAllowed(interaction.guildId);
       const isAdmin = ADMIN_ID && interaction.user.id === ADMIN_ID;
-      if (allowedGuildId && interaction.guildId !== allowedGuildId && !isAdmin) {
+      if (!isAllowed && !isAdmin) {
         const payload = configHelper.createRestrictionPayload();
         return interaction.reply({ ...payload, ephemeral: true });
       }
@@ -833,8 +833,7 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     const isDirectMessage = !message.guild;
     const cleanText = (message.content || '').trim();
 
-    // KIỂM TRA GIỚI HẠN MÁY CHỦ CHO PHÉP (Chỉ hoạt động tại Server chỉ định, Master vẫn DM bình thường)
-    const allowedGuildId = configHelper.getAllowedGuildId();
+    // KIỂM TRA GIỚI HẠN MÁY CHỦ CHO PHÉP (Hỗ trợ Whitelist & Blacklist đa máy chủ, Master vẫn DM bình thường)
     const isAdmin = ADMIN_ID && message.author.id === ADMIN_ID;
 
     // A. Nếu nhắn tin riêng (DM) nhưng không phải là Master/Admin
@@ -843,14 +842,14 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
       return message.reply(payload);
     }
 
-    // B. Nếu ở server khác (ngoài allowedGuildId) và người dùng tương tác tới Bot (? hoặc @mention)
-    if (message.guild && allowedGuildId && message.guild.id !== allowedGuildId && !isAdmin) {
+    // B. Nếu ở server không được phép (theo Whitelist/Blacklist) và người dùng tương tác tới Bot (? hoặc @mention)
+    if (message.guild && !isAdmin && !configHelper.isGuildAllowed(message.guild.id)) {
       const isCallingBot = cleanText.startsWith('?') || (message.mentions && message.mentions.has(client.user?.id));
       if (isCallingBot) {
         const payload = configHelper.createRestrictionPayload();
         return message.reply(payload);
       }
-      return; // Không tương tác với bot trong server khác thì bỏ qua
+      return; // Không tương tác với bot trong server không hợp lệ thì bỏ qua
     }
 
     // Danh sách lệnh hợp lệ

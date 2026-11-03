@@ -1,5 +1,11 @@
 /**
- * helpers/configHelper.js - Quản lý cấu hình động cho Discord Bot (displayMode, allowedGuildId, discordInviteUrl)
+ * helpers/configHelper.js - Quản lý cấu hình động cho Discord Bot:
+ * - displayMode ('text' | 'image')
+ * - restrictionMode ('whitelist' | 'blacklist' | 'none')
+ * - whitelistGuildIds (Danh sách máy chủ được phép)
+ * - blacklistGuildIds (Danh sách máy chủ bị chặn)
+ * - discordInviteUrl (Link mời tham gia Discord)
+ * - serverRestrictionName (Tên hiển thị server chính)
  * Hỗ trợ lưu trữ bền vững trên MongoDB Atlas và đồng bộ cục bộ fallback qua config.json
  */
 
@@ -11,17 +17,43 @@ const { getSystemConfig, setSystemConfig, isMongoAvailable } = require('./mongoH
 const CONFIG_PATH = path.join(__dirname, '../config.json');
 
 const defaultConfig = {
-  displayMode: 'text', // Mặc định là 'text' (có thể chuyển sang 'image')
-  allowedGuildId: process.env.ALLOWED_GUILD_ID || '1515285801091731517',
+  displayMode: 'text',
+  restrictionMode: 'whitelist', // 'whitelist' | 'blacklist' | 'none'
+  whitelistGuildIds: ['1515285801091731517'],
+  blacklistGuildIds: [],
+  allowedGuildId: '1515285801091731517', // backward compatibility
   discordInviteUrl: process.env.DISCORD_INVITE_URL || 'https://discord.gg/apMrvJAPy',
   serverRestrictionName: process.env.RESTRICTED_SERVER_NAME || 'KZ Sì to'
 };
+
+function normalizeIds(input) {
+  if (!input) return [];
+  if (Array.isArray(input)) {
+    return Array.from(new Set(input.map(id => String(id).trim()).filter(Boolean)));
+  }
+  if (typeof input === 'string') {
+    return Array.from(new Set(input.split(/[,;\s]+/).map(id => id.trim()).filter(Boolean)));
+  }
+  return [];
+}
 
 function loadLocalConfig() {
   try {
     if (fs.existsSync(CONFIG_PATH)) {
       const data = fs.readFileSync(CONFIG_PATH, 'utf8');
-      return { ...defaultConfig, ...JSON.parse(data) };
+      const parsed = JSON.parse(data);
+      const merged = { ...defaultConfig, ...parsed };
+
+      // Đảm bảo whitelistGuildIds luôn là mảng chuẩn
+      if (!merged.whitelistGuildIds || !Array.isArray(merged.whitelistGuildIds)) {
+        merged.whitelistGuildIds = normalizeIds(merged.whitelistGuildIds || merged.allowedGuildId);
+      }
+      if (merged.whitelistGuildIds.length === 0 && merged.allowedGuildId) {
+        merged.whitelistGuildIds = [String(merged.allowedGuildId).trim()];
+      }
+      merged.blacklistGuildIds = normalizeIds(merged.blacklistGuildIds);
+
+      return merged;
     }
   } catch (err) {
     console.error('[ConfigHelper] Lỗi khi đọc config.json:', err.message);
@@ -45,10 +77,15 @@ async function syncFromMongo() {
     if (isMongoAvailable()) {
       const dbConfig = await getSystemConfig('app_config', null);
       if (dbConfig && typeof dbConfig === 'object') {
-        currentConfig = { ...currentConfig, ...dbConfig };
+        const merged = { ...currentConfig, ...dbConfig };
+        merged.whitelistGuildIds = normalizeIds(merged.whitelistGuildIds || merged.allowedGuildId);
+        if (merged.whitelistGuildIds.length === 0 && merged.allowedGuildId) {
+          merged.whitelistGuildIds = [String(merged.allowedGuildId).trim()];
+        }
+        merged.blacklistGuildIds = normalizeIds(merged.blacklistGuildIds);
+        currentConfig = merged;
         saveLocalConfig(currentConfig);
       } else {
-        // Lưu cấu hình hiện tại lên DB nếu DB chưa có
         await setSystemConfig('app_config', currentConfig, 'Cấu hình chung của ứng dụng');
       }
     }
@@ -105,8 +142,17 @@ module.exports = {
     persistConfig();
     return currentConfig.displayMode;
   },
+  getRestrictionMode() {
+    return currentConfig.restrictionMode || 'whitelist';
+  },
+  getWhitelistGuildIds() {
+    return currentConfig.whitelistGuildIds || ['1515285801091731517'];
+  },
+  getBlacklistGuildIds() {
+    return currentConfig.blacklistGuildIds || [];
+  },
   getAllowedGuildId() {
-    return currentConfig.allowedGuildId || '1515285801091731517';
+    return currentConfig.whitelistGuildIds?.[0] || currentConfig.allowedGuildId || '1515285801091731517';
   },
   getDiscordInviteUrl() {
     return currentConfig.discordInviteUrl || 'https://discord.gg/apMrvJAPy';
@@ -114,29 +160,69 @@ module.exports = {
   getServerRestrictionName() {
     return currentConfig.serverRestrictionName || 'KZ Sì to';
   },
+  isGuildAllowed(guildId) {
+    if (!guildId) return false;
+    const gId = String(guildId).trim();
+    const mode = currentConfig.restrictionMode || 'whitelist';
+
+    if (mode === 'none') {
+      return true;
+    }
+
+    if (mode === 'blacklist') {
+      const blacklist = currentConfig.blacklistGuildIds || [];
+      return !blacklist.includes(gId);
+    }
+
+    // Default mode: 'whitelist'
+    const whitelist = currentConfig.whitelistGuildIds || ['1515285801091731517'];
+    return whitelist.includes(gId);
+  },
   getGuildRestrictionConfig() {
     return {
-      allowedGuildId: currentConfig.allowedGuildId || '1515285801091731517',
+      restrictionMode: currentConfig.restrictionMode || 'whitelist',
+      whitelistGuildIds: currentConfig.whitelistGuildIds || ['1515285801091731517'],
+      blacklistGuildIds: currentConfig.blacklistGuildIds || [],
+      allowedGuildId: currentConfig.whitelistGuildIds?.[0] || currentConfig.allowedGuildId || '1515285801091731517',
       discordInviteUrl: currentConfig.discordInviteUrl || 'https://discord.gg/apMrvJAPy',
       serverRestrictionName: currentConfig.serverRestrictionName || 'KZ Sì to'
     };
   },
-  updateGuildRestrictionConfig({ allowedGuildId, discordInviteUrl, serverRestrictionName }) {
-    if (allowedGuildId !== undefined) {
-      currentConfig.allowedGuildId = String(allowedGuildId).trim();
+  updateGuildRestrictionConfig({
+    restrictionMode,
+    whitelistGuildIds,
+    blacklistGuildIds,
+    allowedGuildId,
+    discordInviteUrl,
+    serverRestrictionName
+  }) {
+    if (restrictionMode && ['whitelist', 'blacklist', 'none'].includes(restrictionMode)) {
+      currentConfig.restrictionMode = restrictionMode;
     }
+    if (whitelistGuildIds !== undefined) {
+      currentConfig.whitelistGuildIds = normalizeIds(whitelistGuildIds);
+      if (currentConfig.whitelistGuildIds.length > 0) {
+        currentConfig.allowedGuildId = currentConfig.whitelistGuildIds[0];
+      }
+    } else if (allowedGuildId !== undefined) {
+      const normalized = normalizeIds(allowedGuildId);
+      currentConfig.whitelistGuildIds = normalized;
+      currentConfig.allowedGuildId = normalized[0] || '';
+    }
+
+    if (blacklistGuildIds !== undefined) {
+      currentConfig.blacklistGuildIds = normalizeIds(blacklistGuildIds);
+    }
+
     if (discordInviteUrl !== undefined) {
       currentConfig.discordInviteUrl = String(discordInviteUrl).trim();
     }
     if (serverRestrictionName !== undefined) {
       currentConfig.serverRestrictionName = String(serverRestrictionName).trim();
     }
+
     persistConfig();
-    return {
-      allowedGuildId: currentConfig.allowedGuildId,
-      discordInviteUrl: currentConfig.discordInviteUrl,
-      serverRestrictionName: currentConfig.serverRestrictionName
-    };
+    return this.getGuildRestrictionConfig();
   },
   createRestrictionPayload
 };

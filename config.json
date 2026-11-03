@@ -1,5 +1,12 @@
 {
   "displayMode": "text",
+  "restrictionMode": "whitelist",
+  "whitelistGuildIds": [
+    "1515285801091731517"
+  ],
+  "blacklistGuildIds": [
+    "9999"
+  ],
   "allowedGuildId": "1515285801091731517",
   "discordInviteUrl": "https://discord.gg/apMrvJAPy",
   "serverRestrictionName": "KZ Sì to"

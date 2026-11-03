@@ -466,13 +466,16 @@ async function handleDashboardRequest(req, res, context) {
       try {
         const body = await parseJsonBody(req);
         const updated = configHelper.updateGuildRestrictionConfig({
+          restrictionMode: body.restrictionMode,
+          whitelistGuildIds: body.whitelistGuildIds,
+          blacklistGuildIds: body.blacklistGuildIds,
           allowedGuildId: body.allowedGuildId,
           discordInviteUrl: body.discordInviteUrl,
           serverRestrictionName: body.serverRestrictionName
         });
         return sendJson(res, 200, {
           success: true,
-          message: 'Đã cập nhật cấu hình máy chủ Discord và link mời thành công!',
+          message: 'Đã cập nhật cấu hình máy chủ Discord (Whitelist & Blacklist) và link mời thành công!',
           data: updated
         });
       } catch (err) {
