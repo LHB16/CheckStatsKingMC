@@ -7,6 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const mongoose = require('mongoose');
+const { connectMongo, isMongoAvailable } = require('./mongoHelper');
 
 const CACHE_FILE_PATH = path.join(__dirname, '..', 'data', 'skin_cache.json');
 
@@ -124,28 +125,25 @@ function scheduleSaveLocalDatabase() {
 async function initSkinHelper() {
   loadLocalDatabase();
 
-  // Kiểm tra nếu mongoose đã được kết nối từ trước (ví dụ do trackerHelper kết nối)
-  if (mongoose.connection && mongoose.connection.readyState === 1) {
+  // Kiểm tra nếu mongoose đã được kết nối từ trước
+  if (isMongoAvailable()) {
     isMongoConnected = true;
     setupMongoModel();
     await syncFromMongo();
     return;
   }
 
-  // Nếu chưa kết nối, thử kết nối qua MONGODB_URI nếu có
+  // Nếu chưa kết nối, dùng chung connectMongo() để tránh gọi mongoose.connect() 2 lần gây lỗi buffering
   const mongoUri = process.env.MONGODB_URI;
   if (mongoUri && mongoUri.startsWith('mongodb')) {
-    try {
-      if (mongoose.connection.readyState === 0) {
-        console.log('[SkinHelper] Đang kết nối tới MongoDB Atlas...');
-        await mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 5000 });
-      }
+    const connected = await connectMongo();
+    if (connected && isMongoAvailable()) {
       isMongoConnected = true;
       setupMongoModel();
       console.log('✅ [SkinHelper] Kết nối MongoDB Atlas THÀNH CÔNG cho hệ thống Skin!');
       await syncFromMongo();
-    } catch (err) {
-      console.warn(`[SkinHelper] ⚠️ Không thể kết nối MongoDB Atlas cho Skin: ${err.message}. Sử dụng file cục bộ.`);
+    } else {
+      console.warn('[SkinHelper] ⚠️ Chưa thể kết nối MongoDB Atlas cho Skin. Sử dụng file cục bộ.');
       isMongoConnected = false;
     }
   } else {
@@ -158,10 +156,13 @@ async function initSkinHelper() {
     setupMongoModel();
     await syncFromMongo();
   });
+  mongoose.connection.on('disconnected', () => {
+    isMongoConnected = false;
+  });
 
   // Tự động đồng bộ định kỳ từ MongoDB mỗi 30 phút để nạp các skin mới do Baltop Crawler quét được
   setInterval(() => {
-    if (isMongoConnected) {
+    if (isMongoAvailable()) {
       syncFromMongo().catch(e => console.warn('[SkinHelper] Lỗi đồng bộ MongoDB định kỳ:', e.message));
     }
   }, 30 * 60 * 1000);
@@ -171,7 +172,7 @@ async function initSkinHelper() {
  * Đồng bộ tất cả skin từ MongoDB vào RAM Cache
  */
 async function syncFromMongo() {
-  if (!PlayerSkinModel) return;
+  if (!PlayerSkinModel || !isMongoAvailable()) return;
   try {
     const allSkins = await PlayerSkinModel.find({});
     for (const s of allSkins) {
@@ -221,7 +222,7 @@ async function saveSkin(playerName, textureUrlOrId, model = 'classic') {
   flushLocalDatabase(); // Ghi file ngay lập tức để không bị mất dữ liệu
 
   // Cập nhật MongoDB ngầm (asynchronous)
-  if (isMongoConnected && PlayerSkinModel) {
+  if (isMongoAvailable() && PlayerSkinModel) {
     PlayerSkinModel.findOneAndUpdate(
       { playerKey },
       {

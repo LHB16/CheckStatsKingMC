@@ -95,9 +95,6 @@ console.log(`==================================================`);
 console.log(`🚀 Bắt đầu khởi động hệ thống với Chế độ: [${BOT_ROLE.toUpperCase()}]`);
 console.log(`==================================================`);
 
-// Khởi tạo SkinHelper sớm để nạp Cache
-skinHelper.initSkinHelper().catch(e => console.warn('[SkinHelper] Lỗi khởi tạo ban đầu:', e.message));
-
 // Helper gen chuỗi ngẫu nhiên 10 ký tự (chữ hoa, chữ thường, số)
 function generateRandomUsername(length = 10) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -263,14 +260,20 @@ async function startSatelliteClientLoop() {
   }
 
   let isRunningTask = false;
+  let warnedMissingMasterUrl = false;
 
   while (true) {
     try {
       const masterUrl = await getEffectiveMasterUrl();
       if (!masterUrl || !masterUrl.startsWith('http')) {
+        if (!warnedMissingMasterUrl) {
+          warnedMissingMasterUrl = true;
+          console.warn('[Satellite-Worker] ⚠️ Chưa lấy được MASTER_URL (do chưa điền MASTER_URL trong .env và chưa kết nối được MongoDB Atlas). Hãy điền MASTER_URL=https://... vào file .env hoặc bật 0.0.0.0/0 trong Network Access của MongoDB Atlas.');
+        }
         await new Promise(r => setTimeout(r, 5000));
         continue;
       }
+      warnedMissingMasterUrl = false;
 
       const pollUrl = new URL('/api/satellite/poll', masterUrl).href;
       const isOnline = Boolean(localMcBot.isBotOnline);
@@ -399,6 +402,7 @@ async function syncMasterKeepalive() {
 
 // Kết nối MongoDB tập trung sớm và nạp Worker
 connectMongo().then(async (connected) => {
+  skinHelper.initSkinHelper().catch(e => console.warn('[SkinHelper] Lỗi khởi tạo:', e.message));
   if (connected) {
     if (configHelper) {
       await configHelper.syncFromMongo();
@@ -411,8 +415,56 @@ connectMongo().then(async (connected) => {
   startSatelliteClientLoop().catch(err => console.error('[Satellite-Worker] Lỗi vòng lặp:', err.message));
 }).catch(err => {
   console.warn('[MongoHelper] Lỗi khởi tạo MongoDB ban đầu:', err.message);
+  skinHelper.initSkinHelper().catch(() => {});
   startSatelliteClientLoop().catch(e => console.error('[Satellite-Worker] Lỗi vòng lặp:', e.message));
 });
+
+// Bộ lắng nghe lệnh trực tiếp từ Console (Hỗ trợ gõ /tatchat, /batchat, /restart trên Wispbyte Console)
+if (process.stdin && typeof process.stdin.on === 'function') {
+  process.stdin.setEncoding('utf8');
+  process.stdin.on('data', (rawInput) => {
+    const input = String(rawInput || '').trim();
+    if (!input) return;
+    const lower = input.toLowerCase();
+
+    if (lower === '/tatchat' || lower === 'tatchat') {
+      if (localMcBot) {
+        localMcBot.showChatLog = !localMcBot.showChatLog;
+        console.log(`[Console] ${localMcBot.showChatLog ? '🔊 Đã BẬT' : '🔇 Đã TẮT'} hiển thị tin nhắn [MC-Bot Chat] trên Console.`);
+      }
+      return;
+    }
+
+    if (lower === '/batchat' || lower === 'batchat') {
+      if (localMcBot) {
+        localMcBot.showChatLog = true;
+        console.log('[Console] 🔊 Đã BẬT hiển thị tin nhắn [MC-Bot Chat] trên Console.');
+      }
+      return;
+    }
+
+    if (lower === '/restart' || lower === 'restart') {
+      if (localMcBot) {
+        const newName = generateRandomUsername(10);
+        localMcBot.credentials.username = newName;
+        localMcBot.credentials.password = generateRandomUsername(10);
+        console.log(`[Console] 🔄 Đang khởi động lại Minecraft Bot với tên mới: [${newName}]...`);
+        if (localMcBot.bot) {
+          localMcBot.bot.end('Console manual restart');
+        } else {
+          localMcBot.scheduleReconnect();
+        }
+      }
+      return;
+    }
+
+    // Cho phép gõ lệnh trực tiếp vào game nếu bắt đầu bằng dấu /
+    if (input.startsWith('/') && localMcBot && localMcBot.bot && localMcBot.isBotOnline) {
+      console.log(`[Console] 💬 Gửi lệnh vào game: ${input}`);
+      localMcBot.bot.chat(input);
+    }
+  });
+}
 
 // 2. Khởi tạo HTTP Server (Health Check cho Render & Worker API endpoints & Dashboard Web UI)
 const PORT = parseInt(process.env.SERVER_PORT || process.env.PORT) || 3000;
