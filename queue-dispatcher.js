@@ -793,8 +793,16 @@ class QueueDispatcher {
     for (const [workerId, sat] of this.satelliteWorkers.entries()) {
       const satUrl = sat.url || `satellite://${workerId}`;
       const lastSeenMs = sat.lastHeartbeat ? now - new Date(sat.lastHeartbeat).getTime() : Infinity;
-      const isAlive = lastSeenMs < 45000 && sat.online;
+      const isHeartbeatFresh = lastSeenMs < 45000;
+      const isAlive = isHeartbeatFresh && sat.online;
       const isBusy = !sat.ready || sat.busy || this.busyWorkers.has(satUrl);
+
+      let lastErrorStr = '';
+      if (!isHeartbeatFresh) {
+        lastErrorStr = 'Mất kết nối vệ tinh (>45s)';
+      } else if (!sat.online) {
+        lastErrorStr = 'Đang kết nối vào server Minecraft...';
+      }
 
       list.push({
         id: `sat_${workerId}`,
@@ -806,12 +814,12 @@ class QueueDispatcher {
         online: isAlive,
         ready: isAlive && sat.ready,
         busy: isAlive && isBusy,
-        status: !isAlive ? 'offline' : (isBusy ? 'busy' : 'online'),
+        status: !isHeartbeatFresh ? 'offline' : (!sat.online ? 'busy' : (isBusy ? 'busy' : 'online')),
         isActive: sat.isActive !== false,
-        latency: isAlive ? (sat.latency || 15) : -1,
+        latency: isHeartbeatFresh ? (sat.latency || 15) : -1,
         targetPlayer: sat.targetPlayer || null,
         lastHeartbeat: sat.lastHeartbeat,
-        lastError: !isAlive ? 'Mất kết nối vệ tinh (>45s)' : ''
+        lastError: lastErrorStr
       });
     }
 

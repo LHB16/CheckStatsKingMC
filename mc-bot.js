@@ -339,6 +339,25 @@ class PersistentBot extends EventEmitter {
       return;
     }
 
+    // Bộ hẹn giờ chống treo kết nối (Connect Watchdog 25s): Nếu quá 25s chưa spawn vào server thì đổi host & kết nối lại
+    const connectWatchdog = setTimeout(() => {
+      if (!this.isBotOnline) {
+        console.warn(`[MC-Bot] ⚠️ Quá 25s chưa spawn vào ${host}:${this.port}. Đang đóng kết nối treo để chuyển sang host tiếp theo...`);
+        try {
+          if (this.bot) {
+            this.bot.end('Connect watchdog timeout (25s)');
+          } else {
+            this.currentHostIndex = (this.currentHostIndex + 1) % this.hosts.length;
+            this.scheduleReconnect();
+          }
+        } catch (err) {
+          this.currentHostIndex = (this.currentHostIndex + 1) % this.hosts.length;
+          this.scheduleReconnect();
+        }
+      }
+    }, 25000);
+    this.afkTimers.push(connectWatchdog);
+
     this.registerEvents();
   }
 
@@ -433,10 +452,19 @@ class PersistentBot extends EventEmitter {
     this.bot.on('message', (jsonMsg) => {
       const msgText = jsonMsg.toString();
       const cleanMsg = cleanMinecraftText(msgText);
-      if (this.showChatLog) {
+      const lowerMsg = cleanMsg.toLowerCase();
+
+      // Luôn hiển thị các thông báo sảnh / đăng nhập quan trọng ngay cả khi đã bật HIDE_CHAT_LOG (/tatchat)
+      const isImportantAuthMsg =
+        lowerMsg.includes('sảnh') ||
+        lowerMsg.includes('đăng nhập') ||
+        lowerMsg.includes('đăng ký') ||
+        lowerMsg.includes('kingmc.vn') ||
+        lowerMsg.includes('xác minh');
+
+      if (this.showChatLog || isImportantAuthMsg) {
         console.log(`[MC-Bot Chat] ${cleanMsg}`);
       }
-      const lowerMsg = cleanMsg.toLowerCase();
       
       // Bỏ qua các thông báo hệ thống / nội quy mặc định của KingMC
       const isSystemNotice = lowerMsg.includes('điều này là bị cấm') || 

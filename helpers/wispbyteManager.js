@@ -152,15 +152,37 @@ async function pingSingleWispbyteAccount(account) {
           const page = await context.newPage();
           await page.setUserAgent(userAgent);
 
+          // Chặn tải quảng cáo, hình ảnh, font chữ nặng để tránh treo trang (Navigation Timeout) và tiết kiệm RAM
+          await page.setRequestInterception(true);
+          page.on('request', (req) => {
+            const rType = req.resourceType();
+            const rUrl = req.url().toLowerCase();
+            if (
+              rType === 'image' ||
+              rType === 'media' ||
+              rType === 'font' ||
+              rUrl.includes('googlesyndication') ||
+              rUrl.includes('doubleclick') ||
+              rUrl.includes('criteo') ||
+              rUrl.includes('google-analytics') ||
+              rUrl.includes('adsystem')
+            ) {
+              return req.abort().catch(() => {});
+            }
+            return req.continue().catch(() => {});
+          });
+
           const parsedUrl = new URL(targetUrl);
-          const cookieDomain = parsedUrl.hostname.replace(/^www\./, '');
-          const cookies = parseCookieString(cookieHeader, cookieDomain);
-          if (cookies.length > 0) {
-            await page.setCookie(...cookies);
+          const baseHostname = parsedUrl.hostname.replace(/^www\./, '');
+          const cookiesDot = parseCookieString(cookieHeader, `.${baseHostname}`);
+          const cookiesExact = parseCookieString(cookieHeader, baseHostname);
+          const allCookies = [...cookiesDot, ...cookiesExact];
+          if (allCookies.length > 0) {
+            await page.setCookie(...allCookies);
           }
 
-          await page.goto(targetUrl, { waitUntil: 'networkidle2', timeout: 30000 });
-          await new Promise(r => setTimeout(r, 4000));
+          await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 25000 });
+          await new Promise(r => setTimeout(r, 3500));
 
           const currentUrl = page.url();
           const pageTitle = await page.title().catch(() => '');
@@ -185,7 +207,7 @@ async function pingSingleWispbyteAccount(account) {
 
             status = 'ok';
             usedMethod = 'Puppeteer';
-            message = `Đã mở Client Panel (${pageTitle || currentUrl})${clickedRenew ? ' & bấm nút Renew' : ''}`;
+            message = `Đã truy cập Client Panel thành công (${pageTitle || currentUrl})${clickedRenew ? ' & bấm nút Renew' : ''}`;
           }
 
           await context.close().catch(() => {});

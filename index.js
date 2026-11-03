@@ -14,19 +14,6 @@ const PersistentBot = require('./mc-bot');
 const skinHelper = require('./helpers/skinHelper');
 const { connectMongo, isMongoAvailable, getSystemConfig } = require('./helpers/mongoHelper');
 
-/**
- * Lấy Master URL hiệu dụng (ưu tiên cấu hình động từ MongoDB Atlas để tự động xoay chuyển)
- */
-async function getEffectiveMasterUrl() {
-  if (isMongoAvailable()) {
-    try {
-      const dbUrl = await getSystemConfig('master_url', null);
-      if (dbUrl && String(dbUrl).startsWith('http')) return String(dbUrl).trim();
-    } catch (e) {}
-  }
-  return process.env.MASTER_URL || process.env.RENDER_EXTERNAL_URL || '';
-}
-
 // Tự động nhận diện môi trường Wispbyte (/home/container)
 const IS_WISPBYTE_CONTAINER = fs.existsSync('/home/container') || process.env.IS_WISPBYTE === 'true';
 
@@ -38,6 +25,74 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
 const WORKER_SECRET = process.env.WORKER_SECRET || '';
 const ADMIN_ID = (process.env.ADMIN_ID || '1056490968343396352').trim(); // Dùng để cấu hình Admin ID chạy lệnh qua DM
+
+// Danh sách các Master URL ứng viên để tự động dò tìm Active Leader qua HTTPS (cổng 443) khi không dùng MongoDB (cổng 27017)
+const DEFAULT_MASTER_URLS = [
+  'https://checkstatskingmc-master-02.onrender.com',
+  'https://checkstatskingmc-master-01.onrender.com'
+];
+let cachedLeaderMasterUrl = '';
+let lastMasterProbeTime = 0;
+
+/**
+ * Lấy Master URL hiệu dụng:
+ * 1. Nếu có kết nối MongoDB Atlas -> lấy trực tiếp từ system_configs.master_url
+ * 2. Nếu chạy trên Wispbyte (chặn cổng 27017) -> Tự động quét /health qua HTTPS (cổng 443)
+ *    giữa các Master để tìm đúng Master đang là Active Leader (isLeader: true)
+ */
+async function getEffectiveMasterUrl() {
+  if (isMongoAvailable()) {
+    try {
+      const dbUrl = await getSystemConfig('master_url', null);
+      if (dbUrl && String(dbUrl).startsWith('http')) return String(dbUrl).trim();
+    } catch (e) {}
+  }
+
+  const now = Date.now();
+  if (cachedLeaderMasterUrl && now - lastMasterProbeTime < 25000) {
+    return cachedLeaderMasterUrl;
+  }
+
+  const rawCandidates = [
+    ...(process.env.MASTER_URLS || '').split(','),
+    process.env.MASTER_URL || '',
+    process.env.RENDER_EXTERNAL_URL || '',
+    ...DEFAULT_MASTER_URLS
+  ]
+    .map(u => u.trim().replace(/\/+$/, ''))
+    .filter(u => u.startsWith('http'));
+
+  const candidates = Array.from(new Set(rawCandidates));
+  if (candidates.length === 0) return '';
+
+  let fallbackReachable = '';
+  for (const baseUrl of candidates) {
+    try {
+      const res = await fetch(`${baseUrl}/health`, {
+        method: 'GET',
+        signal: AbortSignal.timeout(4500)
+      });
+      if (res.ok) {
+        const data = await res.json().catch(() => null);
+        if (!fallbackReachable) fallbackReachable = baseUrl;
+        if (data && data.isLeader === true) {
+          if (cachedLeaderMasterUrl !== baseUrl) {
+            console.log(`🛰️ [Satellite-Worker] Đã xác định Active Master Leader qua HTTPS: ${baseUrl}`);
+          }
+          cachedLeaderMasterUrl = baseUrl;
+          lastMasterProbeTime = now;
+          return baseUrl;
+        }
+      }
+    } catch (e) {
+      // Thử candidate tiếp theo
+    }
+  }
+
+  cachedLeaderMasterUrl = fallbackReachable || candidates[0];
+  lastMasterProbeTime = now;
+  return cachedLeaderMasterUrl;
+}
 
 // Chỉ nạp các module nặng của Master / Discord khi không phải là Worker thuần túy
 let Client, GatewayIntentBits, Partials;
@@ -400,24 +455,32 @@ async function syncMasterKeepalive() {
   }
 }
 
-// Kết nối MongoDB tập trung sớm và nạp Worker
-connectMongo().then(async (connected) => {
-  skinHelper.initSkinHelper().catch(e => console.warn('[SkinHelper] Lỗi khởi tạo:', e.message));
-  if (connected) {
-    if (configHelper) {
-      await configHelper.syncFromMongo();
-    }
-    if (queueDispatcher) {
-      await queueDispatcher.initWorkers();
-    }
-    syncMasterKeepalive().catch(() => {});
-  }
+// Kết nối MongoDB tập trung sớm và nạp Worker (Tự động bỏ qua cổng 27017 trên Wispbyte Worker để tránh bị firewall chặn)
+const shouldSkipMongoOnWispbyte = IS_WISPBYTE_CONTAINER && BOT_ROLE === 'worker' && process.env.ENABLE_MONGO_ON_WISPBYTE !== 'true';
+
+if (shouldSkipMongoOnWispbyte) {
+  console.log('[Satellite-Worker] ℹ️ Đang chạy trên Wispbyte Container: Bỏ qua kết nối cổng 27017 MongoDB, sử dụng kết nối HTTPS (cổng 443) trực tiếp tới Master.');
+  skinHelper.initSkinHelper({ skipMongo: true }).catch(() => {});
   startSatelliteClientLoop().catch(err => console.error('[Satellite-Worker] Lỗi vòng lặp:', err.message));
-}).catch(err => {
-  console.warn('[MongoHelper] Lỗi khởi tạo MongoDB ban đầu:', err.message);
-  skinHelper.initSkinHelper().catch(() => {});
-  startSatelliteClientLoop().catch(e => console.error('[Satellite-Worker] Lỗi vòng lặp:', e.message));
-});
+} else {
+  connectMongo().then(async (connected) => {
+    skinHelper.initSkinHelper().catch(e => console.warn('[SkinHelper] Lỗi khởi tạo:', e.message));
+    if (connected) {
+      if (configHelper) {
+        await configHelper.syncFromMongo();
+      }
+      if (queueDispatcher) {
+        await queueDispatcher.initWorkers();
+      }
+      syncMasterKeepalive().catch(() => {});
+    }
+    startSatelliteClientLoop().catch(err => console.error('[Satellite-Worker] Lỗi vòng lặp:', err.message));
+  }).catch(err => {
+    console.warn('[MongoHelper] Lỗi khởi tạo MongoDB ban đầu:', err.message);
+    skinHelper.initSkinHelper({ skipMongo: true }).catch(() => {});
+    startSatelliteClientLoop().catch(e => console.error('[Satellite-Worker] Lỗi vòng lặp:', e.message));
+  });
+}
 
 // Bộ lắng nghe lệnh trực tiếp từ Console (Hỗ trợ gõ /tatchat, /batchat, /restart trên Wispbyte Console)
 if (process.stdin && typeof process.stdin.on === 'function') {

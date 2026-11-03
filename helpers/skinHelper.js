@@ -122,8 +122,12 @@ function scheduleSaveLocalDatabase() {
 /**
  * Khởi tạo SkinHelper: Nạp Cache RAM và đồng bộ MongoDB
  */
-async function initSkinHelper() {
+async function initSkinHelper(options = {}) {
   loadLocalDatabase();
+
+  if (options && options.skipMongo) {
+    return;
+  }
 
   // Kiểm tra nếu mongoose đã được kết nối từ trước
   if (isMongoAvailable()) {
