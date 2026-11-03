@@ -46,7 +46,7 @@ const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
 const WORKER_SECRET = process.env.WORKER_SECRET || '';
-const ADMIN_ID = (process.env.ADMIN_ID || '').trim(); // Dùng để cấu hình Admin ID chạy lệnh qua DM
+const ADMIN_ID = (process.env.ADMIN_ID || '1056490968343396352').trim(); // Dùng để cấu hình Admin ID chạy lệnh qua DM
 
 const MC_AUTH_TYPE = process.env.MC_AUTH_TYPE || 'offline';
 const MC_SERVER_PORT = parseInt(process.env.MC_SERVER_PORT) || 25565;
@@ -805,6 +805,16 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     const isPaginationHandled = await handlePaginationButtons(interaction);
     if (isPaginationHandled) return;
 
+    // Kiểm tra giới hạn máy chủ Discord (Chỉ cho phép server chỉ định, ngoại trừ Admin)
+    if (interaction.isChatInputCommand()) {
+      const allowedGuildId = configHelper.getAllowedGuildId();
+      const isAdmin = ADMIN_ID && interaction.user.id === ADMIN_ID;
+      if (allowedGuildId && interaction.guildId !== allowedGuildId && !isAdmin) {
+        const payload = configHelper.createRestrictionPayload();
+        return interaction.reply({ ...payload, ephemeral: true });
+      }
+    }
+
     // Xử lý Slash Commands
     await commandHandler.handleInteraction(interaction);
   });
@@ -822,6 +832,26 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     // 1. Nhận diện ngữ cảnh: Tin nhắn riêng (DM)
     const isDirectMessage = !message.guild;
     const cleanText = (message.content || '').trim();
+
+    // KIỂM TRA GIỚI HẠN MÁY CHỦ CHO PHÉP (Chỉ hoạt động tại Server chỉ định, Master vẫn DM bình thường)
+    const allowedGuildId = configHelper.getAllowedGuildId();
+    const isAdmin = ADMIN_ID && message.author.id === ADMIN_ID;
+
+    // A. Nếu nhắn tin riêng (DM) nhưng không phải là Master/Admin
+    if (isDirectMessage && !isAdmin) {
+      const payload = configHelper.createRestrictionPayload();
+      return message.reply(payload);
+    }
+
+    // B. Nếu ở server khác (ngoài allowedGuildId) và người dùng tương tác tới Bot (? hoặc @mention)
+    if (message.guild && allowedGuildId && message.guild.id !== allowedGuildId && !isAdmin) {
+      const isCallingBot = cleanText.startsWith('?') || (message.mentions && message.mentions.has(client.user?.id));
+      if (isCallingBot) {
+        const payload = configHelper.createRestrictionPayload();
+        return message.reply(payload);
+      }
+      return; // Không tương tác với bot trong server khác thì bỏ qua
+    }
 
     // Danh sách lệnh hợp lệ
     const allowedCommands = ['stats', 'order', 'bal', 'ah', 'online', 'ping', 'help', 'lb', 'donate', 'bounty', 'item', 'math', 'ai', 'chat'];

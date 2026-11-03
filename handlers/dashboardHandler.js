@@ -17,6 +17,7 @@ const {
 } = require('../helpers/mongoHelper');
 const renderManager = require('../helpers/renderManager');
 const masterElection = require('../helpers/masterElection');
+const configHelper = require('../helpers/configHelper');
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -447,6 +448,35 @@ async function handleDashboardRequest(req, res, context) {
         return sendJson(res, 200, { success: true, data: guilds });
       } catch (err) {
         return sendJson(res, 500, { success: false, error: err.message });
+      }
+    }
+
+    // GET /api/guilds/config
+    if (pathname === '/api/guilds/config' && method === 'GET') {
+      try {
+        const config = configHelper.getGuildRestrictionConfig();
+        return sendJson(res, 200, { success: true, data: config });
+      } catch (err) {
+        return sendJson(res, 500, { success: false, error: err.message });
+      }
+    }
+
+    // POST /api/guilds/config (hoặc PUT)
+    if (pathname === '/api/guilds/config' && (method === 'POST' || method === 'PUT')) {
+      try {
+        const body = await parseJsonBody(req);
+        const updated = configHelper.updateGuildRestrictionConfig({
+          allowedGuildId: body.allowedGuildId,
+          discordInviteUrl: body.discordInviteUrl,
+          serverRestrictionName: body.serverRestrictionName
+        });
+        return sendJson(res, 200, {
+          success: true,
+          message: 'Đã cập nhật cấu hình máy chủ Discord và link mời thành công!',
+          data: updated
+        });
+      } catch (err) {
+        return sendJson(res, 400, { success: false, error: err.message });
       }
     }
 

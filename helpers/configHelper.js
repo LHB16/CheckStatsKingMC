@@ -1,16 +1,20 @@
 /**
- * helpers/configHelper.js - Quản lý cấu hình động cho Discord Bot (displayMode: 'text' | 'image')
+ * helpers/configHelper.js - Quản lý cấu hình động cho Discord Bot (displayMode, allowedGuildId, discordInviteUrl)
  * Hỗ trợ lưu trữ bền vững trên MongoDB Atlas và đồng bộ cục bộ fallback qua config.json
  */
 
 const fs = require('fs');
 const path = require('path');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { getSystemConfig, setSystemConfig, isMongoAvailable } = require('./mongoHelper');
 
 const CONFIG_PATH = path.join(__dirname, '../config.json');
 
 const defaultConfig = {
-  displayMode: 'text' // Mặc định là 'text' (có thể chuyển sang 'image')
+  displayMode: 'text', // Mặc định là 'text' (có thể chuyển sang 'image')
+  allowedGuildId: process.env.ALLOWED_GUILD_ID || '1515285801091731517',
+  discordInviteUrl: process.env.DISCORD_INVITE_URL || 'https://discord.gg/apMrvJAPy',
+  serverRestrictionName: process.env.RESTRICTED_SERVER_NAME || 'KZ Sì to'
 };
 
 function loadLocalConfig() {
@@ -60,6 +64,30 @@ async function persistConfig() {
   }
 }
 
+function createRestrictionPayload() {
+  const serverName = currentConfig.serverRestrictionName || 'KZ Sì to';
+  const inviteUrl = currentConfig.discordInviteUrl || 'https://discord.gg/apMrvJAPy';
+
+  const embed = new EmbedBuilder()
+    .setColor(0xED4245)
+    .setDescription(`⚠️ **Bot CheckStatsKingMC hiện tại chỉ hoạt động tại ${serverName}.**`)
+    .setFooter({ text: 'CheckStatsKingMC • Thiết kế bởi BinhLH' })
+    .setTimestamp();
+
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setLabel('Tham Gia Server Discord Ngay')
+      .setStyle(ButtonStyle.Link)
+      .setURL(inviteUrl)
+      .setEmoji('🔗')
+  );
+
+  return {
+    embeds: [embed],
+    components: [row]
+  };
+}
+
 module.exports = {
   syncFromMongo,
   getDisplayMode() {
@@ -76,5 +104,39 @@ module.exports = {
     currentConfig.displayMode = currentConfig.displayMode === 'image' ? 'text' : 'image';
     persistConfig();
     return currentConfig.displayMode;
-  }
+  },
+  getAllowedGuildId() {
+    return currentConfig.allowedGuildId || '1515285801091731517';
+  },
+  getDiscordInviteUrl() {
+    return currentConfig.discordInviteUrl || 'https://discord.gg/apMrvJAPy';
+  },
+  getServerRestrictionName() {
+    return currentConfig.serverRestrictionName || 'KZ Sì to';
+  },
+  getGuildRestrictionConfig() {
+    return {
+      allowedGuildId: currentConfig.allowedGuildId || '1515285801091731517',
+      discordInviteUrl: currentConfig.discordInviteUrl || 'https://discord.gg/apMrvJAPy',
+      serverRestrictionName: currentConfig.serverRestrictionName || 'KZ Sì to'
+    };
+  },
+  updateGuildRestrictionConfig({ allowedGuildId, discordInviteUrl, serverRestrictionName }) {
+    if (allowedGuildId !== undefined) {
+      currentConfig.allowedGuildId = String(allowedGuildId).trim();
+    }
+    if (discordInviteUrl !== undefined) {
+      currentConfig.discordInviteUrl = String(discordInviteUrl).trim();
+    }
+    if (serverRestrictionName !== undefined) {
+      currentConfig.serverRestrictionName = String(serverRestrictionName).trim();
+    }
+    persistConfig();
+    return {
+      allowedGuildId: currentConfig.allowedGuildId,
+      discordInviteUrl: currentConfig.discordInviteUrl,
+      serverRestrictionName: currentConfig.serverRestrictionName
+    };
+  },
+  createRestrictionPayload
 };

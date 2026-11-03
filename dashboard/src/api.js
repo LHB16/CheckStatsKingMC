@@ -96,6 +96,11 @@ export const api = {
 
   // Guilds
   getGuilds: () => apiFetch('/api/guilds'),
+  getGuildsConfig: () => apiFetch('/api/guilds/config'),
+  saveGuildsConfig: (configData) => apiFetch('/api/guilds/config', {
+    method: 'POST',
+    body: JSON.stringify(configData)
+  }),
 
   // Render Rotation
   getRenderAccounts: () => apiFetch('/api/render/accounts'),
