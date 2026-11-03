@@ -1,0 +1,32 @@
+name: Wispbyte Multi-Account Auto Keep-Alive (14-Day Rule)
+
+on:
+  schedule:
+    # Tự động chạy mỗi 12 giờ (00:00 và 12:00 UTC hàng ngày) để giữ hạn toàn bộ tài khoản Wispbyte
+    - cron: '0 */12 * * *'
+  workflow_dispatch: # Cho phép bấm "Run workflow" thủ công bất cứ lúc nào trên tab Actions của GitHub
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies and Chrome for Puppeteer
+        run: |
+          npm install mongoose dotenv puppeteer
+          npx puppeteer browsers install chrome
+
+      - name: Run Wispbyte Multi-Account Keep-Alive
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: node scripts/wispbyte_keepalive_runner.js

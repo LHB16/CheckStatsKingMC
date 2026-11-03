@@ -7,10 +7,10 @@ const path = require('path');
 const dns = require('dns');
 const mongoose = require('mongoose');
 
-// Cấu hình giữ nguyên DNS nội bộ của container (Docker/Wispbyte) kết hợp Google/Cloudflare DNS dự phòng
+// Ưu tiên Google/Cloudflare DNS lên đầu để phân giải SRV records (Minecraft & MongoDB) tức thì trên Wispbyte/Render
 try {
   const existingServers = dns.getServers ? dns.getServers() : [];
-  const mergedServers = Array.from(new Set([...existingServers, '8.8.8.8', '1.1.1.1']));
+  const mergedServers = Array.from(new Set(['8.8.8.8', '1.1.1.1', ...existingServers]));
   dns.setServers(mergedServers);
 } catch (e) {}
 
