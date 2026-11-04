@@ -275,6 +275,20 @@ function checkIpLimit(text) {
          t.includes('ip bi cam');
 }
 
+function checkServerMaintenance(text) {
+  if (!text || typeof text !== 'string') return false;
+  const t = text.toLowerCase();
+  const norm = normalizeSmallCaps(text);
+  return t.includes('máy chủ bảo trì') ||
+         t.includes('may chu bao tri') ||
+         norm.includes('may chu bao tri') ||
+         t.includes('server bảo trì') ||
+         t.includes('server bao tri') ||
+         (t.includes('bảo trì') && t.includes('quay lại')) ||
+         (norm.includes('bao tri') && norm.includes('quay lai')) ||
+         (t.includes('4h30') && t.includes('5h'));
+}
+
 class PersistentBot extends EventEmitter {
   constructor(credentials, hosts, port) {
     super();
@@ -300,6 +314,7 @@ class PersistentBot extends EventEmitter {
     this.currentAction = null; // 'stats' | 'bal' | 'order'
     this.isProcessingOrder = false;
     this.isIpLimited = false;
+    this.isMaintenanceKick = false;
 
     // Mặc định ẩn spam [MC-Bot Chat] trên môi trường Wispbyte (/home/container) hoặc khi bật HIDE_CHAT_LOG=true
     const isWispbyteEnv = process.env.IS_WISPBYTE === 'true' || require('fs').existsSync('/home/container');
@@ -313,6 +328,7 @@ class PersistentBot extends EventEmitter {
     this.isBotOnline = false;
     this.isReady = false;
     this.isIpLimited = false;
+    this.isMaintenanceKick = false;
 
     const host = this.hosts[this.currentHostIndex];
     console.log(`[MC-Bot] Đang kết nối tới ${host}:${this.port}...`);
@@ -367,18 +383,31 @@ class PersistentBot extends EventEmitter {
     });
 
     this.bot.on('kicked', (reason) => {
-      const reasonText = typeof reason === 'string' ? reason : JSON.stringify(reason);
-      const cleanReason = cleanMinecraftText(reasonText);
+      const rawReasonStr = typeof reason === 'string' ? reason : JSON.stringify(reason);
+      const parsedReason = parseMinecraftJSON(reason) || rawReasonStr;
+      const cleanReason = cleanMinecraftText(parsedReason).replace(/\s*\n\s*/g, ' | ') || cleanMinecraftText(rawReasonStr);
       console.warn(`[MC-Bot] Bị kick: ${cleanReason}`);
 
-      const lowerReason = cleanReason.toLowerCase();
-      if (checkIpLimit(lowerReason)) {
+      const lowerReason = (cleanReason + ' ' + rawReasonStr).toLowerCase();
+      if (checkServerMaintenance(lowerReason)) {
+        console.warn(`[MC-Bot] 🛠️ Máy chủ KingMC đang bảo trì định kỳ. Giãn cách 10 phút mới kết nối lại: ${cleanReason}`);
+        this.isMaintenanceKick = true;
+        this.emit('notifyAdmin', `🛠️ **Worker [\`${this.credentials.username}\`]** bị kick do máy chủ bảo trì: \`${cleanReason}\`\n⏳ Sẽ tự động chờ **10 phút** trước khi kết nối lại.`);
+      } else if (checkIpLimit(lowerReason)) {
         console.warn(`[MC-Bot] 🚨 ĐÃ PHÁT HIỆN BỊ KICK DO GIỚI HẠN IP: ${cleanReason}`);
         this.isIpLimited = true;
         this.emit('ipLimitDetected', { username: this.credentials.username, reason: cleanReason });
         this.emit('notifyAdmin', `🚨 **Worker [\`${this.credentials.username}\`]** bị kick do giới hạn IP KingMC: \`${cleanReason}\``);
       } else if (lowerReason.includes('ban') || lowerReason.includes('banned') || lowerReason.includes('bị cấm') || lowerReason.includes('bi cam') || lowerReason.includes('bị ban') || lowerReason.includes('bi ban')) {
-        this.emit('banDetected', { username: this.credentials.username, reason: cleanReason });
+        const oldName = this.credentials.username;
+        const newName = generateRandomUsername(10);
+        this.credentials.username = newName;
+        this.emit('banDetected', {
+          oldUsername: oldName,
+          newUsername: newName,
+          password: this.credentials.password,
+          reason: cleanReason
+        });
       } else {
         this.emit('notifyAdmin', `⚠️ **Worker [\`${this.credentials.username}\`]** bị kick khỏi server! Lý do: \`${cleanReason}\``);
       }
@@ -387,8 +416,12 @@ class PersistentBot extends EventEmitter {
     this.bot.on('end', (reason) => {
       this.isBotOnline = false;
       this.isReady = false;
-      console.log(`[MC-Bot] Mất kết nối. Đang lên lịch Reconnect sau 10 giây...`);
-      this.emit('notifyAdmin', `🔴 **Worker [\`${this.credentials.username}\`]** mất kết nối. Đang chờ reconnect sau 10 giây...`);
+      const reconnectDelayMs = this.isMaintenanceKick ? 10 * 60 * 1000 : (this.isIpLimited ? 60000 : 10000);
+      const waitLabel = this.isMaintenanceKick ? '10 phút (chờ bảo trì)' : `${Math.round(reconnectDelayMs / 1000)} giây`;
+      console.log(`[MC-Bot] Mất kết nối. Đang lên lịch Reconnect sau ${waitLabel}...`);
+      if (!this.isMaintenanceKick) {
+        this.emit('notifyAdmin', `🔴 **Worker [\`${this.credentials.username}\`]** mất kết nối. Đang chờ reconnect sau ${waitLabel}...`);
+      }
       this.currentHostIndex = (this.currentHostIndex + 1) % this.hosts.length;
       
       if (this.statsPromiseReject) {
@@ -396,7 +429,7 @@ class PersistentBot extends EventEmitter {
         this.cleanupStatsState();
       }
 
-      this.scheduleReconnect();
+      this.scheduleReconnect(reconnectDelayMs);
     });
 
     this.bot.once('spawn', () => {
@@ -472,6 +505,12 @@ class PersistentBot extends EventEmitter {
                              lowerMsg.includes('điều này bị cấm') || 
                              lowerMsg.includes('dieu nay bi cam');
       
+      // 0. Kiểm tra xem có phải thông báo máy chủ bảo trì không
+      if (checkServerMaintenance(lowerMsg)) {
+        console.warn(`[MC-Bot] 🛠️ Phát hiện thông báo máy chủ bảo trì qua chat: ${cleanMsg}`);
+        this.isMaintenanceKick = true;
+      }
+
       // 1. Kiểm tra xem có phải thông báo giới hạn IP hoặc cấm IP không
       if (checkIpLimit(lowerMsg)) {
         console.warn(`[MC-Bot] 🚨 ĐÃ PHÁT HIỆN GIỚI HẠN IP HOẶC BỊ CẤM IP: ${cleanMsg}`);
@@ -930,7 +969,10 @@ class PersistentBot extends EventEmitter {
     this.isReady = false;
     if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
     
-    if (this.isIpLimited) {
+    if (this.isMaintenanceKick) {
+      delay = Math.max(delay, 10 * 60 * 1000);
+      console.warn(`[MC-Bot] 🛠️ Máy chủ đang bảo trì, tạm hoãn reconnect trong ${Math.round(delay / 60000)} phút...`);
+    } else if (this.isIpLimited) {
       console.warn(`[MC-Bot] 🛑 Bot đang bị giới hạn IP, tạm hoãn reconnect dồn dập (chờ 60s để Render tạo container mới)...`);
       delay = 60000;
     }

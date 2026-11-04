@@ -8,11 +8,12 @@
 
 require('dotenv').config();
 const fs = require('fs');
+const path = require('path');
 const os = require('os');
 const http = require('http');
 const PersistentBot = require('./mc-bot');
 const skinHelper = require('./helpers/skinHelper');
-const { connectMongo, isMongoAvailable, getSystemConfig } = require('./helpers/mongoHelper');
+const { connectMongo, isMongoAvailable, getSystemConfig, setSystemConfig } = require('./helpers/mongoHelper');
 
 // Tự động nhận diện môi trường Wispbyte (/home/container)
 const IS_WISPBYTE_CONTAINER = fs.existsSync('/home/container') || process.env.IS_WISPBYTE === 'true';
@@ -188,18 +189,93 @@ async function safeSend(channel, payload) {
   return await channel.send(payload);
 }
 
+// Đường dẫn file lưu trữ tài khoản & mật khẩu Bot để tái sử dụng qua các lần khởi động lại (tránh bị khóa 100 acc/IP)
+const BOT_CREDENTIALS_FILE = path.join(__dirname, 'data', 'bot_credentials.json');
+const WORKER_CRED_CONFIG_KEY = 'bot_cred_' + (process.env.RENDER_SERVICE_ID || SATELLITE_WORKER_ID || 'local').replace(/[^a-zA-Z0-9_-]/g, '');
+
+function saveBotCredentials(creds, syncMongo = true) {
+  if (!creds || !creds.username || !creds.password) return;
+  const payload = {
+    username: creds.username,
+    password: creds.password,
+    authType: creds.authType || MC_AUTH_TYPE,
+    updatedAt: new Date().toISOString()
+  };
+  try {
+    const dir = path.dirname(BOT_CREDENTIALS_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(BOT_CREDENTIALS_FILE, JSON.stringify(payload, null, 2), 'utf8');
+  } catch (err) {
+    console.warn(`[Worker] ⚠️ Không thể lưu thông tin tài khoản bot xuống file: ${err.message}`);
+  }
+  if (syncMongo && isMongoAvailable()) {
+    setSystemConfig(WORKER_CRED_CONFIG_KEY, payload, `Saved Bot Credentials (${SATELLITE_WORKER_NAME || BOT_ROLE})`).catch(() => {});
+  }
+}
+
+function loadSavedBotCredentials() {
+  if (process.env.MC_USERNAME && process.env.MC_PASSWORD && process.env.MC_USERNAME !== 'your_minecraft_username') {
+    return {
+      username: process.env.MC_USERNAME.trim(),
+      password: process.env.MC_PASSWORD.trim(),
+      authType: MC_AUTH_TYPE,
+      fromPersistent: true
+    };
+  }
+  try {
+    if (fs.existsSync(BOT_CREDENTIALS_FILE)) {
+      const raw = fs.readFileSync(BOT_CREDENTIALS_FILE, 'utf8');
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.username && parsed.password) {
+        return {
+          username: String(parsed.username).trim(),
+          password: String(parsed.password).trim(),
+          authType: parsed.authType || MC_AUTH_TYPE,
+          fromPersistent: true
+        };
+      }
+    }
+  } catch (err) {
+    console.warn(`[Worker] ⚠️ Lỗi đọc file bot_credentials.json: ${err.message}`);
+  }
+  return null;
+}
+
 // 1. Khởi tạo Local Minecraft Bot (Nếu ở chế độ 'worker' hoặc 'standalone')
 let localMcBot = null;
+let hasInitialSavedCreds = false;
 if (BOT_ROLE === 'worker' || BOT_ROLE === 'standalone') {
-  // Tự tạo random 10 ký tự chữ hoa/thường mỗi khi khởi động (bỏ đọc từ env)
-  const credentials = {
+  const savedCreds = loadSavedBotCredentials();
+  hasInitialSavedCreds = Boolean(savedCreds);
+
+  const credentials = savedCreds ? {
+    username: savedCreds.username,
+    authType: savedCreds.authType || MC_AUTH_TYPE,
+    password: savedCreds.password
+  } : {
     username: generateRandomUsername(10),
     authType: MC_AUTH_TYPE,
     password: generateRandomUsername(10)
   };
 
-  console.log(`[Worker] Khởi tạo Minecraft Bot với Username: [${credentials.username}] và Password: [${credentials.password}]`);
+  if (hasInitialSavedCreds) {
+    console.log(`[Worker] ♻️ Khôi phục tài khoản Minecraft Bot đã lưu: Username [${credentials.username}] và Password [${credentials.password}]`);
+  } else {
+    console.log(`[Worker] 🆕 Khởi tạo tài khoản Minecraft Bot lần đầu: Username [${credentials.username}] và Password [${credentials.password}]`);
+    saveBotCredentials(credentials, false);
+  }
+
   localMcBot = new PersistentBot(credentials, MC_SERVER_HOSTS, MC_SERVER_PORT);
+
+  // Tự động lưu lại tài khoản mới nếu Bot bị Ban trong game và tự đổi tên
+  localMcBot.on('banDetected', () => {
+    if (localMcBot && localMcBot.credentials) {
+      console.log(`[Worker] 💾 Đã lưu tài khoản Bot mới sau khi bị Ban: [${localMcBot.credentials.username}]`);
+      saveBotCredentials(localMcBot.credentials, true);
+    }
+  });
   
   localMcBot.on('notifyAdmin', async (message) => {
     const MASTER_URL = await getEffectiveMasterUrl();
@@ -359,13 +435,10 @@ async function startSatelliteClientLoop() {
 
       const data = await res.json().catch(() => ({}));
 
-      // 1. Nếu Master gửi lệnh restart
+      // 1. Nếu Master gửi lệnh restart (giữ nguyên tài khoản & mật khẩu cũ để tránh bị khóa 100 acc/IP)
       if (data.command === 'restart') {
-        const newUsername = generateRandomUsername(10);
-        const newPassword = generateRandomUsername(10);
-        localMcBot.credentials.username = newUsername;
-        localMcBot.credentials.password = newPassword;
-        console.log(`[Satellite-Worker] 🔄 Nhận lệnh restart từ Master. Tên mới: [${newUsername}]`);
+        saveBotCredentials(localMcBot.credentials, true);
+        console.log(`[Satellite-Worker] 🔄 Nhận lệnh restart từ Master. Giữ nguyên tài khoản cũ: [${localMcBot.credentials.username}]`);
         if (localMcBot.bot) {
           localMcBot.bot.end('Satellite remote restart request');
         } else {
@@ -466,6 +539,24 @@ if (shouldSkipMongoOnWispbyte) {
   connectMongo().then(async (connected) => {
     skinHelper.initSkinHelper().catch(e => console.warn('[SkinHelper] Lỗi khởi tạo:', e.message));
     if (connected) {
+      if (localMcBot) {
+        if (!hasInitialSavedCreds) {
+          const mongoCreds = await getSystemConfig(WORKER_CRED_CONFIG_KEY, null);
+          if (mongoCreds && mongoCreds.username && mongoCreds.password) {
+            localMcBot.credentials.username = mongoCreds.username;
+            localMcBot.credentials.password = mongoCreds.password;
+            saveBotCredentials(localMcBot.credentials, false);
+            console.log(`[Worker] ♻️ Đã đồng bộ khôi phục tài khoản Bot từ MongoDB: [${mongoCreds.username}]`);
+            if (localMcBot.bot) {
+              localMcBot.bot.end('Sync credentials from MongoDB');
+            }
+          } else {
+            saveBotCredentials(localMcBot.credentials, true);
+          }
+        } else {
+          saveBotCredentials(localMcBot.credentials, true);
+        }
+      }
       if (configHelper) {
         await configHelper.syncFromMongo();
       }
@@ -508,12 +599,26 @@ if (process.stdin && typeof process.stdin.on === 'function') {
 
     if (lower === '/restart' || lower === 'restart') {
       if (localMcBot) {
+        saveBotCredentials(localMcBot.credentials, true);
+        console.log(`[Console] 🔄 Đang khởi động lại kết nối Minecraft Bot (giữ nguyên tài khoản [${localMcBot.credentials.username}])...`);
+        if (localMcBot.bot) {
+          localMcBot.bot.end('Console manual restart');
+        } else {
+          localMcBot.scheduleReconnect();
+        }
+      }
+      return;
+    }
+
+    if (lower === '/resetacc' || lower === 'resetacc') {
+      if (localMcBot) {
         const newName = generateRandomUsername(10);
         localMcBot.credentials.username = newName;
         localMcBot.credentials.password = generateRandomUsername(10);
-        console.log(`[Console] 🔄 Đang khởi động lại Minecraft Bot với tên mới: [${newName}]...`);
+        saveBotCredentials(localMcBot.credentials, true);
+        console.log(`[Console] 🆕 Đã tạo tài khoản mới và lưu lại: [${newName}]...`);
         if (localMcBot.bot) {
-          localMcBot.bot.end('Console manual restart');
+          localMcBot.bot.end('Console manual resetacc');
         } else {
           localMcBot.scheduleReconnect();
         }
@@ -616,12 +721,8 @@ const server = http.createServer(async (req, res) => {
       return res.end(JSON.stringify({ success: false, error: 'Node này không chạy Local Worker' }));
     }
 
-    const newUsername = generateRandomUsername(10);
-    const newPassword = generateRandomUsername(10);
-    localMcBot.credentials.username = newUsername;
-    localMcBot.credentials.password = newPassword;
-
-    console.log(`[Worker] 🔄 Nhận lệnh restart từ xa từ Master. Username mới: [${newUsername}], Password mới: [${newPassword}]`);
+    saveBotCredentials(localMcBot.credentials, true);
+    console.log(`[Worker] 🔄 Nhận lệnh restart từ xa từ Master. Giữ nguyên tài khoản cũ: [${localMcBot.credentials.username}]`);
 
     if (localMcBot.bot) {
       localMcBot.bot.end('Remote restart request');
@@ -632,8 +733,8 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     return res.end(JSON.stringify({
       success: true,
-      message: 'Đã nhận lệnh restart thành công',
-      username: newUsername
+      message: 'Đã nhận lệnh restart thành công (giữ nguyên tài khoản cũ)',
+      username: localMcBot.credentials.username
     }));
   }
 
@@ -1527,7 +1628,7 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
          let replyText = `✅ **ĐÃ GỬI LỆNH RESTART TỚI TẤT CẢ WORKERS (${results.length}):**\n\n`;
          results.forEach((res, idx) => {
            if (res.success) {
-             replyText += `**${idx + 1}. [${res.type.toUpperCase()}] ${res.name}**\n   - Trạng thái: 🟢 Đã nhận lệnh restart (Tên mới: \`${res.username}\`)\n`;
+             replyText += `**${idx + 1}. [${res.type.toUpperCase()}] ${res.name}**\n   - Trạng thái: 🟢 Đã nhận lệnh restart (Giữ nguyên tài khoản: \`${res.username}\`)\n`;
            } else {
              replyText += `**${idx + 1}. [${res.type.toUpperCase()}] ${res.name}**\n   - Trạng thái: ❌ Thất bại (\`${res.error}\`)\n`;
            }
