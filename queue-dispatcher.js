@@ -1009,8 +1009,8 @@ class QueueDispatcher {
 
     return {
       success: true,
-      message: 'Đã xếp lệnh restart cho Satellite Worker',
-      username: 'Đang tạo tên mới...'
+      message: 'Đã xếp lệnh restart cho Satellite Worker (giữ nguyên tài khoản cũ)',
+      username: sat.username || 'Giữ nguyên acc cũ'
     };
   }
 
@@ -1060,20 +1060,16 @@ class QueueDispatcher {
     });
   }
 
-  // Restart 1 worker theo ID
+  // Restart 1 worker theo ID (giữ nguyên tài khoản & mật khẩu cũ để tránh bị khóa 100 acc/IP)
   async restartWorkerById(id) {
     if (id === 'local' && this.localBot) {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      let newName = '';
-      for (let i = 0; i < 10; i++) newName += chars.charAt(Math.floor(Math.random() * chars.length));
-      this.localBot.credentials.username = newName;
-      this.localBot.credentials.password = newName;
+      const currentName = this.localBot.credentials?.username || 'LocalBot';
       if (this.localBot.bot) {
         this.localBot.bot.end('Restart request from Master Dashboard');
       } else {
         this.localBot.scheduleReconnect();
       }
-      return { success: true, username: newName };
+      return { success: true, username: currentName };
     }
 
     if (String(id).startsWith('sat_') || this.satelliteWorkers.has(String(id))) {
