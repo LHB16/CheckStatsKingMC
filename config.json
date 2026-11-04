@@ -1,6 +1,7 @@
 {
   "displayMode": "text",
-  "restrictionMode": "whitelist",
+  "restrictionMode": "membership",
+  "mainGuildId": "1515285801091731517",
   "whitelistGuildIds": [
     "1515285801091731517"
   ],

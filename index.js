@@ -1274,13 +1274,24 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     const isPaginationHandled = await handlePaginationButtons(interaction);
     if (isPaginationHandled) return;
 
-    // Kiểm tra giới hạn máy chủ Discord (Hỗ trợ Whitelist & Blacklist đa máy chủ, ngoại trừ Admin)
+    // Kiểm tra giới hạn máy chủ Discord (Hỗ trợ Whitelist, Blacklist & Membership, ngoại trừ Admin)
     if (interaction.isChatInputCommand()) {
-      const isAllowed = configHelper.isGuildAllowed(interaction.guildId);
       const isAdmin = ADMIN_ID && interaction.user.id === ADMIN_ID;
-      if (!isAllowed && !isAdmin) {
-        const payload = configHelper.createRestrictionPayload();
-        return interaction.reply({ ...payload, ephemeral: true });
+      if (!isAdmin) {
+        const mode = configHelper.getRestrictionMode();
+        if (mode === 'membership') {
+          const isMember = await configHelper.isUserInMainGuild(client, interaction.user.id);
+          if (!isMember) {
+            const payload = configHelper.createMemberRestrictionPayload();
+            return interaction.reply({ ...payload, ephemeral: true });
+          }
+        } else {
+          const isAllowed = configHelper.isGuildAllowed(interaction.guildId);
+          if (!isAllowed) {
+            const payload = configHelper.createRestrictionPayload();
+            return interaction.reply({ ...payload, ephemeral: true });
+          }
+        }
       }
     }
 
@@ -1302,23 +1313,39 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     const isDirectMessage = !message.guild;
     const cleanText = (message.content || '').trim();
 
-    // KIỂM TRA GIỚI HẠN MÁY CHỦ CHO PHÉP (Hỗ trợ Whitelist & Blacklist đa máy chủ, Master vẫn DM bình thường)
+    // KIỂM TRA GIỚI HẠN MÁY CHỦ CHO PHÉP (Hỗ trợ Whitelist, Blacklist & Membership, Master vẫn DM bình thường)
     const isAdmin = ADMIN_ID && message.author.id === ADMIN_ID;
 
-    // A. Nếu nhắn tin riêng (DM) nhưng không phải là Master/Admin
-    if (isDirectMessage && !isAdmin) {
-      const payload = configHelper.createRestrictionPayload();
-      return message.reply(payload);
-    }
+    if (!isAdmin) {
+      const mode = configHelper.getRestrictionMode();
 
-    // B. Nếu ở server không được phép (theo Whitelist/Blacklist) và người dùng tương tác tới Bot (? hoặc @mention)
-    if (message.guild && !isAdmin && !configHelper.isGuildAllowed(message.guild.id)) {
-      const isCallingBot = cleanText.startsWith('?') || (message.mentions && message.mentions.has(client.user?.id));
-      if (isCallingBot) {
-        const payload = configHelper.createRestrictionPayload();
-        return message.reply(payload);
+      if (mode === 'membership') {
+        // Chế độ Membership: Cho phép dùng ở mọi server & DM, nhưng bắt buộc người dùng là thành viên Server chính
+        const isCallingBot = isDirectMessage || cleanText.startsWith('?') || (message.mentions && message.mentions.has(client.user?.id));
+        if (isCallingBot) {
+          const isMember = await configHelper.isUserInMainGuild(client, message.author.id);
+          if (!isMember) {
+            const payload = configHelper.createMemberRestrictionPayload();
+            return message.reply(payload);
+          }
+        }
+      } else {
+        // A. Nếu nhắn tin riêng (DM) nhưng không phải là Master/Admin
+        if (isDirectMessage) {
+          const payload = configHelper.createRestrictionPayload();
+          return message.reply(payload);
+        }
+
+        // B. Nếu ở server không được phép (theo Whitelist/Blacklist) và người dùng tương tác tới Bot (? hoặc @mention)
+        if (message.guild && !configHelper.isGuildAllowed(message.guild.id)) {
+          const isCallingBot = cleanText.startsWith('?') || (message.mentions && message.mentions.has(client.user?.id));
+          if (isCallingBot) {
+            const payload = configHelper.createRestrictionPayload();
+            return message.reply(payload);
+          }
+          return; // Không tương tác với bot trong server không hợp lệ thì bỏ qua
+        }
       }
-      return; // Không tương tác với bot trong server không hợp lệ thì bỏ qua
     }
 
     // Danh sách lệnh hợp lệ

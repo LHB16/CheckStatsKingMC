@@ -22,7 +22,8 @@ import {
   ExternalLink,
   AlertCircle,
   Plus,
-  Ban
+  Ban,
+  UserCheck
 } from 'lucide-react';
 import { api } from '../api';
 
@@ -34,7 +35,8 @@ export default function GuildsPage() {
 
   // Cấu hình Whitelist & Blacklist & Link mời
   const [config, setConfig] = useState({
-    restrictionMode: 'whitelist', // 'whitelist' | 'blacklist' | 'none'
+    restrictionMode: 'whitelist', // 'whitelist' | 'blacklist' | 'membership' | 'none'
+    mainGuildId: '1515285801091731517',
     whitelistGuildIds: ['1515285801091731517'],
     blacklistGuildIds: [],
     discordInviteUrl: 'https://discord.gg/apMrvJAPy',
@@ -74,6 +76,7 @@ export default function GuildsPage() {
         const bl = res.data.blacklistGuildIds || [];
         setConfig({
           restrictionMode: res.data.restrictionMode || 'whitelist',
+          mainGuildId: res.data.mainGuildId || wl[0] || '1515285801091731517',
           whitelistGuildIds: wl,
           blacklistGuildIds: bl,
           discordInviteUrl: res.data.discordInviteUrl || 'https://discord.gg/apMrvJAPy',
@@ -180,7 +183,7 @@ export default function GuildsPage() {
   };
 
   const isGuildAllowed = (guildId) => {
-    if (config.restrictionMode === 'none') return true;
+    if (config.restrictionMode === 'none' || config.restrictionMode === 'membership') return true;
     if (config.restrictionMode === 'blacklist') {
       return !(config.blacklistGuildIds || []).includes(guildId);
     }
@@ -271,10 +274,10 @@ export default function GuildsPage() {
           </div>
         </div>
 
-        {/* 3 Chế Độ Hoạt Động */}
+        {/* 4 Chế Độ Hoạt Động */}
         <div>
           <label className="text-xs font-semibold text-slate-300 block mb-2">Chọn chế độ kiểm soát:</label>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <button
               type="button"
               onClick={() => setConfig({ ...config, restrictionMode: 'whitelist' })}
@@ -313,6 +316,24 @@ export default function GuildsPage() {
 
             <button
               type="button"
+              onClick={() => setConfig({ ...config, restrictionMode: 'membership' })}
+              className={`flex items-start gap-3 p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                config.restrictionMode === 'membership'
+                  ? 'bg-blue-500/10 border-blue-500/40 text-blue-300 ring-1 ring-blue-500/30'
+                  : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+              }`}
+            >
+              <UserCheck className="w-5 h-5 mt-0.5 text-blue-400 flex-shrink-0" strokeWidth={1.75} />
+              <div>
+                <p className="text-xs font-bold text-white">Vào Server Chính</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Dùng ở mọi server & DM, nhưng người dùng phải là thành viên của Server chính.
+                </p>
+              </div>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setConfig({ ...config, restrictionMode: 'none' })}
               className={`flex items-start gap-3 p-3 rounded-xl border text-left transition-all cursor-pointer ${
                 config.restrictionMode === 'none'
@@ -324,7 +345,7 @@ export default function GuildsPage() {
               <div>
                 <p className="text-xs font-bold text-white">Mở Tự Do (Tất Cả)</p>
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  Không áp dụng giới hạn máy chủ, mọi server bot tham gia đều sử dụng được.
+                  Không áp dụng giới hạn, bất kỳ ai ở bất kỳ máy chủ nào cũng dùng được.
                 </p>
               </div>
             </button>
@@ -332,12 +353,12 @@ export default function GuildsPage() {
         </div>
 
         <form onSubmit={handleSaveConfig} className="space-y-4 pt-2">
-          {/* Thông tin Link Mời & Tên Máy Chủ */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Thông tin Link Mời, Tên Máy Chủ & ID Server Chính */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
                 <Link2 className="w-3.5 h-3.5 text-indigo-400" strokeWidth={1.75} />
-                <span>Link Mời Máy Chủ Discord (Gửi khi bị chặn)</span>
+                <span>Link Mời Server (Gửi khi bị chặn)</span>
               </label>
               <div className="relative">
                 <input
@@ -365,7 +386,7 @@ export default function GuildsPage() {
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
                 <Server className="w-3.5 h-3.5 text-indigo-400" strokeWidth={1.75} />
-                <span>Tên Máy Chủ Chính Hiển Thị Trong Thông Báo</span>
+                <span>Tên Server Chính Hiển Thị</span>
               </label>
               <input
                 type="text"
@@ -374,6 +395,20 @@ export default function GuildsPage() {
                 placeholder="KZ Sì to"
                 required
                 className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-600 text-xs focus:outline-none focus:border-indigo-500 transition-all"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-blue-400 flex items-center gap-1.5">
+                <UserCheck className="w-3.5 h-3.5 text-blue-400" strokeWidth={1.75} />
+                <span>ID Server Chính (Membership)</span>
+              </label>
+              <input
+                type="text"
+                value={config.mainGuildId || ''}
+                onChange={(e) => setConfig({ ...config, mainGuildId: e.target.value.trim() })}
+                placeholder="1515285801091731517"
+                className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-600 text-xs font-mono focus:outline-none focus:border-blue-500 transition-all"
               />
             </div>
           </div>
@@ -508,6 +543,12 @@ export default function GuildsPage() {
 
                         {/* Badges Phân Loại */}
                         <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                          {config.mainGuildId === guild.guildId && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[10px] font-semibold">
+                              <UserCheck className="w-3 h-3" strokeWidth={1.75} />
+                              <span>Server Chính</span>
+                            </span>
+                          )}
                           {isWhitelisted && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-semibold">
                               <ShieldCheck className="w-3 h-3" strokeWidth={1.75} />
@@ -520,7 +561,12 @@ export default function GuildsPage() {
                               <span>Blacklist</span>
                             </span>
                           )}
-                          {allowed ? (
+                          {config.restrictionMode === 'membership' ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-300 text-[10px]">
+                              <UserCheck className="w-3 h-3" strokeWidth={1.75} />
+                              <span>Yêu Cầu TV Chính</span>
+                            </span>
+                          ) : allowed ? (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px]">
                               <Check className="w-3 h-3" strokeWidth={1.75} />
                               <span>Được Dùng Bot</span>
@@ -578,10 +624,10 @@ export default function GuildsPage() {
                   </div>
 
                   {/* Quick Action Buttons: Whitelist / Blacklist toggle */}
-                  <div className="mt-3 pt-3 border-t border-slate-800/40 flex items-center justify-between gap-2 text-xs">
+                  <div className="mt-3 pt-3 border-t border-slate-800/40 flex items-center justify-between gap-1.5 text-xs flex-wrap">
                     <button
                       onClick={() => handleToggleWhitelist(guild.guildId)}
-                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] font-medium transition-all cursor-pointer ${
+                      className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-[11px] font-medium transition-all cursor-pointer ${
                         isWhitelisted
                           ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30'
                           : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300'
@@ -591,9 +637,30 @@ export default function GuildsPage() {
                       <span>{isWhitelisted ? 'Bỏ Whitelist' : '+ Whitelist'}</span>
                     </button>
 
+                    {config.mainGuildId !== guild.guildId && (
+                      <button
+                        onClick={async () => {
+                          const newConfig = { ...config, mainGuildId: guild.guildId };
+                          setConfig(newConfig);
+                          try {
+                            await api.saveGuildsConfig(newConfig);
+                            setSaveSuccess(true);
+                            setTimeout(() => setSaveSuccess(false), 2000);
+                          } catch (err) {
+                            setSaveError(err.message);
+                          }
+                        }}
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 text-[11px] font-medium transition-all cursor-pointer"
+                        title="Đặt server này làm Server Discord chính"
+                      >
+                        <UserCheck className="w-3 h-3" strokeWidth={1.75} />
+                        <span>Làm SV Chính</span>
+                      </button>
+                    )}
+
                     <button
                       onClick={() => handleToggleBlacklist(guild.guildId)}
-                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] font-medium transition-all cursor-pointer ${
+                      className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-[11px] font-medium transition-all cursor-pointer ${
                         isBlacklisted
                           ? 'bg-rose-500/20 border-rose-500/40 text-rose-300 hover:bg-rose-500/30'
                           : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300'
