@@ -106,7 +106,11 @@ async function createWorkerDeployment(account, options = {}) {
       MC_SERVER_HOSTS: String(mcServerHosts),
       MC_SERVER_PORT: String(mcServerPort),
       WORKER_NAME: String(serviceName),
-      NODE_ENV: 'production'
+      MC_AUTH_TYPE: 'offline',
+      BOT_CHECK_TIMEOUT: '15000',
+      PUPPETEER_SKIP_DOWNLOAD: 'true',
+      NODE_ENV: 'production',
+      ...(process.env.MONGODB_URI ? { MONGODB_URI: process.env.MONGODB_URI } : {})
     }
   };
 
