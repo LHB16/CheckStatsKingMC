@@ -5,6 +5,7 @@
 
 const mineflayer = require('mineflayer');
 const EventEmitter = require('events');
+const dns = require('dns');
 const skinHelper = require('./helpers/skinHelper');
 
 // Hàm loại bỏ mã màu Minecraft (§a, &a, &#RRGGBB, §x..., v.v.)
@@ -332,7 +333,16 @@ class PersistentBot extends EventEmitter {
     this.isMaintenanceKick = false;
 
     const host = this.hosts[this.currentHostIndex];
-    console.log(`[MC-Bot] Đang kết nối tới ${host}:${this.port}...`);
+    console.log(`[MC-Bot] Đang chuẩn bị kết nối tới ${host}:${this.port}...`);
+    try {
+      dns.lookup(host, (err, address) => {
+        if (err) {
+          console.warn(`[MC-Bot] ⚠️ DNS lookup [${host}] lỗi: ${err.message}`);
+        } else {
+          console.log(`[MC-Bot] 🌐 DNS resolved: ${host} ➔ ${address}:${this.port}`);
+        }
+      });
+    } catch (e) {}
 
     const options = {
       host: host,
@@ -367,19 +377,36 @@ class PersistentBot extends EventEmitter {
     try {
       this.bot = mineflayer.createBot(options);
       this.authSent = false;
+
+      // Lắng nghe trạng thái TCP Socket ở tầng giao vận
+      if (this.bot._client) {
+        this.bot._client.on('connect', () => {
+          console.log(`[MC-Bot] 🔌 TCP Socket đã kết nối thành công tới ${host}:${this.port}! Đang gửi packet bắt tay (handshake)...`);
+        });
+        this.bot._client.on('error', (err) => {
+          console.error(`[MC-Bot] ❌ TCP Socket gặp lỗi [${host}:${this.port}]: ${err.message}`);
+        });
+        this.bot._client.on('close', (hadError) => {
+          console.log(`[MC-Bot] 🔌 TCP Socket đã đóng ${hadError ? '(do gặp lỗi)' : '(bình thường)'}.`);
+        });
+      }
+
+      this.bot.on('login', () => {
+        console.log(`[MC-Bot] 👤 Đã nhận Login packet thành công từ server! Đang đợi tải thế giới (Spawn)...`);
+      });
     } catch (e) {
       console.error(`[MC-Bot] Lỗi khởi tạo mineflayer: ${e.message}`);
       this.scheduleReconnect();
       return;
     }
 
-    // Bộ hẹn giờ chống treo kết nối (Connect Watchdog 25s): Nếu quá 25s chưa spawn vào server thì đổi host & kết nối lại
+    // Bộ hẹn giờ chống treo kết nối (Connect Watchdog 40s): Nếu quá 40s chưa spawn vào server thì đổi host & kết nối lại
     const connectWatchdog = setTimeout(() => {
       if (!this.isBotOnline) {
-        console.warn(`[MC-Bot] ⚠️ Quá 25s chưa spawn vào ${host}:${this.port}. Đang đóng kết nối treo để chuyển sang host tiếp theo...`);
+        console.warn(`[MC-Bot] ⚠️ Quá 40s chưa spawn vào ${host}:${this.port}. Đang đóng kết nối treo để chuyển sang host tiếp theo...`);
         try {
           if (this.bot) {
-            this.bot.end('Connect watchdog timeout (25s)');
+            this.bot.end('Connect watchdog timeout (40s)');
           } else {
             this.currentHostIndex = (this.currentHostIndex + 1) % this.hosts.length;
             this.scheduleReconnect();
@@ -389,7 +416,7 @@ class PersistentBot extends EventEmitter {
           this.scheduleReconnect();
         }
       }
-    }, 25000);
+    }, 40000);
     this.afkTimers.push(connectWatchdog);
 
     this.registerEvents();
