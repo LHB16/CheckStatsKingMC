@@ -1,26 +1,16 @@
 {
   "name": "bot-check-stats-kingmc",
   "version": "1.0.0",
-  "description": "Discord bot to check player stats on KingMC.vn using Mineflayer",
+  "description": "Satellite Worker for KingMC",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "debug": "node debug/debug_bot.js",
-    "postinstall": "node scripts/postinstall.js",
-    "build:dashboard": "npm run --prefix dashboard build",
-    "emoji:optimize": "node scripts/optimize_textures_to_emojis.js",
-    "emoji:upload": "node scripts/upload_discord_emojis.js",
-    "emoji:sync": "node scripts/upload_discord_emojis.js --sync-only"
+    "postinstall": "node scripts/postinstall.js"
   },
   "dependencies": {
-    "discord.js": "^14.15.3",
     "dotenv": "^17.4.2",
-    "duck-duck-scrape": "^2.2.7",
-    "groq-sdk": "^1.5.0",
     "mineflayer": "^4.37.1",
     "mongoose": "^9.10.1",
-    "ping-minecraft-server": "^1.0.1",
-    "puppeteer": "^25.4.0",
-    "sharp": "^0.35.4"
+    "ping-minecraft-server": "^1.0.1"
   }
 }
