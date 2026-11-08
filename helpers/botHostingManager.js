@@ -83,7 +83,7 @@ async function createWorkerDeployment(account, options = {}) {
 
   const repo = options.repo || account.repo || process.env.GITHUB_REPO || 'luuhuubinh/botCheckStatsKingMC';
   const cleanRepo = repo.replace(/^https?:\/\/github\.com\//i, '').replace(/\.git$/i, '');
-  const branch = options.branch || account.branch || process.env.GIT_BRANCH || 'wispbyte';
+  const branch = options.branch || account.branch || process.env.WORKER_BRANCH || process.env.GIT_BRANCH || 'worker';
   const serviceName = options.name || `kingmc-worker-${Math.random().toString(36).substring(2, 7)}`;
 
   const masterUrl = options.masterUrl || process.env.RENDER_EXTERNAL_URL || process.env.MASTER_URL || '';

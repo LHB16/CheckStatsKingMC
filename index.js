@@ -1543,7 +1543,7 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
                `• **Tên Worker:** \`${dName}\`\n` +
                `• **Deployment ID:** \`${dId}\`\n` +
                `• **Chế độ:** Satellite Worker (Outbound Long-polling)\n` +
-               `• **Kho GitHub:** \`luuhuubinh/botCheckStatsKingMC#wispbyte\`\n` +
+               `• **Kho GitHub:** \`CheckStatsKingMC#worker\` (Nhánh Worker tối ưu < 100MB)\n` +
                `• **Kết nối:** Worker sẽ tự động kết nối HTTPS về Master và sẵn sàng nhận việc check bal/stats sau khi build xong.\n` +
                `💡 *Lưu ý:* Hệ thống sẽ tự động gửi link nhắc bạn gia hạn 4 ngày/lần vào 8:00 AM.`
              );

@@ -18,11 +18,11 @@ const skipDownload =
   botRole === 'worker' ||
   isWispbyteContainer;
 
-// Tự động dọn dẹp cache Puppeteer/npm cũ trên Wispbyte để giải phóng ổ cứng ngay lập tức
+// Tự động dọn dẹp cache Puppeteer/npm cũ trên Wispbyte / Bot-Hosting để giải phóng ổ cứng ngay lập tức
 if (isWispbyteContainer) {
   const cachesToClean = [
-    '/home/container/.cache/puppeteer',
-    '/home/container/.npm/_cacache'
+    '/home/container/.cache',
+    '/home/container/.npm'
   ];
   for (const cacheDir of cachesToClean) {
     try {
@@ -34,6 +34,17 @@ if (isWispbyteContainer) {
       console.warn(`[PostInstall] ⚠️ Không thể xóa ${cacheDir}: ${e.message}`);
     }
   }
+}
+
+// Tự động xóa dữ liệu Bedrock trong minecraft-data (tiết kiệm ~280 MB ổ cứng cho Worker)
+try {
+  const bedrockDir = path.join(__dirname, '..', 'node_modules', 'minecraft-data', 'minecraft-data', 'data', 'bedrock');
+  if (fs.existsSync(bedrockDir)) {
+    fs.rmSync(bedrockDir, { recursive: true, force: true });
+    console.log('[PostInstall] 🧹 Đã dọn dẹp dữ liệu Bedrock của minecraft-data (giải phóng ~280 MB ổ cứng)!');
+  }
+} catch (e) {
+  console.warn('[PostInstall] ⚠️ Không thể xóa thư mục Bedrock:', e.message);
 }
 
 if (skipDownload) {
