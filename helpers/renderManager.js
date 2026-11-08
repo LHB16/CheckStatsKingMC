@@ -187,7 +187,7 @@ async function createWorkerService(account, options = {}) {
   } = options;
 
   const repo = account.repo || process.env.GITHUB_REPO || 'https://github.com/luuhuubinh/botCheckStatsKingMC';
-  const branch = account.branch || 'main';
+  const branch = account.branch || process.env.GIT_BRANCH || 'wispbyte';
   const serviceName = `kingmc-worker-${Math.random().toString(36).substring(2, 7)}`;
 
   // Chuẩn bị biến môi trường cho Worker (Chuẩn Render API: mảng các { key, value } chuỗi)

@@ -11,6 +11,16 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const http = require('http');
+
+// Tự động khôi phục file data/bedrock/common/features.json nếu bị thiếu (tránh crash MODULE_NOT_FOUND trong supportsFeature.js)
+try {
+  const bedrockFeaturesPath = path.join(__dirname, 'node_modules', 'minecraft-data', 'minecraft-data', 'data', 'bedrock', 'common', 'features.json');
+  if (!fs.existsSync(bedrockFeaturesPath)) {
+    fs.mkdirSync(path.dirname(bedrockFeaturesPath), { recursive: true });
+    fs.writeFileSync(bedrockFeaturesPath, '[]', 'utf8');
+  }
+} catch (e) {}
+
 const PersistentBot = require('./mc-bot');
 const skinHelper = require('./helpers/skinHelper');
 const { connectMongo, isMongoAvailable, getSystemConfig, setSystemConfig } = require('./helpers/mongoHelper');
@@ -18,8 +28,8 @@ const { connectMongo, isMongoAvailable, getSystemConfig, setSystemConfig } = req
 // Tự động nhận diện môi trường Wispbyte (/home/container)
 const IS_WISPBYTE_CONTAINER = fs.existsSync('/home/container') || process.env.IS_WISPBYTE === 'true';
 
-// Cấu hình từ .env (nếu chạy trên Wispbyte mà chưa đặt DISCORD_TOKEN thì mặc định là 'worker')
-const defaultRole = (IS_WISPBYTE_CONTAINER && !process.env.DISCORD_TOKEN) ? 'worker' : 'standalone';
+// Cấu hình từ .env (Mặc định là 'worker' khi chạy trên Wispbyte để tránh quá tải CPU/RAM)
+const defaultRole = IS_WISPBYTE_CONTAINER ? 'worker' : 'standalone';
 const BOT_ROLE = (process.env.BOT_ROLE || defaultRole).toLowerCase();
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
@@ -100,7 +110,7 @@ let Client, GatewayIntentBits, Partials;
 let QueueDispatcher, CommandHandler, handleReportButtons, sendBanAlert, configHelper;
 let handleAiChatMessage, handleMathMessage, isMathExpression, trackerHelper;
 let handleTrackerButtons, buildTrackerOverviewMessage, handlePaginationButtons;
-let getCustomEmoji, handleDashboardRequest, syncDiscordGuilds, renderManager, wispbyteManager, masterElection;
+let getCustomEmoji, handleDashboardRequest, syncDiscordGuilds, renderManager, wispbyteManager, botHostingManager, masterElection;
 
 if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   ({ Client, GatewayIntentBits, Partials } = require('discord.js'));
@@ -117,6 +127,7 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
   ({ handleDashboardRequest, syncDiscordGuilds } = require('./handlers/dashboardHandler'));
   renderManager = require('./helpers/renderManager');
   wispbyteManager = require('./helpers/wispbyteManager');
+  botHostingManager = require('./helpers/botHostingManager');
   masterElection = require('./helpers/masterElection');
 }
 
@@ -494,12 +505,8 @@ async function startSatelliteClientLoop() {
         continue;
       }
 
-      // Nếu đang chưa sẵn sàng hoặc bận thì nghỉ 2.5s giữa các nhịp Heartbeat
-      if (!isOnline || !isReady || isBusy) {
-        await new Promise(r => setTimeout(r, 2500));
-      } else {
-        await new Promise(r => setTimeout(r, 300));
-      }
+      // Nhịp nghỉ 2.5s an toàn giữa các chu kỳ Poll khi rảnh hoặc chưa sẵn sàng để giữ CPU luôn ở mức thấp
+      await new Promise(r => setTimeout(r, 2500));
     } catch (err) {
       await new Promise(r => setTimeout(r, 4000));
     }
@@ -1238,6 +1245,12 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
       discordClient: client,
       adminId: ADMIN_ID
     });
+
+    // Khởi chạy bộ lập lịch gửi tin nhắn nhắc nhở gia hạn Bot-Hosting 8h00 sáng mỗi ngày
+    botHostingManager.startBotHostingReminderScheduler({
+      discordClient: client,
+      adminId: ADMIN_ID
+    });
   });
 
   // Tự động đồng bộ khi Bot tham gia hoặc rời server Discord
@@ -1274,13 +1287,24 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     const isPaginationHandled = await handlePaginationButtons(interaction);
     if (isPaginationHandled) return;
 
-    // Kiểm tra giới hạn máy chủ Discord (Hỗ trợ Whitelist & Blacklist đa máy chủ, ngoại trừ Admin)
+    // Kiểm tra giới hạn máy chủ Discord (Hỗ trợ Whitelist, Blacklist & Membership, ngoại trừ Admin)
     if (interaction.isChatInputCommand()) {
-      const isAllowed = configHelper.isGuildAllowed(interaction.guildId);
       const isAdmin = ADMIN_ID && interaction.user.id === ADMIN_ID;
-      if (!isAllowed && !isAdmin) {
-        const payload = configHelper.createRestrictionPayload();
-        return interaction.reply({ ...payload, ephemeral: true });
+      if (!isAdmin) {
+        const mode = configHelper.getRestrictionMode();
+        if (mode === 'membership') {
+          const isMember = await configHelper.isUserInMainGuild(client, interaction.user.id);
+          if (!isMember) {
+            const payload = configHelper.createMemberRestrictionPayload();
+            return interaction.reply({ ...payload, ephemeral: true });
+          }
+        } else {
+          const isAllowed = configHelper.isGuildAllowed(interaction.guildId);
+          if (!isAllowed) {
+            const payload = configHelper.createRestrictionPayload();
+            return interaction.reply({ ...payload, ephemeral: true });
+          }
+        }
       }
     }
 
@@ -1302,28 +1326,50 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     const isDirectMessage = !message.guild;
     const cleanText = (message.content || '').trim();
 
-    // KIỂM TRA GIỚI HẠN MÁY CHỦ CHO PHÉP (Hỗ trợ Whitelist & Blacklist đa máy chủ, Master vẫn DM bình thường)
+    // KIỂM TRA GIỚI HẠN MÁY CHỦ CHO PHÉP (Hỗ trợ Whitelist, Blacklist & Membership, Master vẫn DM bình thường)
     const isAdmin = ADMIN_ID && message.author.id === ADMIN_ID;
 
-    // A. Nếu nhắn tin riêng (DM) nhưng không phải là Master/Admin
-    if (isDirectMessage && !isAdmin) {
-      const payload = configHelper.createRestrictionPayload();
-      return message.reply(payload);
-    }
+    if (!isAdmin) {
+      const mode = configHelper.getRestrictionMode();
 
-    // B. Nếu ở server không được phép (theo Whitelist/Blacklist) và người dùng tương tác tới Bot (? hoặc @mention)
-    if (message.guild && !isAdmin && !configHelper.isGuildAllowed(message.guild.id)) {
-      const isCallingBot = cleanText.startsWith('?') || (message.mentions && message.mentions.has(client.user?.id));
-      if (isCallingBot) {
-        const payload = configHelper.createRestrictionPayload();
-        return message.reply(payload);
+      // Kiểm tra xem tin nhắn có thực sự tương tác/gọi đích danh Bot hay không
+      // Bỏ qua hoàn toàn nếu tin nhắn chỉ tag @everyone hoặc @here
+      const isExplicitBotMention = !message.mentions?.everyone && Boolean(
+        client.user?.id && message.mentions?.users?.has(client.user.id)
+      );
+
+      if (mode === 'membership') {
+        // Chế độ Membership: Cho phép dùng ở mọi server & DM, nhưng bắt buộc người dùng là thành viên Server chính
+        const isCallingBot = isDirectMessage || cleanText.startsWith('?') || isExplicitBotMention;
+        if (isCallingBot) {
+          const isMember = await configHelper.isUserInMainGuild(client, message.author.id);
+          if (!isMember) {
+            const payload = configHelper.createMemberRestrictionPayload();
+            return message.reply(payload);
+          }
+        }
+      } else {
+        // A. Nếu nhắn tin riêng (DM) nhưng không phải là Master/Admin
+        if (isDirectMessage) {
+          const payload = configHelper.createRestrictionPayload();
+          return message.reply(payload);
+        }
+
+        // B. Nếu ở server không được phép (theo Whitelist/Blacklist) và người dùng tương tác tới Bot (? hoặc @mention đích danh)
+        if (message.guild && !configHelper.isGuildAllowed(message.guild.id)) {
+          const isCallingBot = cleanText.startsWith('?') || isExplicitBotMention;
+          if (isCallingBot) {
+            const payload = configHelper.createRestrictionPayload();
+            return message.reply(payload);
+          }
+          return; // Không tương tác với bot trong server không hợp lệ thì bỏ qua
+        }
       }
-      return; // Không tương tác với bot trong server không hợp lệ thì bỏ qua
     }
 
     // Danh sách lệnh hợp lệ
     const allowedCommands = ['stats', 'order', 'bal', 'ah', 'online', 'ping', 'help', 'lb', 'donate', 'bounty', 'item', 'math', 'ai', 'chat'];
-    const adminCommands = ['help', 'status', 'workers', 'restart', 'mode', 'render', 'toggle', 'ai', 'tracker', 'theodoi', 'master', 'failover', 'wispbyte'];
+    const adminCommands = ['help', 'status', 'workers', 'restart', 'mode', 'render', 'toggle', 'ai', 'tracker', 'theodoi', 'master', 'failover', 'wispbyte', 'bothost', 'bh'];
 
     // 2. Kiểm tra xem có phải lệnh game/người dùng hay không
     // Hỗ trợ: ?stats trong server hoặc stats trong DM
@@ -1464,7 +1510,149 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
 
     try {
       if (command === 'help') {
-         await safeSend(message.channel, '**Danh sách lệnh Admin:**\n- `!master [status/switch]`: Xem hoặc chuyển đổi quyền giữa 2 Master (Active / Standby)\n- `!status` hoặc `!workers`: Xem danh sách và trạng thái toàn bộ Workers (Local, Remote Render & Satellite Wispbyte)\n- `!wispbyte [list/add/remove/check]`: Quản lý đa tài khoản Wispbyte & tự động truy cập Client Panel 24h/lần\n- `!restart`: Random tên mới và khởi động lại bot ngay lập tức\n- `!mode` hoặc `!render`: Chuyển đổi chế độ hiển thị danh sách (Text / Image)\n- `!toggle off/on [lời nhắn]`: Bật/tắt việc nhận Slash Commands từ user khác.\n- `!ai off/on [lời nhắn]`: Bật/tắt tính năng trò chuyện AI với người dùng.\n- `!tracker [trang]`: Xem danh sách và trạng thái theo dõi số dư định kỳ (phân trang)\n- `!tracker add <tên>`: Bật theo dõi số dư cho một người chơi\n- `!tracker untrack <tên>`: Hủy theo dõi một người chơi\n- `!tracker check`: Kích hoạt vòng lặp check bal cho các người chơi ngay lập tức');
+         await safeSend(message.channel, '**Danh sách lệnh Admin:**\n- `!master [status/switch]`: Xem hoặc chuyển đổi quyền giữa 2 Master (Active / Standby)\n- `!status` hoặc `!workers`: Xem danh sách và trạng thái toàn bộ Workers (Local, Remote Render & Satellite Wispbyte)\n- `!bothost [list/add/deploy/remind/delete]`: Quản lý Worker trên Bot-Hosting.net & tự động gửi link nhắc hạn 8h sáng\n- `!wispbyte [list/add/remove/check]`: Quản lý đa tài khoản Wispbyte & tự động truy cập Client Panel 24h/lần\n- `!restart`: Random tên mới và khởi động lại bot ngay lập tức\n- `!mode` hoặc `!render`: Chuyển đổi chế độ hiển thị danh sách (Text / Image)\n- `!toggle off/on [lời nhắn]`: Bật/tắt việc nhận Slash Commands từ user khác.\n- `!ai off/on [lời nhắn]`: Bật/tắt tính năng trò chuyện AI với người dùng.\n- `!tracker [trang]`: Xem danh sách và trạng thái theo dõi số dư định kỳ (phân trang)\n- `!tracker add <tên>`: Bật theo dõi số dư cho một người chơi\n- `!tracker untrack <tên>`: Hủy theo dõi một người chơi\n- `!tracker check`: Kích hoạt vòng lặp check bal cho các người chơi ngay lập tức');
+      } else if (command === 'bothost' || command === 'bh') {
+         const sub = (args.shift() || 'list').toLowerCase();
+         if (sub === 'add' || sub === 'set') {
+           const accountId = (args.shift() || '').trim();
+           const apiKey = args.join(' ').trim();
+           if (!accountId || !apiKey) {
+             return await safeSend(message.channel, '📖 **Cú pháp thêm tài khoản Bot-Hosting:**\n`!bothost add <tên_hoặc_id_acc> <api_key>`\n\n*Ví dụ:*\n`!bothost add bh_acc_1 bhk_abcdef123456...`');
+           }
+           await safeSend(message.channel, `⏳ Đang kiểm tra API Key tài khoản **${accountId}** trên Bot-Hosting.net...`);
+           try {
+             const deps = await botHostingManager.listDeployments(apiKey);
+             await botHostingManager.saveBotHostingAccount({
+               accountId,
+               name: accountId,
+               apiKey,
+               isActive: true
+             });
+             return await safeSend(message.channel, `✅ **Thành công!** Đã lưu tài khoản Bot-Hosting **${accountId}** vào MongoDB Atlas.\n• Số deployments hiện tại trên web: **${deps.length}**\n• Tiến trình tự động nhắc gia hạn vào **8h00 sáng mỗi ngày** đã sẵn sàng.`);
+           } catch (err) {
+             return await safeSend(message.channel, `❌ **Lỗi kiểm tra API Key:** ${err.message}\nVui lòng kiểm tra lại token và các quyền (\`deployments:read\`, \`deployments:write\`, \`deployments:power\`).`);
+           }
+         } else if (sub === 'deploy' || sub === 'create' || sub === 'worker') {
+           const accountId = (args.shift() || '').trim();
+           const accounts = await botHostingManager.getAllBotHostingAccounts();
+           const targetAcc = accountId 
+             ? accounts.find(a => a.accountId === accountId || a.name === accountId)
+             : accounts.find(a => a.isActive && a.apiKey);
+
+           if (!targetAcc) {
+             return await safeSend(message.channel, '⚠️ Không tìm thấy tài khoản Bot-Hosting phù hợp. Cú pháp: `!bothost deploy <id_acc>` (hoặc dùng `!bothost add` trước).');
+           }
+
+           const statusMsg = await safeSend(message.channel, `🚀 **Đang gửi yêu cầu tạo Worker mới lên Bot-Hosting.net qua tài khoản [${targetAcc.name || targetAcc.accountId}]...**`);
+           try {
+             const effectiveMasterUrl = await getEffectiveMasterUrl();
+             const deployRes = await botHostingManager.createWorkerDeployment(targetAcc, {
+               masterUrl: effectiveMasterUrl,
+               workerSecret: WORKER_SECRET,
+               mcServerHosts: MC_SERVER_HOSTS.join(','),
+               mcServerPort: MC_SERVER_PORT
+             });
+             const dId = deployRes.id || deployRes._id || deployRes.deploymentId || 'N/A';
+             const dName = deployRes.name || 'Worker';
+             return await statusMsg.edit(
+               `✅ **ĐÃ TẠO WORKER THÀNH CÔNG TRÊN BOT-HOSTING!**\n` +
+               `• **Tên Worker:** \`${dName}\`\n` +
+               `• **Deployment ID:** \`${dId}\`\n` +
+               `• **Chế độ:** Satellite Worker (Outbound Long-polling)\n` +
+               `• **Kho GitHub:** \`CheckStatsKingMC#worker\` (Nhánh Worker tối ưu < 100MB)\n` +
+               `• **Kết nối:** Worker sẽ tự động kết nối HTTPS về Master và sẵn sàng nhận việc check bal/stats sau khi build xong.\n` +
+               `💡 *Lưu ý:* Hệ thống sẽ tự động gửi link nhắc bạn gia hạn 4 ngày/lần vào 8:00 AM.`
+             );
+           } catch (err) {
+             return await statusMsg.edit(`❌ **Lỗi tạo Worker trên Bot-Hosting:** ${err.message}`);
+           }
+         } else if (sub === 'remove' || sub === 'delete-acc') {
+           const accountId = (args.shift() || '').trim();
+           if (!accountId) {
+             return await safeSend(message.channel, '⚠️ Cú pháp: `!bothost remove <id_acc>`');
+           }
+           const ok = await botHostingManager.deleteBotHostingAccount(accountId);
+           return await safeSend(message.channel, ok ? `🗑️ Đã xóa tài khoản Bot-Hosting **${accountId}** khỏi database.` : `⚠️ Không tìm thấy tài khoản **${accountId}**.`);
+         } else if (sub === 'delete' || sub === 'del' || sub === 'kill') {
+           const accountId = (args.shift() || '').trim();
+           const deployId = (args.shift() || '').trim();
+           if (!accountId || !deployId) {
+             return await safeSend(message.channel, '⚠️ Cú pháp xóa Worker: `!bothost delete <id_acc> <deployment_id>`\n*(Dùng `!bothost list` để lấy deployment_id)*');
+           }
+           const accounts = await botHostingManager.getAllBotHostingAccounts();
+           const targetAcc = accounts.find(a => a.accountId === accountId);
+           if (!targetAcc) return await safeSend(message.channel, `⚠️ Không tìm thấy tài khoản **${accountId}**.`);
+
+           try {
+             await botHostingManager.deleteDeployment(targetAcc.apiKey, deployId, accountId);
+             return await safeSend(message.channel, `🗑️ Đã xóa Worker (Deployment ID: \`${deployId}\`) trên Bot-Hosting.net thành công.`);
+           } catch (err) {
+             return await safeSend(message.channel, `❌ Lỗi xóa deployment: ${err.message}`);
+           }
+         } else if (sub === 'restart' || sub === 'reboot') {
+           const accountId = (args.shift() || '').trim();
+           const deployId = (args.shift() || '').trim();
+           if (!accountId || !deployId) {
+             return await safeSend(message.channel, '⚠️ Cú pháp: `!bothost restart <id_acc> <deployment_id>`');
+           }
+           const accounts = await botHostingManager.getAllBotHostingAccounts();
+           const targetAcc = accounts.find(a => a.accountId === accountId);
+           if (!targetAcc) return await safeSend(message.channel, `⚠️ Không tìm thấy tài khoản **${accountId}**.`);
+
+           try {
+             await botHostingManager.restartDeployment(targetAcc.apiKey, deployId);
+             return await safeSend(message.channel, `🔄 Đã gửi lệnh khởi động lại Worker \`${deployId}\` trên Bot-Hosting.net.`);
+           } catch (err) {
+             return await safeSend(message.channel, `❌ Lỗi khởi động lại: ${err.message}`);
+           }
+         } else if (sub === 'remind' || sub === 'nhac' || sub === 'test') {
+           await safeSend(message.channel, '⏳ Đang thử nghiệm gửi tin nhắn nhắc nhở gia hạn Bot-Hosting tới Admin Discord...');
+           const remRes = await botHostingManager.sendBotHostingReminder({
+             discordClient: client,
+             adminId: ADMIN_ID,
+             manual: true
+           });
+           if (remRes.success) {
+             return await safeSend(message.channel, `✅ Đã gửi thành công tin nhắn nhắc nhở (${remRes.count} tài khoản) vào tin nhắn riêng (DM) của bạn!`);
+           } else {
+             return await safeSend(message.channel, `⚠️ Gửi nhắc nhở không thành công: ${remRes.message}`);
+           }
+         } else {
+           const accounts = await botHostingManager.getAllBotHostingAccounts();
+           if (accounts.length === 0) {
+             return await safeSend(message.channel, 
+               'ℹ️ **Chưa có tài khoản Bot-Hosting nào trong hệ thống.**\n\n' +
+               '📖 **Hướng dẫn sử dụng:**\n' +
+               '• Thêm tài khoản: `!bothost add <id_acc> <api_key>`\n' +
+               '• Tạo Worker mới: `!bothost deploy <id_acc>`\n' +
+               '• Thử tin nhắn nhắc nhở 8h sáng: `!bothost remind`\n' +
+               '• Xóa Worker: `!bothost delete <id_acc> <deploy_id>`\n' +
+               '• Xóa tài khoản: `!bothost remove <id_acc>`'
+             );
+           }
+           let txt = `🛰️ **DANH SÁCH TÀI KHOẢN BOT-HOSTING (${accounts.length}):**\n\n`;
+           for (let i = 0; i < accounts.length; i++) {
+             const acc = accounts[i];
+             txt += `**${i + 1}. 🟢 ${acc.name || acc.accountId}** (\`${acc.accountId}\`)\n`;
+             try {
+               const deps = await botHostingManager.listDeployments(acc.apiKey);
+               if (deps.length === 0) {
+                 txt += `   └ *Chưa có Worker nào. Dùng \`!bothost deploy ${acc.accountId}\` để tạo!*\n`;
+               } else {
+                 deps.forEach(d => {
+                   const dId = d.id || d.deploymentId || 'N/A';
+                   const dName = d.name || 'Worker';
+                   const dStatus = d.status || 'unknown';
+                   txt += `   • **${dName}** (\`${dId}\`) - Trạng thái: \`${dStatus}\`\n`;
+                 });
+               }
+             } catch (e) {
+               txt += `   └ ⚠️ *Lỗi kết nối API: ${e.message}*\n`;
+             }
+           }
+           txt += `\n⏰ *Hệ thống tự động gửi link nhắc nhở gia hạn vào **8h00 sáng mỗi ngày** trên Discord Admin.*`;
+           return await safeSend(message.channel, txt);
+         }
       } else if (command === 'wispbyte') {
          const sub = (args.shift() || 'list').toLowerCase();
          if (sub === 'add' || sub === 'set') {

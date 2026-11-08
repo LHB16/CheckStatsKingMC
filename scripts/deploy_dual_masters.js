@@ -69,7 +69,7 @@ async function createMasterServiceOnAccount(account, config) {
   const { instanceId, instanceName, region, serviceName } = config;
 
   const repo = 'https://github.com/LHB16/CheckStatsKingMC';
-  const branch = 'main';
+  const branch = process.env.GIT_BRANCH || 'wispbyte';
 
   const envVars = [
     { key: 'ADMIN_ID', value: String(process.env.ADMIN_ID || '1056490968343396352') },

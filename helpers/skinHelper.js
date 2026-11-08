@@ -109,14 +109,15 @@ function flushLocalDatabase() {
 }
 
 /**
- * Lưu RAM cache xuống file JSON cục bộ (Debounced 500ms)
+ * Lưu RAM cache xuống file JSON cục bộ (Debounced 3000ms)
+ * Giúp gom các lần cập nhật liên tiếp vào 1 lần ghi đĩa duy nhất, tránh nghẽn Event Loop
  */
 function scheduleSaveLocalDatabase() {
   if (saveFileTimeout) clearTimeout(saveFileTimeout);
 
   saveFileTimeout = setTimeout(() => {
     flushLocalDatabase();
-  }, 500);
+  }, 3000);
 }
 
 /**
@@ -211,6 +212,12 @@ async function saveSkin(playerName, textureUrlOrId, model = 'classic') {
 
   if (!textureId) return null;
 
+  // 1. Kiểm tra RAM Cache trước: Nếu đã có skin này và textureId không đổi -> return ngay, tiết kiệm 100% CPU và Disk I/O
+  const existing = ramSkinCache.get(playerKey);
+  if (existing && existing.textureId === textureId) {
+    return existing;
+  }
+
   const skinUrl = `http://textures.minecraft.net/texture/${textureId}`;
   const record = {
     playerKey,
@@ -223,7 +230,9 @@ async function saveSkin(playerName, textureUrlOrId, model = 'classic') {
 
   // Cập nhật RAM Cache tức thì
   ramSkinCache.set(playerKey, record);
-  flushLocalDatabase(); // Ghi file ngay lập tức để không bị mất dữ liệu
+
+  // Gom đệm lưu file bất đồng bộ (debounce 3s) thay vì ghi file đồng bộ liên tục
+  scheduleSaveLocalDatabase();
 
   // Cập nhật MongoDB ngầm (asynchronous)
   if (isMongoAvailable() && PlayerSkinModel) {

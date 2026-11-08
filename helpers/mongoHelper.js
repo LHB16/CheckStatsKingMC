@@ -7,11 +7,13 @@ const path = require('path');
 const dns = require('dns');
 const mongoose = require('mongoose');
 
-// Ưu tiên Google/Cloudflare DNS lên đầu để phân giải SRV records (Minecraft & MongoDB) tức thì trên Wispbyte/Render
+// Ưu tiên DNS mặc định của container trước, thêm Google/Cloudflare DNS làm fallback
 try {
   const existingServers = dns.getServers ? dns.getServers() : [];
-  const mergedServers = Array.from(new Set(['8.8.8.8', '1.1.1.1', ...existingServers]));
-  dns.setServers(mergedServers);
+  const mergedServers = Array.from(new Set([...existingServers, '8.8.8.8', '1.1.1.1'])).filter(Boolean);
+  if (mergedServers.length > 0) {
+    dns.setServers(mergedServers);
+  }
 } catch (e) {}
 
 // Tắt bufferCommands mặc định để tránh treo 10000ms khi mất kết nối hoặc bị chặn cổng 27017
@@ -96,6 +98,7 @@ function setupDonationConfigModel() {
 let LeaderboardModel = null;
 let RenderAccountModel = null;
 let WispbyteAccountModel = null;
+let BotHostingAccountModel = null;
 let SystemConfigModel = null;
 
 // Khởi tạo Wispbyte Account Schema (Lưu trữ nhiều tài khoản Wispbyte để tự động gia hạn 14 ngày / 24h)
@@ -156,6 +159,35 @@ function setupRenderAccountModel() {
   return RenderAccountModel;
 }
 
+// Khởi tạo BotHosting Account Schema (Lưu trữ tài khoản Bot-Hosting.net để quản lý Worker & nhắc gia hạn 4 ngày)
+function setupBotHostingAccountModel() {
+  if (BotHostingAccountModel) return BotHostingAccountModel;
+
+  const DeploymentSubSchema = new mongoose.Schema({
+    deploymentId: { type: String, default: '' },
+    name: { type: String, default: '' },
+    status: { type: String, default: 'active' },
+    createdAt: { type: Date, default: Date.now },
+    lastRenewedAt: { type: Date, default: Date.now },
+    nextRenewDue: { type: Date, default: null }
+  }, { _id: false });
+
+  const BotHostingAccountSchema = new mongoose.Schema({
+    accountId: { type: String, required: true, unique: true, index: true },
+    name: { type: String, default: '' },
+    apiKey: { type: String, required: true },
+    deployments: { type: [DeploymentSubSchema], default: [] },
+    isActive: { type: Boolean, default: true, index: true },
+    lastRemindedAt: { type: Date, default: null },
+    panelUrl: { type: String, default: 'https://bot-hosting.net/panel' }
+  }, {
+    timestamps: true
+  });
+
+  BotHostingAccountModel = mongoose.models.BotHostingAccount || mongoose.model('BotHostingAccount', BotHostingAccountSchema);
+  return BotHostingAccountModel;
+}
+
 // Khởi tạo System Config Schema (Cấu hình động cho Bot, GAS Webhook, Rotation)
 function setupSystemConfigModel() {
   if (SystemConfigModel) return SystemConfigModel;
@@ -206,6 +238,10 @@ function getWispbyteAccountModel() {
   return setupWispbyteAccountModel();
 }
 
+function getBotHostingAccountModel() {
+  return setupBotHostingAccountModel();
+}
+
 function getSystemConfigModel() {
   return setupSystemConfigModel();
 }
@@ -226,6 +262,7 @@ async function connectMongo() {
     setupLeaderboardModel();
     setupRenderAccountModel();
     setupWispbyteAccountModel();
+    setupBotHostingAccountModel();
     setupSystemConfigModel();
     return true;
   }
@@ -251,6 +288,7 @@ async function connectMongo() {
         setupLeaderboardModel();
         setupRenderAccountModel();
         setupWispbyteAccountModel();
+        setupBotHostingAccountModel();
         setupSystemConfigModel();
         console.log('✅ [MongoHelper] Kết nối MongoDB Atlas THÀNH CÔNG!');
       }
@@ -494,6 +532,60 @@ async function deleteWispbyteAccount(accountId) {
   }
 }
 
+/**
+ * Lấy danh sách toàn bộ BotHosting Account từ MongoDB
+ */
+async function getAllBotHostingAccounts() {
+  try {
+    if (!isMongoAvailable()) return [];
+    const Model = setupBotHostingAccountModel();
+    return await Model.find().sort({ createdAt: 1 }).lean();
+  } catch (err) {
+    console.warn('[MongoHelper] Lỗi lấy danh sách BotHostingAccount:', err.message);
+    return [];
+  }
+}
+
+/**
+ * Lưu hoặc cập nhật BotHosting Account vào MongoDB
+ */
+async function saveBotHostingAccount(accountData) {
+  try {
+    if (!isMongoAvailable()) return null;
+    const Model = setupBotHostingAccountModel();
+    const accountId = accountData.accountId || accountData.id;
+    if (!accountId) throw new Error('Thiếu accountId khi lưu BotHostingAccount');
+
+    const updatePayload = { ...accountData, accountId };
+    delete updatePayload.id;
+
+    const doc = await Model.findOneAndUpdate(
+      { accountId },
+      updatePayload,
+      { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
+    ).lean();
+    return doc;
+  } catch (err) {
+    console.error('[MongoHelper] Lỗi lưu BotHostingAccount:', err.message);
+    throw err;
+  }
+}
+
+/**
+ * Xóa BotHosting Account khỏi MongoDB
+ */
+async function deleteBotHostingAccount(accountId) {
+  try {
+    if (!isMongoAvailable()) return false;
+    const Model = setupBotHostingAccountModel();
+    const res = await Model.findOneAndDelete({ accountId });
+    return !!res;
+  } catch (err) {
+    console.error('[MongoHelper] Lỗi xóa BotHostingAccount:', err.message);
+    return false;
+  }
+}
+
 module.exports = {
   connectMongo,
   isMongoAvailable,
@@ -503,6 +595,7 @@ module.exports = {
   getLeaderboardModel,
   getRenderAccountModel,
   getWispbyteAccountModel,
+  getBotHostingAccountModel,
   getSystemConfigModel,
   setupWorkerModel,
   setupDiscordGuildModel,
@@ -510,6 +603,7 @@ module.exports = {
   setupLeaderboardModel,
   setupRenderAccountModel,
   setupWispbyteAccountModel,
+  setupBotHostingAccountModel,
   setupSystemConfigModel,
   seedDonationImage,
   getDonationConfig,
@@ -520,5 +614,8 @@ module.exports = {
   deleteRenderAccount,
   getAllWispbyteAccounts,
   saveWispbyteAccount,
-  deleteWispbyteAccount
+  deleteWispbyteAccount,
+  getAllBotHostingAccounts,
+  saveBotHostingAccount,
+  deleteBotHostingAccount
 };

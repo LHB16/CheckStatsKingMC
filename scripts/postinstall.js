@@ -18,11 +18,11 @@ const skipDownload =
   botRole === 'worker' ||
   isWispbyteContainer;
 
-// Tự động dọn dẹp cache Puppeteer/npm cũ trên Wispbyte để giải phóng ổ cứng ngay lập tức
+// Tự động dọn dẹp cache Puppeteer/npm cũ trên Wispbyte / Bot-Hosting để giải phóng ổ cứng ngay lập tức
 if (isWispbyteContainer) {
   const cachesToClean = [
-    '/home/container/.cache/puppeteer',
-    '/home/container/.npm/_cacache'
+    '/home/container/.cache',
+    '/home/container/.npm'
   ];
   for (const cacheDir of cachesToClean) {
     try {
@@ -34,6 +34,41 @@ if (isWispbyteContainer) {
       console.warn(`[PostInstall] ⚠️ Không thể xóa ${cacheDir}: ${e.message}`);
     }
   }
+}
+
+// Tự động xóa dữ liệu các phiên bản Bedrock trong minecraft-data (tiết kiệm ~280 MB ổ cứng cho Worker)
+// Luôn bảo lưu data/bedrock/common/features.json vì minecraft-data/lib/supportsFeature.js yêu cầu file này
+try {
+  const bedrockDir = path.join(__dirname, '..', 'node_modules', 'minecraft-data', 'minecraft-data', 'data', 'bedrock');
+  const commonDir = path.join(bedrockDir, 'common');
+  const featuresFile = path.join(commonDir, 'features.json');
+
+  let featuresContent = '[]';
+  if (fs.existsSync(featuresFile)) {
+    try { featuresContent = fs.readFileSync(featuresFile, 'utf8'); } catch (e) {}
+  }
+
+  if (fs.existsSync(bedrockDir)) {
+    const items = fs.readdirSync(bedrockDir);
+    for (const item of items) {
+      if (item !== 'common') {
+        const itemPath = path.join(bedrockDir, item);
+        try {
+          fs.rmSync(itemPath, { recursive: true, force: true });
+        } catch (e) {}
+      }
+    }
+  }
+
+  if (!fs.existsSync(commonDir)) {
+    fs.mkdirSync(commonDir, { recursive: true });
+  }
+  if (!fs.existsSync(featuresFile)) {
+    fs.writeFileSync(featuresFile, featuresContent, 'utf8');
+  }
+  console.log('[PostInstall] 🧹 Đã dọn dẹp các phiên bản Bedrock thừa (bảo lưu common/features.json, giải phóng ~280 MB ổ cứng)!');
+} catch (e) {
+  console.warn('[PostInstall] ⚠️ Không thể dọn dẹp thư mục Bedrock:', e.message);
 }
 
 if (skipDownload) {
