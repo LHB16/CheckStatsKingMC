@@ -18,8 +18,8 @@ const { connectMongo, isMongoAvailable, getSystemConfig, setSystemConfig } = req
 // Tự động nhận diện môi trường Wispbyte (/home/container)
 const IS_WISPBYTE_CONTAINER = fs.existsSync('/home/container') || process.env.IS_WISPBYTE === 'true';
 
-// Cấu hình từ .env (nếu chạy trên Wispbyte mà chưa đặt DISCORD_TOKEN thì mặc định là 'worker')
-const defaultRole = (IS_WISPBYTE_CONTAINER && !process.env.DISCORD_TOKEN) ? 'worker' : 'standalone';
+// Cấu hình từ .env (Mặc định là 'worker' khi chạy trên Wispbyte để tránh quá tải CPU/RAM)
+const defaultRole = IS_WISPBYTE_CONTAINER ? 'worker' : 'standalone';
 const BOT_ROLE = (process.env.BOT_ROLE || defaultRole).toLowerCase();
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
@@ -494,12 +494,8 @@ async function startSatelliteClientLoop() {
         continue;
       }
 
-      // Nếu đang chưa sẵn sàng hoặc bận thì nghỉ 2.5s giữa các nhịp Heartbeat
-      if (!isOnline || !isReady || isBusy) {
-        await new Promise(r => setTimeout(r, 2500));
-      } else {
-        await new Promise(r => setTimeout(r, 300));
-      }
+      // Nhịp nghỉ 2.5s an toàn giữa các chu kỳ Poll khi rảnh hoặc chưa sẵn sàng để giữ CPU luôn ở mức thấp
+      await new Promise(r => setTimeout(r, 2500));
     } catch (err) {
       await new Promise(r => setTimeout(r, 4000));
     }

@@ -323,6 +323,19 @@ class PersistentBot extends EventEmitter {
       : (process.env.HIDE_CHAT_LOG === 'false' ? true : !isWispbyteEnv);
   }
 
+  /**
+   * Bật hoặc tắt mô phỏng vật lý của Mineflayer (50ms tick loop)
+   * Giúp tiết kiệm CPU tối đa khi bot đứng AFK bên ngoài sảnh (KingSMP)
+   */
+  setPhysicsEnabled(enabled, reason = '') {
+    if (!this.bot) return;
+    const prev = this.bot.physicsEnabled !== false;
+    this.bot.physicsEnabled = Boolean(enabled);
+    if (prev !== this.bot.physicsEnabled) {
+      console.log(`[MC-Bot] ⚙️ ${this.bot.physicsEnabled ? '🟢 ĐÃ BẬT' : '🛑 ĐÃ TẮT'} mô phỏng vật lý${reason ? ` (${reason})` : ''}.`);
+    }
+  }
+
   connect() {
     this.clearAllTimers();
     this.isBotOnline = false;
@@ -337,7 +350,24 @@ class PersistentBot extends EventEmitter {
       host: host,
       port: this.port,
       username: this.credentials.username,
-      version: '1.20.1'
+      version: '1.20.1',
+      viewDistance: 'tiny', // Tối ưu Wispbyte: Giảm tải nén/giải nén chunk & entities từ KingMC
+      physicsEnabled: true, // Mặc định BẬT vật lý khi ở sảnh để tiếp đất & chọn menu ổn định
+      plugins: {
+        particle: false,
+        sound: false,
+        rain: false,
+        ray_trace: false,
+        boss_bar: false,
+        breath: false,
+        digging: false,
+        enchantment_table: false,
+        fishing: false,
+        furnace: false,
+        anvil: false,
+        villager: false,
+        command_block: false
+      }
     };
 
     if (this.credentials.authType === 'microsoft') {
@@ -435,6 +465,7 @@ class PersistentBot extends EventEmitter {
     this.bot.once('spawn', () => {
       this.isBotOnline = true;
       this.isReady = false;
+      this.setPhysicsEnabled(true, 'Spawn vào sảnh KingMC');
       console.log(`[MC-Bot] Đã spawn vào server thành công! Bắt đầu kịch bản AFK.`);
 
       // Quét toàn bộ người chơi hiện có trong Tablist khi vừa spawn
@@ -458,20 +489,17 @@ class PersistentBot extends EventEmitter {
       this.startAfkRoutine();
     });
 
-    // Lắng nghe sự kiện người chơi vào server hoặc cập nhật Tablist để gom skin 24/7
+    // Lắng nghe sự kiện người chơi mới vào server để gom skin
     this.bot.on('playerJoined', (player) => {
       if (player && player.username && player.skinData && player.skinData.url) {
         skinHelper.saveSkin(player.username, player.skinData.url, player.skinData.model);
       }
     });
 
-    this.bot.on('playerUpdated', (player) => {
-      if (player && player.username && player.skinData && player.skinData.url) {
-        skinHelper.saveSkin(player.username, player.skinData.url, player.skinData.model);
-      }
-    });
+    // Lưu ý: Bỏ lắng nghe playerUpdated vì packet này phát liên tục nhiều lần mỗi giây khi ping/level thay đổi, gây quá tải CPU
 
     this.bot.on('death', () => {
+      this.setPhysicsEnabled(true, 'Bot đã chết, bật lại vật lý để hồi sinh');
       console.log(`[MC-Bot] Bot đã chết. Đang chờ hồi sinh và thực hiện lại /rtp sau 5 giây...`);
       const deathTimer = setTimeout(() => {
         if (this.isBotOnline) {
@@ -563,6 +591,7 @@ class PersistentBot extends EventEmitter {
         }
 
         if (isLobby) {
+          this.setPhysicsEnabled(true, 'Phát hiện bị chuyển về Lobby');
           if (!this.lastAuthTime || Date.now() - this.lastAuthTime > 5000) {
             this.lastAuthTime = Date.now();
             console.log(`[MC-Bot] ⚠️ Đã xác nhận đang ở Lobby (Toạ độ + chat). Chuyển bot sang trạng thái BẬN và gõ /dn...`);
@@ -1183,6 +1212,7 @@ class PersistentBot extends EventEmitter {
       }
       
       this.isReady = true;
+      this.setPhysicsEnabled(false, 'Đã vào cụm KingSMP & hoàn tất /rtp');
       this.scanTablistSkins();
       this.emit('notifyAdmin', `🟢 **Worker [\`${this.credentials.username}\`]** đã READY và rảnh rỗi chờ lệnh.`);
       console.log(`[MC-Bot] ✅ Đã hoàn tất /rtp và sẵn sàng nhận lệnh từ Discord. Sẽ lặp lại sau 1 giờ.`);
