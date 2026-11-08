@@ -11,6 +11,16 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const http = require('http');
+
+// Tự động khôi phục file data/bedrock/common/features.json nếu bị thiếu (tránh crash MODULE_NOT_FOUND trong supportsFeature.js)
+try {
+  const bedrockFeaturesPath = path.join(__dirname, 'node_modules', 'minecraft-data', 'minecraft-data', 'data', 'bedrock', 'common', 'features.json');
+  if (!fs.existsSync(bedrockFeaturesPath)) {
+    fs.mkdirSync(path.dirname(bedrockFeaturesPath), { recursive: true });
+    fs.writeFileSync(bedrockFeaturesPath, '[]', 'utf8');
+  }
+} catch (e) {}
+
 const PersistentBot = require('./mc-bot');
 const skinHelper = require('./helpers/skinHelper');
 const { connectMongo, isMongoAvailable, getSystemConfig, setSystemConfig } = require('./helpers/mongoHelper');

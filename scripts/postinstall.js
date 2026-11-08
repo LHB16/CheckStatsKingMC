@@ -36,15 +36,39 @@ if (isWispbyteContainer) {
   }
 }
 
-// Tự động xóa dữ liệu Bedrock trong minecraft-data (tiết kiệm ~280 MB ổ cứng cho Worker)
+// Tự động xóa dữ liệu các phiên bản Bedrock trong minecraft-data (tiết kiệm ~280 MB ổ cứng cho Worker)
+// Luôn bảo lưu data/bedrock/common/features.json vì minecraft-data/lib/supportsFeature.js yêu cầu file này
 try {
   const bedrockDir = path.join(__dirname, '..', 'node_modules', 'minecraft-data', 'minecraft-data', 'data', 'bedrock');
-  if (fs.existsSync(bedrockDir)) {
-    fs.rmSync(bedrockDir, { recursive: true, force: true });
-    console.log('[PostInstall] 🧹 Đã dọn dẹp dữ liệu Bedrock của minecraft-data (giải phóng ~280 MB ổ cứng)!');
+  const commonDir = path.join(bedrockDir, 'common');
+  const featuresFile = path.join(commonDir, 'features.json');
+
+  let featuresContent = '[]';
+  if (fs.existsSync(featuresFile)) {
+    try { featuresContent = fs.readFileSync(featuresFile, 'utf8'); } catch (e) {}
   }
+
+  if (fs.existsSync(bedrockDir)) {
+    const items = fs.readdirSync(bedrockDir);
+    for (const item of items) {
+      if (item !== 'common') {
+        const itemPath = path.join(bedrockDir, item);
+        try {
+          fs.rmSync(itemPath, { recursive: true, force: true });
+        } catch (e) {}
+      }
+    }
+  }
+
+  if (!fs.existsSync(commonDir)) {
+    fs.mkdirSync(commonDir, { recursive: true });
+  }
+  if (!fs.existsSync(featuresFile)) {
+    fs.writeFileSync(featuresFile, featuresContent, 'utf8');
+  }
+  console.log('[PostInstall] 🧹 Đã dọn dẹp các phiên bản Bedrock thừa (bảo lưu common/features.json, giải phóng ~280 MB ổ cứng)!');
 } catch (e) {
-  console.warn('[PostInstall] ⚠️ Không thể xóa thư mục Bedrock:', e.message);
+  console.warn('[PostInstall] ⚠️ Không thể dọn dẹp thư mục Bedrock:', e.message);
 }
 
 if (skipDownload) {
