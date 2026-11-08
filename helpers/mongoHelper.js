@@ -7,11 +7,13 @@ const path = require('path');
 const dns = require('dns');
 const mongoose = require('mongoose');
 
-// Ưu tiên Google/Cloudflare DNS lên đầu để phân giải SRV records (Minecraft & MongoDB) tức thì trên Wispbyte/Render
+// Ưu tiên DNS mặc định của container trước, thêm Google/Cloudflare DNS làm fallback
 try {
   const existingServers = dns.getServers ? dns.getServers() : [];
-  const mergedServers = Array.from(new Set(['8.8.8.8', '1.1.1.1', ...existingServers]));
-  dns.setServers(mergedServers);
+  const mergedServers = Array.from(new Set([...existingServers, '8.8.8.8', '1.1.1.1'])).filter(Boolean);
+  if (mergedServers.length > 0) {
+    dns.setServers(mergedServers);
+  }
 } catch (e) {}
 
 // Tắt bufferCommands mặc định để tránh treo 10000ms khi mất kết nối hoặc bị chặn cổng 27017
