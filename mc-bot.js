@@ -23,38 +23,21 @@ function cleanMinecraftText(text) {
     .trim();
 }
 
+// Bảng tra cứu chuẩn hóa ký tự Small Caps từ GUI Minecraft sang chữ thường ASCII
+const SMALL_CAPS_MAP = {
+  'đ': 'd', 'Đ': 'd',
+  'ᴀ': 'a', 'ʙ': 'b', 'ᴄ': 'c', 'ᴅ': 'd', 'ᴇ': 'e', 'ғ': 'f', 'ɢ': 'g', 'ʜ': 'h',
+  'ɪ': 'i', 'Ɪ': 'i', 'ᴊ': 'j', 'ᴋ': 'k', 'ʟ': 'l', 'ᴍ': 'm', 'ɴ': 'n', 'ᴏ': 'o',
+  'ᴘ': 'p', 'ǫ': 'q', 'ʀ': 'r', 'Ʀ': 'r', 'ꜱ': 's', 'ᴛ': 't', 'ᴜ': 'u', 'ᴠ': 'v',
+  'ᴡ': 'w', 'x': 'x', 'ʏ': 'y', 'ᴢ': 'z'
+};
+const SMALL_CAPS_REGEX = /[đĐᴀʙᴄᴅᴇғɢʜɪꞮᴊᴋʟᴍɴᴏᴘǫʀƦꜱᴛᴜᴠᴡxʏᴢ]/gu;
+
 // Chuẩn hóa phông chữ Small Caps độc lạ của Server Minecraft (ví dụ: đơɴ ʜàɴɢ ᴄủᴀ -> don hang cua)
 function normalizeSmallCaps(str) {
   if (!str) return '';
   return String(str)
-    .replace(/đ/g, 'd')
-    .replace(/Đ/g, 'D')
-    .replace(/ᴀ/g, 'a')
-    .replace(/ʙ/g, 'b')
-    .replace(/ᴄ/g, 'c')
-    .replace(/ᴅ/g, 'd')
-    .replace(/ᴇ/g, 'e')
-    .replace(/ғ/g, 'f')
-    .replace(/ɢ/g, 'g')
-    .replace(/ʜ/g, 'h')
-    .replace(/ɪ/g, 'i')
-    .replace(/ᴊ/g, 'j')
-    .replace(/ᴋ/g, 'k')
-    .replace(/ʟ/g, 'l')
-    .replace(/ᴍ/g, 'm')
-    .replace(/ɴ/g, 'n')
-    .replace(/ᴏ/g, 'o')
-    .replace(/ᴘ/g, 'p')
-    .replace(/ǫ/g, 'q')
-    .replace(/ʀ/g, 'r')
-    .replace(/ꜱ/g, 's')
-    .replace(/ᴛ/g, 't')
-    .replace(/ᴜ/g, 'u')
-    .replace(/ᴠ/g, 'v')
-    .replace(/ᴡ/g, 'w')
-    .replace(/x/g, 'x')
-    .replace(/ʏ/g, 'y')
-    .replace(/ᴢ/g, 'z')
+    .replace(SMALL_CAPS_REGEX, ch => SMALL_CAPS_MAP[ch] || ch)
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
@@ -76,7 +59,7 @@ function cleanBuyerName(str) {
   let cleanText = cleanMinecraftText(str);
   let normalized = normalizeSmallCaps(cleanText);
 
-  const prefixMatch = normalized.match(/^(?:don\s*hang|order)?(?:\s*cua|\s*of|:|\s)*\s*/iu);
+  const prefixMatch = normalized.match(/^(?:don\s*hang|order)?(?:\s*(?:cua|of))?[\s:\-#]*/iu);
   if (prefixMatch && prefixMatch[0].length > 0) {
     const prefixLen = prefixMatch[0].length;
     let buyerPart = cleanText.substring(prefixLen).trim();
@@ -84,7 +67,7 @@ function cleanBuyerName(str) {
     if (buyerPart) return buyerPart;
   }
 
-  cleanText = cleanText.replace(/^(?:đơn\s*hàng|don\s*hang|order)?(?:\s*của|\s*cua|:|\s)*\s*/iu, '').trim();
+  cleanText = cleanText.replace(/^(?:đơn\s*hàng|don\s*hang|order)?(?:\s*(?:của|cua|of))?[\s:\-#]*/iu, '').trim();
   cleanText = cleanText.replace(/^[:\-\s#]+/, '').trim();
   return cleanText || 'Ẩn danh';
 }
@@ -98,6 +81,7 @@ const MC_COLOR_CODES = {
 };
 
 // Hàm parse chuẩn Minecraft JSON Text Component (có đệ quy đọc extra, text và gắn mã màu)
+// Tối ưu an toàn tuyệt đối chống ReDoS bằng cắt chuỗi indexOf thay vì Regex lặp nguy hiểm
 function parseMinecraftJSON(input) {
   if (!input) return '';
 
@@ -109,17 +93,21 @@ function parseMinecraftJSON(input) {
         return parseMinecraftJSON(obj);
       } catch (e) {}
     }
-    const jsonMatch = str.match(/^(.*?)\s*(\{(?:[^{}]|"*")*\})\s*$/);
-    if (jsonMatch) {
-      const prefixText = jsonMatch[1].trim();
+
+    // Nếu chuỗi chứa JSON component lồng bên trong (ví dụ: "Tiền tố {"text":"Nội dung",...}")
+    const firstBrace = str.indexOf('{');
+    const lastBrace = str.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace > firstBrace) {
+      const prefixText = str.slice(0, firstBrace).trim();
+      const jsonCandidate = str.slice(firstBrace, lastBrace + 1);
       try {
-        const parsedJson = JSON.parse(jsonMatch[2]);
+        const parsedJson = JSON.parse(jsonCandidate);
         const innerText = parseMinecraftJSON(parsedJson);
         if (innerText) return (prefixText ? prefixText + ' ' : '') + innerText;
       } catch (e) {}
-      if (prefixText) str = prefixText;
     }
-    return str.replace(/\{"color".*?\}/gi, '').trim();
+
+    return str.replace(/\{"color"[^}]*\}/gi, '').trim();
   }
 
   if (Array.isArray(input)) {
@@ -827,13 +815,13 @@ class PersistentBot extends EventEmitter {
             const item = window.slots[i];
             if (!item) continue;
 
+            // Bỏ qua item trang trí/kính/barrier/air trước khi parse displayName và Lore
+            const nameLower = (item.name || '').toLowerCase();
+            if (nameLower.includes('pane') || nameLower === 'air' || nameLower === 'barrier') continue;
+
             let displayName = item.displayName || '';
             if (item.customName) displayName = item.customName;
             displayName = parseMinecraftJSON(displayName);
-
-            // Bỏ qua item trang trí/kính/barrier/air
-            const nameLower = (item.name || '').toLowerCase();
-            if (nameLower.includes('pane') || nameLower === 'air' || nameLower === 'barrier') continue;
 
             let loreArray = [];
             if (item.customLore) {
@@ -1334,11 +1322,7 @@ class PersistentBot extends EventEmitter {
           const item = win.slots[i];
           if (!item) continue;
 
-          let displayName = item.displayName || '';
-          if (item.customName) displayName = item.customName;
-          displayName = parseMinecraftJSON(displayName);
-
-          // Bỏ qua item trang trí/kính/barrier/air
+          // Bỏ qua item trang trí/kính/barrier/air trước khi parse displayName và Lore
           const nameLower = (item.name || '').toLowerCase();
           if (nameLower.includes('pane') || nameLower === 'air' || nameLower === 'barrier') continue;
 
@@ -1348,6 +1332,10 @@ class PersistentBot extends EventEmitter {
           } else if (isBoneBlockQuery) {
             if (nameLower !== 'bone_block') continue;
           }
+
+          let displayName = item.displayName || '';
+          if (item.customName) displayName = item.customName;
+          displayName = parseMinecraftJSON(displayName);
 
           let loreArray = [];
           if (item.customLore) {
@@ -1405,7 +1393,11 @@ class PersistentBot extends EventEmitter {
 
             // Trích xuất Giá mỗi item (Ví dụ: GIÁ MỖI ITEM: $ 151.6)
             if (!price) {
-              if (lowerLine.includes('giá') || lowerLine.includes('gia') || lowerLine.includes('$') || normLine.includes('gia')) {
+              if (
+                lowerLine.includes('giá') ||
+                lowerLine.includes('$') ||
+                ((lowerLine.includes('gia') || normLine.includes('gia')) && !lowerLine.includes('giao') && !normLine.includes('giao'))
+              ) {
                 if (cleanLine.includes(':')) {
                   price = cleanLine.split(':').slice(1).join(':').trim();
                 } else if (cleanLine.includes('$')) {

@@ -290,38 +290,21 @@ function getItemIconUrl(itemOrId) {
   return cdn3d;
 }
 
+// Bảng tra cứu chuẩn hóa ký tự Small Caps từ GUI Minecraft sang chữ thường ASCII
+const SMALL_CAPS_MAP = {
+  'đ': 'd', 'Đ': 'd',
+  'ᴀ': 'a', 'ʙ': 'b', 'ᴄ': 'c', 'ᴅ': 'd', 'ᴇ': 'e', 'ғ': 'f', 'ɢ': 'g', 'ʜ': 'h',
+  'ɪ': 'i', 'Ɪ': 'i', 'ᴊ': 'j', 'ᴋ': 'k', 'ʟ': 'l', 'ᴍ': 'm', 'ɴ': 'n', 'ᴏ': 'o',
+  'ᴘ': 'p', 'ǫ': 'q', 'ʀ': 'r', 'Ʀ': 'r', 'ꜱ': 's', 'ᴛ': 't', 'ᴜ': 'u', 'ᴠ': 'v',
+  'ᴡ': 'w', 'x': 'x', 'ʏ': 'y', 'ᴢ': 'z'
+};
+const SMALL_CAPS_REGEX = /[đĐᴀʙᴄᴅᴇғɢʜɪꞮᴊᴋʟᴍɴᴏᴘǫʀƦꜱᴛᴜᴠᴡxʏᴢ]/gu;
+
 // Chuẩn hóa phông chữ Small Caps độc lạ của Server Minecraft (ví dụ: đơɴ ʜàɴɢ ᴄủᴀ -> don hang cua)
 function normalizeSmallCaps(str) {
   if (!str) return '';
   return String(str)
-    .replace(/đ/g, 'd')
-    .replace(/Đ/g, 'D')
-    .replace(/ᴀ/g, 'a')
-    .replace(/ʙ/g, 'b')
-    .replace(/ᴄ/g, 'c')
-    .replace(/ᴅ/g, 'd')
-    .replace(/ᴇ/g, 'e')
-    .replace(/ғ/g, 'f')
-    .replace(/ɢ/g, 'g')
-    .replace(/ʜ/g, 'h')
-    .replace(/ɪ/g, 'i')
-    .replace(/ᴊ/g, 'j')
-    .replace(/ᴋ/g, 'k')
-    .replace(/ʟ/g, 'l')
-    .replace(/ᴍ/g, 'm')
-    .replace(/ɴ/g, 'n')
-    .replace(/ᴏ/g, 'o')
-    .replace(/ᴘ/g, 'p')
-    .replace(/ǫ/g, 'q')
-    .replace(/ʀ/g, 'r')
-    .replace(/ꜱ/g, 's')
-    .replace(/ᴛ/g, 't')
-    .replace(/ᴜ/g, 'u')
-    .replace(/ᴠ/g, 'v')
-    .replace(/ᴡ/g, 'w')
-    .replace(/x/g, 'x')
-    .replace(/ʏ/g, 'y')
-    .replace(/ᴢ/g, 'z')
+    .replace(SMALL_CAPS_REGEX, ch => SMALL_CAPS_MAP[ch] || ch)
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
@@ -347,7 +330,7 @@ function cleanBuyerName(str) {
   let cleanText = cleanMinecraftText(str);
   let normalized = normalizeSmallCaps(cleanText);
 
-  const prefixMatch = normalized.match(/^(?:don\s*hang|order)?(?:\s*cua|\s*of|:|\s)*\s*/iu);
+  const prefixMatch = normalized.match(/^(?:don\s*hang|order)?(?:\s*(?:cua|of))?[\s:\-#]*/iu);
   if (prefixMatch && prefixMatch[0].length > 0) {
     const prefixLen = prefixMatch[0].length;
     let buyerPart = cleanText.substring(prefixLen).trim();
@@ -355,7 +338,7 @@ function cleanBuyerName(str) {
     if (buyerPart) return buyerPart;
   }
 
-  cleanText = cleanText.replace(/^(?:đơn\s*hàng|don\s*hang|order)?(?:\s*của|\s*cua|:|\s)*\s*/iu, '').trim();
+  cleanText = cleanText.replace(/^(?:đơn\s*hàng|don\s*hang|order)?(?:\s*(?:của|cua|of))?[\s:\-#]*/iu, '').trim();
   cleanText = cleanText.replace(/^[:\-\s#]+/, '').trim();
   return cleanText || 'Ẩn danh';
 }
