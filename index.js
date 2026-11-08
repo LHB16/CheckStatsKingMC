@@ -12,12 +12,24 @@ const path = require('path');
 const os = require('os');
 const http = require('http');
 
-// Tự động khôi phục file data/bedrock/common/features.json nếu bị thiếu (tránh crash MODULE_NOT_FOUND trong supportsFeature.js)
+// Tự động khôi phục các file data/bedrock/common/*.json nếu bị thiếu do dọn dẹp/cache hỏng
+// minecraft-data bắt buộc phải nạp features.json, protocolVersions.json, versions.json, legacy.json
 try {
-  const bedrockFeaturesPath = path.join(__dirname, 'node_modules', 'minecraft-data', 'minecraft-data', 'data', 'bedrock', 'common', 'features.json');
-  if (!fs.existsSync(bedrockFeaturesPath)) {
-    fs.mkdirSync(path.dirname(bedrockFeaturesPath), { recursive: true });
-    fs.writeFileSync(bedrockFeaturesPath, '[]', 'utf8');
+  const bedrockCommonDir = path.join(__dirname, 'node_modules', 'minecraft-data', 'minecraft-data', 'data', 'bedrock', 'common');
+  if (!fs.existsSync(bedrockCommonDir)) {
+    fs.mkdirSync(bedrockCommonDir, { recursive: true });
+  }
+  const requiredBedrockFiles = {
+    'features.json': '[]',
+    'protocolVersions.json': '[]',
+    'versions.json': '[]',
+    'legacy.json': '{}'
+  };
+  for (const [filename, defaultContent] of Object.entries(requiredBedrockFiles)) {
+    const filePath = path.join(bedrockCommonDir, filename);
+    if (!fs.existsSync(filePath)) {
+      fs.writeFileSync(filePath, defaultContent, 'utf8');
+    }
   }
 } catch (e) {}
 

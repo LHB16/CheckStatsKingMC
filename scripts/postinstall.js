@@ -37,15 +37,27 @@ if (isWispbyteContainer) {
 }
 
 // Tự động xóa dữ liệu các phiên bản Bedrock trong minecraft-data (tiết kiệm ~280 MB ổ cứng cho Worker)
-// Luôn bảo lưu data/bedrock/common/features.json vì minecraft-data/lib/supportsFeature.js yêu cầu file này
+// Luôn bảo lưu toàn bộ data/bedrock/common/* vì minecraft-data bắt buộc phải nạp features.json, protocolVersions.json, versions.json, legacy.json
 try {
   const bedrockDir = path.join(__dirname, '..', 'node_modules', 'minecraft-data', 'minecraft-data', 'data', 'bedrock');
   const commonDir = path.join(bedrockDir, 'common');
-  const featuresFile = path.join(commonDir, 'features.json');
 
-  let featuresContent = '[]';
-  if (fs.existsSync(featuresFile)) {
-    try { featuresContent = fs.readFileSync(featuresFile, 'utf8'); } catch (e) {}
+  const requiredFiles = {
+    'features.json': '[]',
+    'protocolVersions.json': '[]',
+    'versions.json': '[]',
+    'legacy.json': '{}'
+  };
+
+  // Lưu lại nội dung các file hiện có nếu hợp lệ
+  const preservedContents = {};
+  for (const filename of Object.keys(requiredFiles)) {
+    const filePath = path.join(commonDir, filename);
+    if (fs.existsSync(filePath)) {
+      try {
+        preservedContents[filename] = fs.readFileSync(filePath, 'utf8');
+      } catch (e) {}
+    }
   }
 
   if (fs.existsSync(bedrockDir)) {
@@ -63,10 +75,16 @@ try {
   if (!fs.existsSync(commonDir)) {
     fs.mkdirSync(commonDir, { recursive: true });
   }
-  if (!fs.existsSync(featuresFile)) {
-    fs.writeFileSync(featuresFile, featuresContent, 'utf8');
+
+  // Khôi phục hoặc tạo file mặc định cho toàn bộ metadata của bedrock/common
+  for (const [filename, defaultContent] of Object.entries(requiredFiles)) {
+    const filePath = path.join(commonDir, filename);
+    if (!fs.existsSync(filePath)) {
+      const content = preservedContents[filename] || defaultContent;
+      fs.writeFileSync(filePath, content, 'utf8');
+    }
   }
-  console.log('[PostInstall] 🧹 Đã dọn dẹp các phiên bản Bedrock thừa (bảo lưu common/features.json, giải phóng ~280 MB ổ cứng)!');
+  console.log('[PostInstall] 🧹 Đã dọn dẹp các phiên bản Bedrock thừa (bảo lưu toàn bộ bedrock/common, giải phóng ~280 MB ổ cứng)!');
 } catch (e) {
   console.warn('[PostInstall] ⚠️ Không thể dọn dẹp thư mục Bedrock:', e.message);
 }
