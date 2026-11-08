@@ -1332,9 +1332,15 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
     if (!isAdmin) {
       const mode = configHelper.getRestrictionMode();
 
+      // Kiểm tra xem tin nhắn có thực sự tương tác/gọi đích danh Bot hay không
+      // Bỏ qua hoàn toàn nếu tin nhắn chỉ tag @everyone hoặc @here
+      const isExplicitBotMention = !message.mentions?.everyone && Boolean(
+        client.user?.id && message.mentions?.users?.has(client.user.id)
+      );
+
       if (mode === 'membership') {
         // Chế độ Membership: Cho phép dùng ở mọi server & DM, nhưng bắt buộc người dùng là thành viên Server chính
-        const isCallingBot = isDirectMessage || cleanText.startsWith('?') || (message.mentions && message.mentions.has(client.user?.id));
+        const isCallingBot = isDirectMessage || cleanText.startsWith('?') || isExplicitBotMention;
         if (isCallingBot) {
           const isMember = await configHelper.isUserInMainGuild(client, message.author.id);
           if (!isMember) {
@@ -1349,9 +1355,9 @@ if (BOT_ROLE === 'master' || BOT_ROLE === 'standalone') {
           return message.reply(payload);
         }
 
-        // B. Nếu ở server không được phép (theo Whitelist/Blacklist) và người dùng tương tác tới Bot (? hoặc @mention)
+        // B. Nếu ở server không được phép (theo Whitelist/Blacklist) và người dùng tương tác tới Bot (? hoặc @mention đích danh)
         if (message.guild && !configHelper.isGuildAllowed(message.guild.id)) {
-          const isCallingBot = cleanText.startsWith('?') || (message.mentions && message.mentions.has(client.user?.id));
+          const isCallingBot = cleanText.startsWith('?') || isExplicitBotMention;
           if (isCallingBot) {
             const payload = configHelper.createRestrictionPayload();
             return message.reply(payload);
