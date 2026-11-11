@@ -351,6 +351,8 @@ class PersistentBot extends EventEmitter {
       version: '1.20.1',
       viewDistance: 'tiny', // Tối ưu Wispbyte: Giảm tải nén/giải nén chunk & entities từ KingMC
       physicsEnabled: true, // Mặc định BẬT vật lý khi ở sảnh để tiếp đất & chọn menu ổn định
+      hideErrors: true, // Ẩn lỗi chunk & packet không tương thích để tránh tràn console
+      logErrors: false, // Tắt tự động dump stack trace lỗi từ Mineflayer, để bot tự kiểm soát log
       plugins: {
         particle: false,
         sound: false,
@@ -384,7 +386,15 @@ class PersistentBot extends EventEmitter {
           console.log(`[MC-Bot] 🔌 TCP Socket đã kết nối thành công tới ${host}:${this.port}! Đang gửi packet bắt tay (handshake)...`);
         });
         this.bot._client.on('error', (err) => {
-          console.error(`[MC-Bot] ❌ TCP Socket gặp lỗi [${host}:${this.port}]: ${err.message}`);
+          const msg = err && err.message ? err.message : String(err);
+          if (
+            msg.includes('bounds of the managed data') ||
+            msg.includes('Attempted to read beyond') ||
+            msg.includes('chunk failed to load')
+          ) {
+            return;
+          }
+          console.error(`[MC-Bot] ❌ TCP Socket gặp lỗi [${host}:${this.port}]: ${msg}`);
         });
         this.bot._client.on('close', (hadError) => {
           console.log(`[MC-Bot] 🔌 TCP Socket đã đóng ${hadError ? '(do gặp lỗi)' : '(bình thường)'}.`);
@@ -424,7 +434,20 @@ class PersistentBot extends EventEmitter {
 
   registerEvents() {
     this.bot.on('error', (err) => {
-      console.error(`[MC-Bot] Lỗi kết nối: ${err.message}`);
+      const msg = err && err.message ? err.message : String(err);
+
+      // Bỏ qua hoặc cảnh báo ngắn gọn các lỗi không tương thích packet chunk/palette/buffer từ KingMC
+      if (
+        msg.includes('bounds of the managed data') ||
+        msg.includes('Attempted to read beyond') ||
+        msg.includes('chunk failed to load') ||
+        msg.includes('Partial packet')
+      ) {
+        console.warn(`[MC-Bot] ⚠️ Đã bỏ qua chunk packet không tương thích từ KingMC: ${msg}`);
+        return;
+      }
+
+      console.error(`[MC-Bot] Lỗi kết nối: ${msg}`);
     });
 
     this.bot.on('kicked', (reason) => {
